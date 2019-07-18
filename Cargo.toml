@@ -1,0 +1,17 @@
+[package]
+name = "match_filter"
+version = "0.1.0"
+authors = ["austin <austin.chase.m@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+clap = "2.33.0"
+npy = "0.4"
+npy-derive = "0.4"
+toml = "0.5"
+serde = "1.0.92"
+serde_derive = "1.0.92"
+rmp-serde = "0.13.7"
+rustfft = "3.0.0"
+gnuplot = "0.0.31"
+cpuprofiler = "0.0.3"
