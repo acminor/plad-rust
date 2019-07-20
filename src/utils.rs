@@ -1,4 +1,4 @@
-use gnuplot::{Caption, Color, Figure};
+use gnuplot::{Color, Figure};
 use rustfft::{num_complex::Complex, num_traits::Zero, FFTplanner};
 
 pub fn inner_product(

@@ -49,11 +49,11 @@ impl StarModel for NoneModel {
 pub fn parse_model(mtype: StarModelType, mfile: String) -> Box<dyn StarModel> {
     match mtype {
         StarModelType::None => Box::new(NoneModel {}),
-        _ => Box::new(NoneModel {}),
+        //_ => Box::new(NoneModel {}),
     }
 }
 
-pub fn parse_star_file(star_file: String) -> Star {
+pub fn parse_star_file(star_file: &str) -> Star {
     let contents =
         fs::read_to_string(&star_file).expect("Failed to read Star TOML file");
     let star_toml: StarToml =
@@ -69,7 +69,8 @@ pub fn parse_star_file(star_file: String) -> Star {
         let mut file = fs::File::open(&star_toml.samples)
             .expect("Failed to read Star samples file");
         let mut contents: Vec<u8> = Vec::new();
-        file.read_to_end(&mut contents);
+        file.read_to_end(&mut contents)
+            .expect("Failed reading contents of Star samples.");
 
         let mut de = rmp_serde::Deserializer::new(&contents[..]);
 
@@ -79,7 +80,7 @@ pub fn parse_star_file(star_file: String) -> Star {
 
     Star {
         id: star_toml.id,
-        uid: star_file,
+        uid: star_file.to_string(),
         samples: samples,
         star_type: star_type,
         model_type: StarModelType::None,

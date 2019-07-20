@@ -2,7 +2,7 @@ use serde_derive::Deserialize;
 use std::fs;
 use std::io::Read;
 
-use rustfft::{num_complex::Complex, num_traits::Zero, FFTplanner};
+use rustfft::{num_complex::Complex};
 
 #[derive(Debug, Deserialize)]
 pub struct TemplateToml {
@@ -31,7 +31,8 @@ pub fn parse_template_file(file_name: String) -> Templates {
         let mut file = fs::File::open(&template_toml.templates)
             .expect("Failed to read Templates templates file");
         let mut contents: Vec<u8> = Vec::new();
-        file.read_to_end(&mut contents);
+        file.read_to_end(&mut contents)
+            .expect("Failed reading contents of templates.");
 
         let mut de = rmp_serde::Deserializer::new(&contents[..]);
 

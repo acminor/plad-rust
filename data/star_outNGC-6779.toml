@@ -1,5 +1,0 @@
-id = "NGC-6779"
-star_type = "variable"
-samples = "data/star_outNGC-6779-samples.mpk"
-sample_rate = 15
-arima_model_file = "data/star_outNGC-6779-arima-model"

@@ -9,13 +9,10 @@ use template::*;
 use utils::*;
 
 use clap::{App, Arg};
-use toml;
 
-use std::boxed::Box;
+use std::fs;
 use std::str::FromStr;
-use std::vec;
 
-use rustfft::num_complex::Complex;
 use cpuprofiler::PROFILER;
 
 struct RunInfo {
@@ -32,7 +29,7 @@ fn parse_args() -> RunInfo {
         .author("Austin C. Minor (米诺) <austin.chase.m@gmail.com>")
         .about("TODO")
         .arg(
-            Arg::with_name("input_file")
+            Arg::with_name("input_dir")
                 .short("i")
                 .long("input")
                 .help("TODO")
@@ -77,10 +74,40 @@ fn parse_args() -> RunInfo {
         matches.value_of("templates_file").unwrap().to_string(),
     );
 
-    let star =
-        parse_star_file(matches.value_of("input_file").unwrap().to_string());
+    let unwrap_parse_star_files = |file: std::io::Result<fs::DirEntry>| match file {
+        Ok(file) => match file.file_type() {
+            Ok(file_type) => {
+                if file_type.is_file() {
+                    match file.path().extension() {
+                        Some(ext) if ext == "toml" => Some(parse_star_file(
+                            file.path().as_path().to_str().unwrap(),
+                        )),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            }
+            Err(_) => None,
+        },
+        Err(_) => None,
+    };
 
-    let stars = vec![star];
+    let input_dir = matches.value_of("input_dir").unwrap().to_string();
+    let stars: Vec<Star> = match fs::metadata(&input_dir) {
+        Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
+            .unwrap()
+            .filter_map(unwrap_parse_star_files)
+            .collect(),
+        _ => panic!("Error in reading input_dir"),
+    };
+
+    println!("{}", stars.len());
+
+    //    let star =
+    //        parse_star_file(matches.value_of("input_dir").unwrap().to_string());
+
+    // let stars = vec![star];
 
     RunInfo {
         templates: templates,
@@ -96,6 +123,7 @@ fn parse_args() -> RunInfo {
 }
 
 fn main() {
+    let prof = false;
     let run_info = parse_args();
 
     let RunInfo {
@@ -106,20 +134,24 @@ fn main() {
         window_length,
     } = run_info;
 
-    PROFILER.lock().unwrap().start("./prof.profile").expect("Couldn't start");
+    if prof {
+        PROFILER
+            .lock()
+            .unwrap()
+            .start("./prof.profile")
+            .expect("Couldn't start");
+    }
 
-    let mut templates = templates;
+    let templates = templates;
     let template_sz = templates.templates.len();
-    let mut stars = stars;
+    let stars = stars;
 
     let now = std::time::Instant::now();
     let mut iterations = 0;
-    let iter = stars
+    let _iter = stars
         .into_iter()
-        .zip(std::iter::repeat(templates.templates))
-        .flat_map(|(mut star, templates)| {
-            println!("Debug {}", templates.len());
-
+        .flat_map(|mut star| {
+            let mut res = Vec::new();
             while star.samples.len() > (window_length as usize) {
                 if iterations % 15 == 0 {
                     println!("Iteration: {}", iterations);
@@ -129,22 +161,33 @@ fn main() {
                 let window =
                     star.samples.drain(0..(window_length as usize)).collect();
 
-                templates
+                let max_filter_val = templates
+                    .templates
                     .iter()
                     .map(|template| {
                         inner_product(&template, &window, noise_stddev, true)
                             .iter()
                             .map(|x| x.re)
-                            .collect::<Vec<f32>>()
+                            .fold(-1000.0, |acc, x| match x > acc {
+                                true => x,
+                                false => acc,
+                            })
                     })
-                    .collect::<Vec<Vec<f32>>>();
+                    .fold(-1000.0, |acc, x| match x > acc {
+                        true => x,
+                        false => acc,
+                    });
+
+                res.push(max_filter_val);
             }
 
-            vec![]
+            res
         })
-        .collect::<Vec<Vec<f32>>>();
+        .collect::<Vec<f32>>();
 
-    PROFILER.lock().unwrap().stop().expect("Couldn't start");
+    if prof {
+        PROFILER.lock().unwrap().stop().expect("Couldn't start");
+    }
 
     println!(
         "{} stars per second @ {} templates",
