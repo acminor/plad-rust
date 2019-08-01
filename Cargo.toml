@@ -15,3 +15,6 @@ rmp-serde = "0.13.7"
 rustfft = "3.0.0"
 gnuplot = "0.0.31"
 cpuprofiler = "0.0.3"
+num = "0.1.0"
+arrayfire = "3.6.1"
+#arrayfire = { path="./crates/arrayfire-rust" }

@@ -74,24 +74,27 @@ fn parse_args() -> RunInfo {
         matches.value_of("templates_file").unwrap().to_string(),
     );
 
-    let unwrap_parse_star_files = |file: std::io::Result<fs::DirEntry>| match file {
-        Ok(file) => match file.file_type() {
-            Ok(file_type) => {
-                if file_type.is_file() {
-                    match file.path().extension() {
-                        Some(ext) if ext == "toml" => Some(parse_star_file(
-                            file.path().as_path().to_str().unwrap(),
-                        )),
-                        _ => None,
+    let unwrap_parse_star_files =
+        |file: std::io::Result<fs::DirEntry>| match file {
+            Ok(file) => match file.file_type() {
+                Ok(file_type) => {
+                    if file_type.is_file() {
+                        match file.path().extension() {
+                            Some(ext) if ext == "toml" => {
+                                Some(parse_star_file(
+                                    file.path().as_path().to_str().unwrap(),
+                                ))
+                            }
+                            _ => None,
+                        }
+                    } else {
+                        None
                     }
-                } else {
-                    None
                 }
-            }
+                Err(_) => None,
+            },
             Err(_) => None,
-        },
-        Err(_) => None,
-    };
+        };
 
     let input_dir = matches.value_of("input_dir").unwrap().to_string();
     let stars: Vec<Star> = match fs::metadata(&input_dir) {
@@ -123,7 +126,7 @@ fn parse_args() -> RunInfo {
 }
 
 fn main() {
-    let prof = false;
+    let prof = true;
     let run_info = parse_args();
 
     let RunInfo {
@@ -143,47 +146,83 @@ fn main() {
     }
 
     let templates = templates;
-    let template_sz = templates.templates.len();
-    let stars = stars;
+//    let template_sz = templates.templates.len();
+    let mut stars = stars;
 
     let now = std::time::Instant::now();
     let mut iterations = 0;
-    let _iter = stars
-        .into_iter()
-        .flat_map(|mut star| {
-            let mut res = Vec::new();
-            while star.samples.len() > (window_length as usize) {
+
+    println!(
+        "Total iterations needed: {}",
+        ((stars[0].samples.len() as u64 / window_length as u64) as u64)
+            * stars.len() as u64
+    );
+
+    let is_offline = true;
+    loop {
+        let mut cur_stars = stars
+            .iter_mut()
+            .filter(|star| star.samples.len() >= (window_length as usize))
+            .collect::<Vec<&mut Star>>();
+
+        if cur_stars.len() == 0 && is_offline {
+            break;
+        }
+
+        let windows = cur_stars
+            .iter_mut()
+            .map(|mut star| {
                 if iterations % 15 == 0 {
                     println!("Iteration: {}", iterations);
                 }
                 iterations += 1;
 
-                let window =
-                    star.samples.drain(0..(window_length as usize)).collect();
+                star.samples.drain(0..(window_length as usize)).collect()
+            })
+            .collect();
 
-                let max_filter_val = templates
-                    .templates
-                    .iter()
-                    .map(|template| {
-                        inner_product(&template, &window, noise_stddev, true)
-                            .iter()
-                            .map(|x| x.re)
-                            .fold(-1000.0, |acc, x| match x > acc {
-                                true => x,
-                                false => acc,
-                            })
+        let ip = inner_product(
+            &templates.templates,
+            &windows,
+            noise_stddev,
+            true,
+            200,
+            20,
+        );
+
+        let group_len = 1;
+        /*
+        cur_stars
+            .iter_mut()
+            .filter_map(|mut stars| {
+                if iterations % 15 == 0 {
+                    println!("Iteration: {}", iterations);
+                }
+                iterations += 1;
+
+                let windows = stars
+                    .into_iter()
+                    .map(|star| {
+                        star.samples
+                            .drain(0..(window_length as usize))
+                            .collect()
                     })
-                    .fold(-1000.0, |acc, x| match x > acc {
-                        true => x,
-                        false => acc,
-                    });
+                    .collect::<Vec<Vec<f32>>>();
 
-                res.push(max_filter_val);
-            }
+                let ip = inner_product(
+                    &templates.templates,
+                    &windows,
+                    noise_stddev,
+                    true,
+                    1,
+                    1,
+                );
 
-            res
-        })
-        .collect::<Vec<f32>>();
+                Some(ip)
+            })
+            .collect::<Vec<Vec<f32>>>();
+        */
+    }
 
     if prof {
         PROFILER.lock().unwrap().stop().expect("Couldn't start");
@@ -192,7 +231,7 @@ fn main() {
     println!(
         "{} stars per second @ {} templates",
         iterations / now.elapsed().as_secs(),
-        template_sz
+        1000
     );
 
     println!("Hello, world!\n");
