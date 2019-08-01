@@ -107,11 +107,6 @@ fn parse_args() -> RunInfo {
 
     println!("{}", stars.len());
 
-    //    let star =
-    //        parse_star_file(matches.value_of("input_dir").unwrap().to_string());
-
-    // let stars = vec![star];
-
     RunInfo {
         templates: templates,
         stars: stars,
@@ -126,7 +121,7 @@ fn parse_args() -> RunInfo {
 }
 
 fn main() {
-    let prof = true;
+    let prof = false;
     let run_info = parse_args();
 
     let RunInfo {
@@ -146,7 +141,6 @@ fn main() {
     }
 
     let templates = templates;
-//    let template_sz = templates.templates.len();
     let mut stars = stars;
 
     let now = std::time::Instant::now();
@@ -159,6 +153,7 @@ fn main() {
     );
 
     let is_offline = true;
+    let mut i = 0;
     loop {
         let mut cur_stars = stars
             .iter_mut()
@@ -167,6 +162,12 @@ fn main() {
 
         if cur_stars.len() == 0 && is_offline {
             break;
+        }
+
+        if i == 15 {
+            break;
+        } else {
+            i+=1;
         }
 
         let windows = cur_stars
@@ -191,37 +192,6 @@ fn main() {
         );
 
         let group_len = 1;
-        /*
-        cur_stars
-            .iter_mut()
-            .filter_map(|mut stars| {
-                if iterations % 15 == 0 {
-                    println!("Iteration: {}", iterations);
-                }
-                iterations += 1;
-
-                let windows = stars
-                    .into_iter()
-                    .map(|star| {
-                        star.samples
-                            .drain(0..(window_length as usize))
-                            .collect()
-                    })
-                    .collect::<Vec<Vec<f32>>>();
-
-                let ip = inner_product(
-                    &templates.templates,
-                    &windows,
-                    noise_stddev,
-                    true,
-                    1,
-                    1,
-                );
-
-                Some(ip)
-            })
-            .collect::<Vec<Vec<f32>>>();
-        */
     }
 
     if prof {
