@@ -17,4 +17,6 @@ gnuplot = "0.0.31"
 cpuprofiler = "0.0.3"
 num = "0.1.0"
 arrayfire = "3.6.1"
+plotters = "0.2.2"
+tempfile = "3.1.0"
 #arrayfire = { path="./crates/arrayfire-rust" }

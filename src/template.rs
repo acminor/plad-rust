@@ -58,13 +58,21 @@ pub fn parse_template_file(file_name: String) -> Templates {
             })
             .collect::<Vec<Vec<Complex<f32>>>>();
 
-        temp.chunks(8)
+        let max_len = temp
+            .iter()
+            .map(|template| template.len())
+            .max()
+            .expect("Issue getting max template set length.");
+
+        temp.chunks(2560)
             .map(|chunk| {
+                /*
                 let max_len = chunk
                     .iter()
                     .map(|template| template.len())
                     .max()
                     .expect("Issue getting max template set length.");
+                */
                 let chunk_len = chunk.len();
                 let padded_temps = chunk
                     .into_iter()

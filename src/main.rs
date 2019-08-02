@@ -8,6 +8,8 @@ use star::*;
 use template::*;
 use utils::*;
 
+use arrayfire as AF;
+
 use clap::{App, Arg};
 
 use std::fs;
@@ -124,6 +126,8 @@ fn main() {
     let prof = false;
     let run_info = parse_args();
 
+    AF::set_backend(AF::Backend::CUDA);
+
     let RunInfo {
         stars,
         templates,
@@ -164,11 +168,13 @@ fn main() {
             break;
         }
 
-        if i == 15 {
+        /*
+        if i == 100 {
             break;
         } else {
             i+=1;
         }
+        */
 
         let windows = cur_stars
             .iter_mut()
@@ -188,7 +194,7 @@ fn main() {
             noise_stddev,
             true,
             200,
-            20,
+            200,
         );
 
         let group_len = 1;
