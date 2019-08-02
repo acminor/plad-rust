@@ -44,10 +44,11 @@ pub fn parse_template_file(file_name: String) -> Templates {
 
         let mut de = rmp_serde::Deserializer::new(&contents[..]);
 
-        let temp: Vec<Vec<(f32, f32)>> =
+        let temp: Vec<Vec<f32>> =
             serde::Deserialize::deserialize(&mut de)
                 .expect("Failed to deserialize templates");
 
+        /*
         let temp = temp
             .into_iter()
             .map(|template| {
@@ -57,6 +58,7 @@ pub fn parse_template_file(file_name: String) -> Templates {
                     .collect()
             })
             .collect::<Vec<Vec<Complex<f32>>>>();
+        */
 
         let max_len = temp
             .iter()
@@ -64,54 +66,75 @@ pub fn parse_template_file(file_name: String) -> Templates {
             .max()
             .expect("Issue getting max template set length.");
 
+        // using the numpy fftfreq reference
+        // [ ] TODO check if correct
+        // - ie only concerned with pos. freq. in fft
+        let real_len: usize = if max_len % 2 == 1 { // odd
+            (max_len-1)/2
+        } else { // even
+            max_len/2 - 1
+        };
+
         temp.chunks(2560)
             .map(|chunk| {
-                /*
-                let max_len = chunk
-                    .iter()
-                    .map(|template| template.len())
-                    .max()
-                    .expect("Issue getting max template set length.");
-                */
                 let chunk_len = chunk.len();
-                let padded_temps = chunk
-                    .into_iter()
-                    .map(|template| {
-                        let temp_len = template.len();
-                        template
-                            .into_iter()
-                            .chain(
-                                (temp_len..max_len)
-                                    .map(|x| {
-                                        Complex::new(0.0 as f32, 0.0 as f32)
-                                    })
-                                    .collect::<Vec<Complex<f32>>>()
-                                    .iter(),
+
+                let mut chunk: Vec<AF_Array<Complex<f32>>> =
+                    chunk.into_iter().map(|template| {
+                        let template = AF_Array::new(
+                            &template,
+                            AF_Dim4::new(&[template.len() as u64, 1, 1, 1])
+                        );
+
+                        {
+                            let fft_bs = AF::fft(&template, 1.0, max_len as i64);
+                            let mut buf: Vec<Complex<f32>> = Vec::new();
+                            buf.resize(fft_bs.elements(),
+                                       Complex::new(0.0 as f32,0.0 as f32));
+
+                            fft_bs.lock();
+                            fft_bs.host(&mut buf);
+                            fft_bs.unlock();
+
+                            let fft = buf.drain((0..real_len))
+                                .collect::<Vec<Complex<f32>>>();
+
+                            crate::utils::debug_plt(
+                                &fft.iter().map(|x| x.re).collect(), None);
+
+                            AF_Array::new(
+                                &fft,
+                                AF_Dim4::new(&[real_len as u64, 1, 1, 1])
                             )
-                            .cloned()
-                            .collect::<Vec<Complex<f32>>>()
-                    })
-                    .flat_map(|template| template)
-                    .collect::<Vec<Complex<f32>>>();
+                        }
+                    }).collect();
 
-                /*
-                println!(
-                    "Len: {}, ExLen: {}",
-                    padded_temps.len(),
-                    max_len * chunk_len
-                );
-                */
+                let mut chunk = chunk.drain(0..chunk.len());
+                let chunk_out = {
+                    let mut chunk_out = chunk.next()
+                        .expect("Should have at least one template.");
+                    for lchunk in chunk {
+                        chunk_out = AF::join(1, &chunk_out, &lchunk);
+                    }
 
-                let chunk = AF_Array::new(
-                    &padded_temps,
-                    AF_Dim4::new(&[chunk_len as u64, max_len as u64, 1, 1]),
-                );
+                    chunk_out
+                };
+                println!("J Dims: {}", chunk_out.dims());
+                //let chunk_out = AF::transpose(&chunk_out, false);
 
-                let chunk = AF::transpose(&chunk, false);
+                let mut buf: Vec<Complex<f32>> = Vec::new();
+                buf.resize(chunk_out.elements(), Complex::new(0.0, 0.0 as f32));
+                chunk_out.lock();
+                chunk_out.host(&mut buf);
+                chunk_out.unlock();
+
+                // [ ] TODO check that plot is correct
+                crate::utils::debug_plt(
+                    &buf.iter().map(|x| x.re).collect(), None);
 
                 TemplateGroup {
-                    templates: chunk,
-                    max_len: max_len,
+                    templates: chunk_out,
+                    max_len: real_len,
                 }
             })
             .collect::<Vec<TemplateGroup>>()

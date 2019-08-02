@@ -64,6 +64,8 @@ pub fn inner_product(
                 std::thread::sleep_ms(100000);
             }
 
+            println!("stars dim: {}", stars.dims());
+            println!("temps dim: {}", template_group.templates.dims());
             let res_af = AF::matmul(
                 &stars,
                 &template_group.templates,
@@ -87,7 +89,7 @@ pub fn inner_product(
     res
 }
 
-fn debug_plt(data: &Vec<f32>, x_range: Option<&Vec<f32>>) {
+pub fn debug_plt(data: &Vec<f32>, x_range: Option<&Vec<f32>>) {
     use std::process::Command;
     use plotters::prelude::*;
     use std::io::{self, Write};
