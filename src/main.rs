@@ -20,7 +20,11 @@ use cpuprofiler::PROFILER;
 struct RunInfo {
     templates: Templates,
     stars: Vec<Star>,
-    rho: f32,
+    // [ ] TODO used for noise
+    //  - should actually apply noise
+    //    in generation of star data
+    //    no need to add here
+    _rho: f32,
     noise_stddev: f32,
     window_length: i32,
 }
@@ -112,7 +116,8 @@ fn parse_args() -> RunInfo {
     RunInfo {
         templates: templates,
         stars: stars,
-        rho: f32::from_str(matches.value_of("rho").unwrap()).unwrap(),
+        // [ ] TODO see earlier fixme
+        _rho: f32::from_str(matches.value_of("rho").unwrap()).unwrap(),
         noise_stddev: f32::from_str(matches.value_of("noise").unwrap())
             .unwrap(),
         window_length: i32::from_str(
@@ -131,7 +136,8 @@ fn main() {
     let RunInfo {
         stars,
         templates,
-        rho,
+        // [ ] TODO see earlier fixme
+        _rho,
         noise_stddev,
         window_length,
     } = run_info;
@@ -158,6 +164,7 @@ fn main() {
 
     let is_offline = true;
     let mut i = 0;
+    let mut dbg_data: Vec<f32> = Vec::new();
     loop {
         let mut cur_stars = stars
             .iter_mut()
@@ -168,17 +175,15 @@ fn main() {
             break;
         }
 
-        /*
-        if i == 100 {
+        if i == -1 {
             break;
         } else {
             i+=1;
         }
-        */
 
         let windows = cur_stars
             .iter_mut()
-            .map(|mut star| {
+            .map(|star| {
                 if iterations % 15 == 0 {
                     println!("Iteration: {}", iterations);
                 }
@@ -197,8 +202,10 @@ fn main() {
             200,
         );
 
-        let group_len = 1;
+        dbg_data.push(ip[0]);
     }
+
+    crate::utils::debug_plt(&dbg_data, None);
 
     if prof {
         PROFILER.lock().unwrap().stop().expect("Couldn't start");

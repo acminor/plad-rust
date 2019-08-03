@@ -1,0 +1,5 @@
+id = "CNST"
+star_type = "constant"
+samples = "data/stars/star_outCNST-samples.mpk"
+sample_rate = 15
+arima_model_file = "star_outCNST-arima-model"

@@ -1,27 +1,26 @@
 use arrayfire as AF;
-use arrayfire::device_mem_info;
-use arrayfire::mem_info;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
-use gnuplot::{Color, Figure};
 use num::Complex;
-use rustfft::{
-    num_complex::Complex as fft_complex, num_traits::Zero, FFTplanner,
-};
 
 use crate::template::*;
 
 pub fn inner_product(
     templates: &Vec<TemplateGroup>,
     signals: &Vec<Vec<f32>>,
-    snf: f32,
-    pre_fft: bool,
-    template_group_len: usize,
+    // [ ] TODO include in calculations
+    //  - ie work on estitmation, etc.
+    _snf: f32,
+    // [ ] TODO assume always on after template read
+    //  - refactor out
+    _pre_fft: bool,
+    // [ ] TODO refactor into template instant.
+    _template_group_len: usize,
     signal_group_len: usize,
 ) -> Vec<f32> {
     let mut res: Vec<f32> = Vec::new();
     for signals in signals.chunks(signal_group_len) {
-        let chunk_len = signals.len();
+        let num_stars = signals.len();
         let signals = &signals
             .iter()
             .flat_map(|signal| signal.into_iter())
@@ -32,46 +31,52 @@ pub fn inner_product(
             AF_Dim4::new(&[30 as u64, (signals.len() / 30) as u64, 1, 1]),
         );
 
-        let stars = AF::fft(&stars, 1.0, templates[0].max_len as i64);
-        //let stars = AF::transpose(&stars, false);
-        for template_group in templates {
-            /*
-            let padding = &AF::constant(
-                Complex::new(0.0 as f32, 0.0 as f32),
-                AF_Dim4::new(&[
-                    chunk_len as u64,
-                    (template_group.max_len - 30) as u64,
-                    1,
-                    1,
-                ]),
-            );
-            println!("sd: {}", stars.dims());
-            println!("pd: {}", padding.dims());
-            let stars = AF::join(1, &stars, &padding);
-            */
-            //let stars = AF::fft(&stars, 1.0, template_group.max_len as i64);
+        let stars = {
+            let fft_bs = AF::fft(&stars, 1.0, templates[0].fft_len as i64);
+            let mut buf: Vec<Complex<f32>> = Vec::new();
+            buf.resize(fft_bs.elements(),
+                       Complex::new(0.0 as f32,0.0 as f32));
 
-            if false {
-                let mut dbg_data: Vec<f32> = Vec::new();
-                dbg_data.resize(stars.elements(), 0.0);
-                stars.lock();
-                AF::real(&stars).host(&mut dbg_data[..]);
-                stars.unlock();
+            fft_bs.lock();
+            fft_bs.host(&mut buf);
+            fft_bs.unlock();
 
-                let mut fg = Figure::new();
-                fg.axes2d().lines(0..100000, dbg_data, &[Color("black")]);
-                fg.show();
-                std::thread::sleep_ms(100000);
+            let mut fft: Vec<Vec<Complex<f32>>> = Vec::new();
+            for _ in 0..num_stars {
+                let mut temp = Vec::new();
+                temp.append(&mut buf
+                            .drain(0..templates[0].max_len)
+                            .collect::<Vec<Complex<f32>>>()
+                );
+                fft.push(temp);
             }
 
+            let fft = fft
+                .into_iter()
+                .flat_map(|star_fft|
+                          star_fft.into_iter()).collect::<Vec<Complex<f32>>>();
+
+            AF_Array::new(
+                &fft,
+                AF_Dim4::new(&[
+                    templates[0].max_len as u64, num_stars as u64, 1, 1])
+            )
+        };
+        //let stars = AF::transpose(&stars, false);
+        for template_group in templates {
             println!("stars dim: {}", stars.dims());
             println!("temps dim: {}", template_group.templates.dims());
+
+            // [ ] TODO add in Delta x scale
             let res_af = AF::matmul(
                 &stars,
                 &template_group.templates,
                 AF::MatProp::TRANS,
                 AF::MatProp::NONE,
             );
+
+            let res_af = AF::transpose(&res_af, false);
+            println!("mult dims: {}", res_af.dims());
 
             let mut temp: Vec<f32> = Vec::new();
             temp.resize(res_af.elements(), 0.0);
@@ -80,21 +85,36 @@ pub fn inner_product(
             res_af.host(&mut temp);
             res_af.unlock();
 
-            res.append(&mut temp);
+            let mut t2 = temp.chunks(template_group.num_templates).map(|mf_outs| {
+                let mut max = -1000.0;
+                for &out in mf_outs {
+                    max = if out > max {
+                        out
+                    } else {
+                        max
+                    };
+                }
+
+                max
+            }).collect::<Vec<f32>>();
+
+            //debug_plt(&t2, None);
+            res.append(&mut t2);
         }
     }
 
-    debug_plt(&res, None);
+    if false {
+        debug_plt(&res, None);
+    }
 
     res
 }
 
-pub fn debug_plt(data: &Vec<f32>, x_range: Option<&Vec<f32>>) {
+// [ ] TODO add _x_range functionality
+pub fn debug_plt(data: &Vec<f32>, _x_range: Option<&Vec<f32>>) {
     use std::process::Command;
     use plotters::prelude::*;
-    use std::io::{self, Write};
     use tempfile::tempdir;
-    use std::fs::File;
 
     let mut max_val = -10000000.0;
     let mut min_val = 10000000.0;

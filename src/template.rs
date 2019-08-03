@@ -16,7 +16,9 @@ pub struct TemplateToml {
 
 pub struct TemplateGroup {
     pub templates: AF_Array<Complex<f32>>,
+    pub num_templates: usize,
     pub max_len: usize,
+    pub fft_len: usize,
 }
 
 pub struct Templates {
@@ -96,11 +98,13 @@ pub fn parse_template_file(file_name: String) -> Templates {
                             fft_bs.host(&mut buf);
                             fft_bs.unlock();
 
-                            let fft = buf.drain((0..real_len))
+                            let fft = buf.drain(0..real_len)
                                 .collect::<Vec<Complex<f32>>>();
 
+                            /*
                             crate::utils::debug_plt(
                                 &fft.iter().map(|x| x.re).collect(), None);
+                            */
 
                             AF_Array::new(
                                 &fft,
@@ -135,6 +139,8 @@ pub fn parse_template_file(file_name: String) -> Templates {
                 TemplateGroup {
                     templates: chunk_out,
                     max_len: real_len,
+                    fft_len: max_len,
+                    num_templates: chunk_len,
                 }
             })
             .collect::<Vec<TemplateGroup>>()

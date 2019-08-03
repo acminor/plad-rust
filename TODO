@@ -1,5 +1,5 @@
-+ [ ] Do fft and scaling locally at startup
++ [x] Do fft and scaling locally at startup
   - fixes issue of misscaled fft
     (ie scaled fft is not normall with just 0 padding XD)
 + [ ] Fix the output format for inner product reduce
-+ [ ] Fix issue of having fft transform
++ [o] Fix issue of having fft transform

@@ -46,7 +46,8 @@ impl StarModel for NoneModel {
     }
 }
 
-pub fn parse_model(mtype: StarModelType, mfile: String) -> Box<dyn StarModel> {
+// [ ] TODO implement model functionality
+pub fn parse_model(mtype: StarModelType, _mfile: String) -> Box<dyn StarModel> {
     match mtype {
         StarModelType::None => Box::new(NoneModel {}),
         //_ => Box::new(NoneModel {}),
