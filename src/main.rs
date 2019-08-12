@@ -139,7 +139,7 @@ fn main() {
         let gil = Python::acquire_gil();
         let py = RefCell::new(gil.python());
         let n = nnp::NNPPredictor::new(py, hm);
-        n.predict(vec![0.0], vec![0.0]);
+        n.predict(vec![vec![3.0], vec![2.0], vec![1.0]], vec![0.0, 1.0, 2.0]);
     }
     let prof = false;
     let run_info = parse_args();

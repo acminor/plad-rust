@@ -50,9 +50,10 @@ class LSTM_Predictor:
 
 
     def predict(self, x):
-        x = np.array([[i] for i in x])
+        x = np.array(x)
         x = np.reshape(x, (x.shape[0], 1, x.shape[1]))
-        return np.reshape(self.model.predict(x), (-1))
+        out = np.reshape(self.model.predict(x), (-1))
+        return out
 
 
     def fit(self, dataset, train_split=.67):

@@ -61,7 +61,9 @@ impl StarModel for NNPPredictor<'_> {
     {
         Ok(())
     }
-    fn predict(&self, look_backs: Vec<f32>, times: Vec<f32>) -> f32
+    fn predict(&self,
+               look_backs: Vec<Vec<f32>>, // current value plus previous values
+               times: Vec<f32>) -> f32
     {
         let py = *self.py.borrow();
 
