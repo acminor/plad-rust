@@ -88,8 +88,12 @@ pub fn inner_product(
             let mut t2 = temp.chunks(template_group.num_templates).map(|mf_outs| {
                 let mut max = -1000.0;
                 for &out in mf_outs {
-                    max = if out > max {
-                        out
+                    if out < 0.0 {
+                        println!("WARNING: template with less than 0 value");
+                    }
+
+                    max = if out/0.0006 > max {
+                        out/0.0006
                     } else {
                         max
                     };

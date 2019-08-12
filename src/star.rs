@@ -33,7 +33,15 @@ pub struct Star {
     pub sample_rate: i32,
 }
 
+pub struct StarModelInitErrMsg {
+    problem_entry: String,
+    err_msg: String,
+}
+
+pub type StarModelErr = Result<(), StarModelInitErrMsg>;
 pub trait StarModel {
+    fn init(&self, args: std::collections::HashMap<String, String>)
+            -> StarModelErr;
     fn predict(&self, look_backs: Vec<f32>, times: Vec<f32>) -> f32;
 }
 
@@ -41,6 +49,11 @@ pub trait StarModel {
 pub struct NoneModel();
 
 impl StarModel for NoneModel {
+    fn init(&self, args: std::collections::HashMap<String, String>)
+            -> StarModelErr
+    {
+        Ok(())
+    }
     fn predict(&self, _look_backs: Vec<f32>, _times: Vec<f32>) -> f32 {
         0.0
     }

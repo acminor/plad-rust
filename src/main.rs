@@ -3,10 +3,12 @@
 mod star;
 mod template;
 mod utils;
+mod nnp;
 
 use star::*;
 use template::*;
 use utils::*;
+use pyo3::prelude::*;
 
 use arrayfire as AF;
 
@@ -14,6 +16,7 @@ use clap::{App, Arg};
 
 use std::fs;
 use std::str::FromStr;
+use std::cell::RefCell;
 
 use cpuprofiler::PROFILER;
 
@@ -128,6 +131,16 @@ fn parse_args() -> RunInfo {
 }
 
 fn main() {
+    {
+        let mut hm: std::collections::HashMap<String, String>
+            = std::collections::HashMap::new();
+        hm.insert("look_back".to_string(), "1".to_string());
+        hm.insert("arima_model_file".to_string(), "1".to_string());
+        let gil = Python::acquire_gil();
+        let py = RefCell::new(gil.python());
+        let n = nnp::NNPPredictor::new(py, hm);
+        n.predict(vec![0.0], vec![0.0]);
+    }
     let prof = false;
     let run_info = parse_args();
 
