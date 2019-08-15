@@ -1,9 +1,13 @@
 //extern crate clap;
 
+#[macro_use]
+extern crate rental;
+
 mod star;
 mod template;
 mod utils;
 mod nnp;
+mod python;
 
 use star::*;
 use template::*;
@@ -17,6 +21,7 @@ use clap::{App, Arg};
 use std::fs;
 use std::str::FromStr;
 use std::cell::RefCell;
+use std::marker::PhantomData;
 
 use cpuprofiler::PROFILER;
 
@@ -132,6 +137,11 @@ fn parse_args() -> RunInfo {
 
 fn main() {
     {
+        let mut gil_vec: Vec<GILGuard> = vec![];
+        let mut py_vec: Vec<RefCell<Python>> = vec![];
+        python_refs!(gil_vec, py_vec);
+        python_refs!(gil_vec, py_vec);
+        python_refs!(gil_vec, py_vec);
         let mut hm: std::collections::HashMap<String, String>
             = std::collections::HashMap::new();
         hm.insert("look_back".to_string(), "1".to_string());
