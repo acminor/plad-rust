@@ -3,6 +3,7 @@ name = "match_filter"
 version = "0.1.0"
 authors = ["austin <austin.chase.m@gmail.com>"]
 edition = "2018"
+build = "build.rs"
 
 [build-dependencies]
 capnpc = "0.10.1"

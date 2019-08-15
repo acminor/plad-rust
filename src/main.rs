@@ -137,20 +137,12 @@ fn parse_args() -> RunInfo {
 
 fn main() {
     {
-        let mut gil_vec: Vec<GILGuard> = vec![];
-        let mut py_vec: Vec<RefCell<Python>> = vec![];
-        python_refs!(gil_vec, py_vec);
-        python_refs!(gil_vec, py_vec);
-        python_refs!(gil_vec, py_vec);
         let mut hm: std::collections::HashMap<String, String>
             = std::collections::HashMap::new();
         hm.insert("look_back".to_string(), "1".to_string());
         hm.insert("arima_model_file".to_string(), "1".to_string());
-        let gil = Python::acquire_gil();
-        let py = RefCell::new(gil.python());
-        let n = nnp::NNPPredictor::new(py, hm);
-        n.predict(vec![vec![3.0], vec![2.0], vec![1.0]], vec![0.0, 1.0, 2.0]);
     }
+
     let prof = false;
     let run_info = parse_args();
 
