@@ -4,13 +4,13 @@
 @0xedfba81d6cf6c6ba;
 
 interface Predictor {
-  init @0 (kwargs :Map(Text,Text)) -> (uid :UInt32);
-  predict @1 (req :Int32) -> (res :PredictResponse);
+  init @0 (predictor :Text, args :Map(Text,Text)) -> (uid :UInt32);
+  predict @1 (req :PredictRequest) -> (res :PredictResponse);
 
   struct PredictRequest {
      lookBacks @0 :List(List(Float32));
      times @1 :List(Float32);
-     predictor @2 :Text;
+     predictorUID @2 :UInt32;
   }
 
   struct PredictResponse {

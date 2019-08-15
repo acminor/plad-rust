@@ -3,3 +3,6 @@
     (ie scaled fft is not normall with just 0 padding XD)
 + [ ] Fix the output format for inner product reduce
 + [o] Fix issue of having fft transform
++ [ ] Python plugins
+  + [ ] Plugin Loading
+  + [ ] ZeroMQ for low latency

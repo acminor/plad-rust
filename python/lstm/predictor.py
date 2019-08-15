@@ -50,7 +50,6 @@ class LSTM_Predictor:
 
 
     def predict(self, x):
-        x = np.array(x)
         x = np.reshape(x, (x.shape[0], 1, x.shape[1]))
         out = np.reshape(self.model.predict(x), (-1))
         return out
