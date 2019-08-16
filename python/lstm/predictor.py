@@ -9,11 +9,11 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 
 class LSTM_Predictor:
-    def __init__(self, look_back=1):
+    def __init__(self, look_back=1, training=True):
         # for reproducibility
         np.random.seed(7)
 
-        self.model = self._create_model(look_back)
+        self.model = self._create_model(look_back, training)
         self._look_back = look_back
 
 
@@ -33,11 +33,16 @@ class LSTM_Predictor:
 
 
     @staticmethod
-    def _create_model(look_back):
+    def _create_model(look_back, training):
         model = Sequential()
         model.add(LSTM(4, input_shape=(1, look_back)))
         model.add(Dense(1))
-        model.compile(loss='mean_squared_error', optimizer='adam')
+        # speed up for loading as suggested here
+        # - no need to compile model for predicting only
+        # https://stackoverflow.com/questions/
+        # 47955779/speeding-up-loading-a-model-in-keras
+        if training:
+            model.compile(loss='mean_squared_error', optimizer='adam')
         return model
 
 

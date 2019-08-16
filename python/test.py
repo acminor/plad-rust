@@ -1,23 +1,36 @@
 import time
+import zmq
+import socket
+
 import capnp
 capnp.remove_import_hook()
 predictor = capnp.load('../protos/predictor.capnp')
 
-client = capnp.TwoPartyClient('127.0.0.1:12345')
+#zmq_context = zmq.Context()
+#socket = zmq_context.socket(zmq.REQ)
+#socket.connect('ipc://test-server')
+#socket.send(b'test')
+
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.connect('testing2')
+sock = '127.0.0.1:12345'
+sock = s
+client = capnp.TwoPartyClient(sock)
 pred = client.ez_restore('predictor').cast_as(predictor.Predictor)
 
-rq = pred.init_request()
-rq.predictor = 'npp'
-rq.args.entries = [
-    {'key': 'look_back', 'val': '1'},
-    {'key': 'arima_model_file',
-     'val': '/home/austin/libraries/rust_stuff'
-     +'/match_filter/data/stars/model_file'},
-]
-pm = rq.send()
-pm_res = pm.wait()
-uid = pm_res.uid
-print(str(pm_res))
+for i in range(0, 1):
+    rq = pred.init_request()
+    rq.predictor = 'npp'
+    rq.args.entries = [
+        {'key': 'look_back', 'val': '1'},
+        {'key': 'arima_model_file',
+        'val': '/home/austin/libraries/rust_stuff'
+        +'/match_filter/data/stars/model_file'},
+    ]
+    pm = rq.send()
+    pm_res = pm.wait()
+    uid = pm_res.uid
+    print(str(pm_res))
 
 TEST_LEN = 10000
 promises = list()

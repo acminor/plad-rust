@@ -12,6 +12,6 @@ class PredictorWrapper:
 
 def build_predictor(**kwargs):
     log.debug('LSTM_Predictor build_predictor args: {}'.format(kwargs))
-    lpred = LSTMP(int(kwargs['look_back']))
+    lpred = LSTMP(int(kwargs['look_back']), training=False)
     lpred.load_model_weights(kwargs['arima_model_file'])
     return PredictorWrapper(lpred)
