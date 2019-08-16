@@ -20,7 +20,7 @@ pred = client.ez_restore('predictor').cast_as(predictor.Predictor)
 
 for i in range(0, 1):
     rq = pred.init_request()
-    rq.predictor = 'npp'
+    rq.predictor = 'LSTM'
     rq.args.entries = [
         {'key': 'look_back', 'val': '1'},
         {'key': 'arima_model_file',

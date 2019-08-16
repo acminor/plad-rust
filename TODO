@@ -4,5 +4,9 @@
 + [ ] Fix the output format for inner product reduce
 + [o] Fix issue of having fft transform
 + [ ] Python plugins
-  + [ ] Plugin Loading
-  + [ ] ZeroMQ for low latency
+  + [x] Plugin Loading
+  + [x] Unix Domain Sockets [not anymore -ZeroMQ-] for low latency
+    - did not really help much (hopefully rust will help some)
+  + [ ] Rust Tokio/Future Capn Proto Plugin Manager
+    + [ ] start python processes
+    + [ ] predict using these
