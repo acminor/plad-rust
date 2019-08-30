@@ -1,0 +1,3 @@
+python_plugin_directories = []
+data_directories = []
+# ffi_plugin_directories = [] # unused for now

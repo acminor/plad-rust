@@ -2,6 +2,8 @@ use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
 use num::Complex;
+use std::path::Path;
+use std::path::PathBuf;
 
 use crate::template::*;
 
@@ -162,12 +164,24 @@ pub fn debug_plt(data: &Vec<f32>, _x_range: Option<&Vec<f32>>) {
         .expect("problem creating process");
 }
 
-/*
-if false {
-let dbg_data: Vec<f32> = template.iter().map(|&x| x.re).collect();
-let mut fg = Figure::new();
-fg.axes2d()
-.lines(0..template.len(), dbg_data, &[Color("black")]);
-fg.show();
+// since the each data path has a file located locally from it
+// in the samples or arima_model_file, etc. we use this to get
+// a proper localized/global path from our perspective and not the
+// data config. file's perspective
+//
+// -- assumes file is a file on disk and not a directory due to
+//    previous checks
+pub fn normalize_local_data_paths(star_file: &str, data_file: &String) -> String {
+    match Path::new(star_file).parent() {
+        Some(base_dir) => {
+            [base_dir.to_str().unwrap(), &data_file[..]]
+                .iter()
+                .collect::<PathBuf>()
+                .to_str().unwrap()
+                .to_string()
+        },
+        None => {
+            data_file.to_string()
+        }
+    }
 }
-*/

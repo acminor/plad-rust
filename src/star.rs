@@ -1,5 +1,6 @@
 use serde_derive::Deserialize;
 use std::{fs, io::Read};
+use crate::utils;
 
 #[derive(Debug, Deserialize)]
 pub struct StarToml {
@@ -81,8 +82,9 @@ pub fn parse_star_file(star_file: &str) -> Star {
     };
 
     let samples = {
-        let mut file = fs::File::open(&star_toml.samples)
-            .expect("Failed to read Star samples file");
+        let mut file = fs::File::open(
+            &utils::normalize_local_data_paths(&star_file, &star_toml.samples)
+            ).expect("Failed to read Star samples file");
         let mut contents: Vec<u8> = Vec::new();
         file.read_to_end(&mut contents)
             .expect("Failed reading contents of Star samples.");
