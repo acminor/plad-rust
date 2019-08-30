@@ -14,6 +14,7 @@ pub struct StarToml {
 pub enum StarType {
     Constant,
     Variable,
+    Unknown,
 }
 
 #[derive(Debug)]

@@ -8,6 +8,7 @@ mod template;
 mod utils;
 mod nnp;
 mod python;
+mod dat_star;
 
 use star::*;
 use template::*;
@@ -98,7 +99,12 @@ fn parse_args() -> RunInfo {
                                 Some(parse_star_file(
                                     file.path().as_path().to_str().unwrap(),
                                 ))
-                            }
+                            },
+                            Some(ext) if ext == "dat" => {
+                                Some(dat_star::parse_star_file(
+                                    file.path().as_path().to_str().unwrap(),
+                                ))
+                            },
                             _ => None,
                         }
                     } else {
