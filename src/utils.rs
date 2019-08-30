@@ -66,8 +66,8 @@ pub fn inner_product(
         };
         //let stars = AF::transpose(&stars, false);
         for template_group in templates {
-            println!("stars dim: {}", stars.dims());
-            println!("temps dim: {}", template_group.templates.dims());
+            //println!("stars dim: {}", stars.dims());
+            //println!("temps dim: {}", template_group.templates.dims());
 
             // [ ] TODO add in Delta x scale
             let res_af = AF::matmul(
@@ -78,11 +78,15 @@ pub fn inner_product(
             );
 
             let res_af = AF::transpose(&res_af, false);
-            println!("mult dims: {}", res_af.dims());
+            //println!("mult dims: {}", res_af.dims());
 
             let mut temp: Vec<f32> = Vec::new();
             temp.resize(res_af.elements(), 0.0);
-            let res_af = AF::real(&res_af);
+            //let res_af = AF::real(&res_af);
+            // as in SO questions try using abs to get pos. vals.
+            // https://{{so}}.com/questions/6740545/understanding-fft-output
+            // https://dsp.{{se}}.com/questions/20500/negative-values-of-the-fft
+            let res_af = AF::abs(&res_af);
             res_af.lock();
             res_af.host(&mut temp);
             res_af.unlock();

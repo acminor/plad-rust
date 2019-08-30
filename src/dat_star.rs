@@ -22,9 +22,10 @@ pub fn parse_star_file(star_file: &str) -> Star {
                 .collect::<Vec<&str>>()[1]
                 .parse::<f32>()
                 .expect("Failed to parse f(t) data")
+                + 50.0
         }).collect();
 
-    utils::debug_plt(&star_data, None);
+    //utils::debug_plt(&star_data, None);
 
     Star {
         id: star_file.to_string(),

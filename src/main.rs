@@ -3,6 +3,11 @@
 #[macro_use]
 extern crate rental;
 
+#[macro_use]
+extern crate slog;
+extern crate slog_term;
+extern crate slog_async;
+
 mod star;
 mod template;
 mod utils;
@@ -23,6 +28,8 @@ use std::fs;
 use std::str::FromStr;
 use std::cell::RefCell;
 use std::marker::PhantomData;
+
+use slog::Drain;
 
 use cpuprofiler::PROFILER;
 
@@ -145,6 +152,14 @@ fn parse_args() -> RunInfo {
     }
 }
 
+fn setup_logging() -> slog::Logger {
+    let decorator = slog_term::TermDecorator::new().build();
+    let drain = slog_term::FullFormat::new(decorator).build().fuse();
+    let drain = slog_async::Async::new(drain).build().fuse();
+
+    slog::Logger::root(drain, o!())
+}
+
 fn main() {
     {
         let mut hm: std::collections::HashMap<String, String>
@@ -154,6 +169,7 @@ fn main() {
     }
 
     let prof = false;
+    let log = setup_logging();
     let run_info = parse_args();
 
     AF::set_backend(AF::Backend::CUDA);
@@ -179,18 +195,33 @@ fn main() {
     let mut stars = stars;
 
     let now = std::time::Instant::now();
+    let mut log_timer = std::time::Instant::now();
+    /* NOTE: This is a per star, per window counting variable */
     let mut iterations = 0;
+
+    let max_len: usize
+        = stars.iter().map(|star| star.samples.len()).max().unwrap();
+    let tot_iter: usize =
+        stars.iter().map(|star| star.samples.len()).sum::<usize>();
 
     println!(
         "Total iterations needed: {}",
-        ((stars[0].samples.len() as u64 / window_length as u64) as u64)
-            * stars.len() as u64
+        ((tot_iter as u64 / window_length as u64) as u64)
     );
 
     let is_offline = true;
     let mut i = 0;
     let mut dbg_data: Vec<f32> = Vec::new();
     loop {
+        if log_timer.elapsed() > std::time::Duration::from_secs(2) {
+            // TODO implement logging logic
+            let sps = iterations / now.elapsed().as_secs();
+            let pp = (iterations as f32)/(tot_iter as f32);
+            info!(log, ""; "StarsPerSec"=>format!("{}", sps));
+            info!(log, ""; "%Progress"=>format!("{}", pp));
+
+            log_timer = std::time::Instant::now();
+        }
         let mut cur_stars = stars
             .iter_mut()
             .filter(|star| star.samples.len() >= (window_length as usize))
@@ -209,9 +240,6 @@ fn main() {
         let windows = cur_stars
             .iter_mut()
             .map(|star| {
-                if iterations % 15 == 0 {
-                    println!("Iteration: {}", iterations);
-                }
                 iterations += 1;
 
                 star.samples.drain(0..(window_length as usize)).collect()
