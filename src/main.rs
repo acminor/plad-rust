@@ -48,13 +48,15 @@ fn parse_args() -> RunInfo {
                 .short("i")
                 .long("input")
                 .help("TODO")
+                .number_of_values(1)
+                .multiple(true)
                 .takes_value(true)
                 .required(true),
         )
         .arg(
             Arg::with_name("templates_file")
                 .short("t")
-                .long("templates_file")
+                .long("templates-file")
                 .help("TODO")
                 .takes_value(true)
                 .required(true),
@@ -78,7 +80,7 @@ fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("window_length")
                 .short("w")
-                .long("window_length")
+                .long("window-length")
                 .help("TODO")
                 .takes_value(true)
                 .required(true),
@@ -116,7 +118,9 @@ fn parse_args() -> RunInfo {
             Err(_) => None,
         };
 
-    let input_dir = matches.value_of("input_dir").unwrap().to_string();
+    let input_dirs: Vec<String> =
+        matches.values_of("input_dir").unwrap().map(|s| s.to_string()).collect();
+    let input_dir = &input_dirs[0];
     let stars: Vec<Star> = match fs::metadata(&input_dir) {
         Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
             .unwrap()
