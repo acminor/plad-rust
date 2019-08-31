@@ -168,7 +168,7 @@ fn main() {
         hm.insert("arima_model_file".to_string(), "1".to_string());
     }
 
-    let prof = false;
+    let prof = true;
     let log = setup_logging();
     let run_info = parse_args();
 
@@ -202,11 +202,12 @@ fn main() {
     let max_len: usize
         = stars.iter().map(|star| star.samples.len()).max().unwrap();
     let tot_iter: usize =
-        stars.iter().map(|star| star.samples.len()).sum::<usize>();
+        stars.iter().map(|star| star.samples.len()).sum::<usize>()
+        / window_length as usize;
 
     println!(
         "Total iterations needed: {}",
-        ((tot_iter as u64 / window_length as u64) as u64)
+        tot_iter
     );
 
     let is_offline = true;
@@ -215,10 +216,15 @@ fn main() {
     loop {
         if log_timer.elapsed() > std::time::Duration::from_secs(2) {
             // TODO implement logging logic
-            let sps = iterations / now.elapsed().as_secs();
-            let pp = (iterations as f32)/(tot_iter as f32);
-            info!(log, ""; "StarsPerSec"=>format!("{}", sps));
-            info!(log, ""; "%Progress"=>format!("{}", pp));
+            let sps = iterations as f32 / now.elapsed().as_secs() as f32;
+            let pp = (iterations as f32)/(tot_iter as f32) * 100.0;
+            info!(log, "";
+                  "TotTime"=>format!("{}s", now.elapsed().as_secs()),
+                  "IterationsLeft"=>format!("{}", tot_iter - iterations as usize),
+                  "EstTimeLeft"=>format!("{}s", (tot_iter - iterations as usize) as f32/sps as f32),
+                  "StarsPerSec"=>format!("{}", sps),
+                  "StarsPerTenSec"=>format!("{}", sps*10.0),
+                  "%Progress"=>format!("{}%", pp));
 
             log_timer = std::time::Instant::now();
         }
@@ -258,7 +264,7 @@ fn main() {
         dbg_data.push(ip[0]);
     }
 
-    crate::utils::debug_plt(&dbg_data, None);
+    //crate::utils::debug_plt(&dbg_data, None);
 
     if prof {
         PROFILER.lock().unwrap().stop().expect("Couldn't start");

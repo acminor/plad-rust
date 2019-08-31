@@ -11,7 +11,7 @@ function safe_call {
         opt="--$1"
     fi
 
-    RUST_BACKTRACE=1 optirun cargo run $opt --\
+    RUST_BACKTRACE=1 cargo run $opt --\
                   --input /data/star_extra_data/star_dataset/data/gwac \
                   --templates-file data/templates-10x10-nfft.toml \
                   --noise .06 \

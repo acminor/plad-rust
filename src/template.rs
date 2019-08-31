@@ -133,8 +133,10 @@ pub fn parse_template_file(file_name: String) -> Templates {
                 chunk_out.unlock();
 
                 // [ ] TODO check that plot is correct
+                /*
                 crate::utils::debug_plt(
                     &buf.iter().map(|x| x.re).collect(), None);
+                */
 
                 TemplateGroup {
                     templates: chunk_out,
