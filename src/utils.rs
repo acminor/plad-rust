@@ -35,6 +35,8 @@ pub fn inner_product(
 
         let stars = {
             let fft_bs = AF::fft(&stars, 1.0, templates[0].fft_len as i64);
+            AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
+            /*
             let mut buf: Vec<Complex<f32>> = Vec::new();
             buf.resize(fft_bs.elements(),
                        Complex::new(0.0 as f32,0.0 as f32));
@@ -63,6 +65,7 @@ pub fn inner_product(
                 AF_Dim4::new(&[
                     templates[0].max_len as u64, num_stars as u64, 1, 1])
             )
+            */
         };
         //let stars = AF::transpose(&stars, false);
         for template_group in templates {

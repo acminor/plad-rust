@@ -90,6 +90,8 @@ pub fn parse_template_file(file_name: String) -> Templates {
 
                         {
                             let fft_bs = AF::fft(&template, 1.0, max_len as i64);
+                            AF::rows(&fft_bs, 0, (real_len - 1) as u64)
+                            /*
                             let mut buf: Vec<Complex<f32>> = Vec::new();
                             buf.resize(fft_bs.elements(),
                                        Complex::new(0.0 as f32,0.0 as f32));
@@ -110,6 +112,7 @@ pub fn parse_template_file(file_name: String) -> Templates {
                                 &fft,
                                 AF_Dim4::new(&[real_len as u64, 1, 1, 1])
                             )
+                             */
                         }
                     }).collect();
 
