@@ -34,7 +34,10 @@ pub fn inner_product(
         );
 
         let stars = {
-            let fft_bs = AF::fft(&stars, 1.0, templates[0].fft_len as i64);
+            //let fft_bs = AF::fft(&stars, 1.0, templates[0].fft_len as i64);
+            // [x] TODO eval if speeds up computation
+            //     -- about 1.8x
+            let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
             AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
             /*
             let mut buf: Vec<Complex<f32>> = Vec::new();
@@ -68,6 +71,9 @@ pub fn inner_product(
             */
         };
         //let stars = AF::transpose(&stars, false);
+        // [ ] TODO work on making right grouping
+        //     of templates output and max of them
+        //     -- for now only works bc large template groups (only one group)
         for template_group in templates {
             //println!("stars dim: {}", stars.dims());
             //println!("temps dim: {}", template_group.templates.dims());
@@ -83,17 +89,19 @@ pub fn inner_product(
             let res_af = AF::transpose(&res_af, false);
             //println!("mult dims: {}", res_af.dims());
 
-            let mut temp: Vec<f32> = Vec::new();
-            temp.resize(res_af.elements(), 0.0);
             //let res_af = AF::real(&res_af);
             // as in SO questions try using abs to get pos. vals.
             // https://{{so}}.com/questions/6740545/understanding-fft-output
             // https://dsp.{{se}}.com/questions/20500/negative-values-of-the-fft
             let res_af = AF::abs(&res_af);
+            /*
+            let mut temp: Vec<f32> = Vec::new();
+            temp.resize(res_af.elements(), 0.0);
             res_af.lock();
             res_af.host(&mut temp);
             res_af.unlock();
 
+            // [x] TODO should be able to bring over to GPU
             let mut t2 = temp.chunks(template_group.num_templates).map(|mf_outs| {
                 let mut max = -1000.0;
                 for &out in mf_outs {
@@ -110,9 +118,18 @@ pub fn inner_product(
 
                 max
             }).collect::<Vec<f32>>();
+            */
+
+            let res_af = AF::max(&res_af, 0);
+            //println!("max dims: {}", res_af.dims());
+            let mut temp: Vec<f32> = Vec::new();
+            temp.resize(res_af.elements(), 0.0);
+            res_af.lock();
+            res_af.host(&mut temp);
+            res_af.unlock();
 
             //debug_plt(&t2, None);
-            res.append(&mut t2);
+            res.append(&mut temp);
         }
     }
 

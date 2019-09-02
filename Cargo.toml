@@ -32,4 +32,5 @@ tokio = "0.2.0-alpha"
 slog = "2.5.2"
 slog-term = "2.4.1"
 slog-async = "2.3.0"
+jemallocator = "0.3.0"
 #arrayfire = { path="./crates/arrayfire-rust" }

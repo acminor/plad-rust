@@ -1,1 +1,2 @@
 export LD_LIBRARY_PATH=/usr/lib64:/usr/local/cuda-10.1/lib64:/usr/local/lib:/usr/lib64:/usr/local/cuda-10.1/lib64:/usr/local/lib:/usr/lib64:/usr/local/cuda-10.1/lib64:/usr/local/lib:./crates/arrayfire-rust/arrayfire/build/package/lib
+#export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/lib64:/usr/local/cuda-10.1/lib64:/usr/local/lib:/usr/lib64:/usr/local/cuda-10.1/lib64:/usr/local/lib:/usr/lib64:/usr/local/cuda-10.1/lib64:/usr/local/lib:/opt/arrayfire/lib

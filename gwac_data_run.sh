@@ -13,7 +13,7 @@ function safe_call {
 
     RUST_BACKTRACE=1 cargo run $opt --\
                   --input /data/star_extra_data/star_dataset/data/gwac \
-                  --templates-file data/templates-10x10-nfft.toml \
+                  --templates-file data/templates-25x25.toml \
                   --noise .06 \
                   --rho 4.0 \
                   --window-length 30

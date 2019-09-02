@@ -8,6 +8,12 @@ extern crate slog;
 extern crate slog_term;
 extern crate slog_async;
 
+extern crate jemallocator;
+
+// [ ] TODO Test if this speeds up the program: also what about memory pressure
+#[global_allocator]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
 mod star;
 mod template;
 mod utils;
@@ -168,7 +174,9 @@ fn main() {
         hm.insert("arima_model_file".to_string(), "1".to_string());
     }
 
-    let prof = true;
+    AF::info();
+
+    let prof = false;
     let log = setup_logging();
     let run_info = parse_args();
 
@@ -264,17 +272,19 @@ fn main() {
         dbg_data.push(ip[0]);
     }
 
-    //crate::utils::debug_plt(&dbg_data, None);
+    crate::utils::debug_plt(&dbg_data, None);
 
     if prof {
         PROFILER.lock().unwrap().stop().expect("Couldn't start");
     }
 
+    /*
     println!(
         "{} stars per second @ {} templates",
         iterations / now.elapsed().as_secs(),
         1000
     );
+    */
 
     println!("Hello, world!\n");
 }
