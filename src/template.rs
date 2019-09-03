@@ -88,32 +88,8 @@ pub fn parse_template_file(file_name: String) -> Templates {
                             AF_Dim4::new(&[template.len() as u64, 1, 1, 1])
                         );
 
-                        {
-                            let fft_bs = AF::fft(&template, 1.0, max_len as i64);
-                            AF::rows(&fft_bs, 0, (real_len - 1) as u64)
-                            /*
-                            let mut buf: Vec<Complex<f32>> = Vec::new();
-                            buf.resize(fft_bs.elements(),
-                                       Complex::new(0.0 as f32,0.0 as f32));
-
-                            fft_bs.lock();
-                            fft_bs.host(&mut buf);
-                            fft_bs.unlock();
-
-                            let fft = buf.drain(0..real_len)
-                                .collect::<Vec<Complex<f32>>>();
-
-                            /*
-                            crate::utils::debug_plt(
-                                &fft.iter().map(|x| x.re).collect(), None);
-                            */
-
-                            AF_Array::new(
-                                &fft,
-                                AF_Dim4::new(&[real_len as u64, 1, 1, 1])
-                            )
-                             */
-                        }
+                        let fft_bs = AF::fft(&template, 1.0, max_len as i64);
+                        AF::rows(&fft_bs, 0, (real_len - 1) as u64)
                     }).collect();
 
                 let mut chunk = chunk.drain(0..chunk.len());
