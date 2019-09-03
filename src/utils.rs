@@ -34,41 +34,8 @@ pub fn inner_product(
         );
 
         let stars = {
-            //let fft_bs = AF::fft(&stars, 1.0, templates[0].fft_len as i64);
-            // [x] TODO eval if speeds up computation
-            //     -- about 1.8x
             let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
             AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
-            /*
-            let mut buf: Vec<Complex<f32>> = Vec::new();
-            buf.resize(fft_bs.elements(),
-                       Complex::new(0.0 as f32,0.0 as f32));
-
-            fft_bs.lock();
-            fft_bs.host(&mut buf);
-            fft_bs.unlock();
-
-            let mut fft: Vec<Vec<Complex<f32>>> = Vec::new();
-            for _ in 0..num_stars {
-                let mut temp = Vec::new();
-                temp.append(&mut buf
-                            .drain(0..templates[0].max_len)
-                            .collect::<Vec<Complex<f32>>>()
-                );
-                fft.push(temp);
-            }
-
-            let fft = fft
-                .into_iter()
-                .flat_map(|star_fft|
-                          star_fft.into_iter()).collect::<Vec<Complex<f32>>>();
-
-            AF_Array::new(
-                &fft,
-                AF_Dim4::new(&[
-                    templates[0].max_len as u64, num_stars as u64, 1, 1])
-            )
-            */
         };
         //let stars = AF::transpose(&stars, false);
         // [ ] TODO work on making right grouping
@@ -94,31 +61,6 @@ pub fn inner_product(
             // https://{{so}}.com/questions/6740545/understanding-fft-output
             // https://dsp.{{se}}.com/questions/20500/negative-values-of-the-fft
             let res_af = AF::abs(&res_af);
-            /*
-            let mut temp: Vec<f32> = Vec::new();
-            temp.resize(res_af.elements(), 0.0);
-            res_af.lock();
-            res_af.host(&mut temp);
-            res_af.unlock();
-
-            // [x] TODO should be able to bring over to GPU
-            let mut t2 = temp.chunks(template_group.num_templates).map(|mf_outs| {
-                let mut max = -1000.0;
-                for &out in mf_outs {
-                    if out < 0.0 {
-                        println!("WARNING: template with less than 0 value");
-                    }
-
-                    max = if out/0.0006 > max {
-                        out/0.0006
-                    } else {
-                        max
-                    };
-                }
-
-                max
-            }).collect::<Vec<f32>>();
-            */
 
             let res_af = AF::max(&res_af, 0);
             //println!("max dims: {}", res_af.dims());
@@ -131,10 +73,6 @@ pub fn inner_product(
             //debug_plt(&t2, None);
             res.append(&mut temp);
         }
-    }
-
-    if false {
-        debug_plt(&res, None);
     }
 
     res

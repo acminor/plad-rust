@@ -17,14 +17,12 @@ static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 mod star;
 mod template;
 mod utils;
-mod nnp;
 mod python;
 mod dat_star;
 
 use star::*;
 use template::*;
 use utils::*;
-use pyo3::prelude::*;
 
 use arrayfire as AF;
 
@@ -34,6 +32,7 @@ use std::fs;
 use std::str::FromStr;
 use std::cell::RefCell;
 use std::marker::PhantomData;
+use std::collections::HashMap;
 
 use slog::Drain;
 
@@ -221,6 +220,11 @@ fn main() {
     let is_offline = true;
     let mut i = 0;
     let mut dbg_data: Vec<f32> = Vec::new();
+    let mut data: HashMap<String, Vec<f32>> = HashMap::new();
+    stars.iter()
+        .for_each(|star| {
+            data.insert(star.uid.clone(), Vec::new());
+        });
     loop {
         if log_timer.elapsed() > std::time::Duration::from_secs(2) {
             // TODO implement logging logic
@@ -229,7 +233,8 @@ fn main() {
             info!(log, "";
                   "TotTime"=>format!("{}s", now.elapsed().as_secs()),
                   "IterationsLeft"=>format!("{}", tot_iter - iterations as usize),
-                  "EstTimeLeft"=>format!("{}s", (tot_iter - iterations as usize) as f32/sps as f32),
+                  "EstTimeLeft"=>format!("{}s", (tot_iter - iterations as usize)
+                                         as f32/sps as f32),
                   "StarsPerSec"=>format!("{}", sps),
                   "StarsPerTenSec"=>format!("{}", sps*10.0),
                   "%Progress"=>format!("{}%", pp));
@@ -260,6 +265,13 @@ fn main() {
             })
             .collect();
 
+        let window_names = cur_stars
+            .iter()
+            .map(|star| {
+                &star.uid[..]
+            })
+            .collect::<Vec<&str>>();
+
         let ip = inner_product(
             &templates.templates,
             &windows,
@@ -269,7 +281,108 @@ fn main() {
             200,
         );
 
+        ip
+            .iter()
+            .zip(window_names)
+            .for_each(|(val, star)| {
+                data.get_mut(star).unwrap().push(*val);
+            });
+
         dbg_data.push(ip[0]);
+    }
+
+    let stats = |data: &Vec<f32>| {
+        let mut avg = 0.0;
+        let mut min = std::f32::INFINITY;
+        let mut max = std::f32::NEG_INFINITY;
+        let mut std_dev = 0.0;
+        let len = data.len() as f32;
+
+        for &datum in data {
+            avg += datum;
+            min = if min < datum {
+                min
+            } else {
+                datum
+            };
+            max = if max > datum {
+                max
+            } else {
+                datum
+            };
+            std_dev += datum*datum;
+        }
+
+        avg = avg/len;
+        std_dev = (std_dev/len - avg*avg).sqrt();
+
+        (min, max, avg, std_dev)
+    };
+
+    { // over all values
+        let (min, max, avg, std_dev) =
+            stats(&data
+                  .iter()
+                  .flat_map(|(key, val)| {
+                      val.clone()
+                  }).collect());
+        info!(log, "All values stats: ";
+              "min"=>format!("{}", min),
+              "max"=>format!("{}", max),
+              "avg"=>format!("{}", avg),
+              "std_dev"=>format!("{}", std_dev));
+    }
+
+    { // TODO comment ???
+        let star_stats = || {
+            data
+                .iter()
+                .map(|(key, val)| {
+                    stats(val)
+                })
+        };
+
+        let mins = star_stats()
+            .by_ref()
+            .map(|tup| {tup.0})
+            .collect::<Vec<f32>>();
+        let maxs = star_stats()
+            .by_ref()
+            .map(|tup| {tup.1})
+            .collect::<Vec<f32>>();
+        let avgs = star_stats()
+            .by_ref()
+            .map(|tup| {tup.2})
+            .collect::<Vec<f32>>();
+
+        let (min, max, avg, std_dev) = stats(&mins);
+        info!(log, "Min values stats: ";
+              "min"=>format!("{}", min),
+              "max"=>format!("{}", max),
+              "avg"=>format!("{}", avg),
+              "std_dev"=>format!("{}", std_dev));
+
+        let (min, max, avg, std_dev) = stats(&maxs);
+        info!(log, "Max values stats: ";
+              "min"=>format!("{}", min),
+              "max"=>format!("{}", max),
+              "avg"=>format!("{}", avg),
+              "std_dev"=>format!("{}", std_dev));
+
+        let (min, max, avg, std_dev) = stats(&avgs);
+        info!(log, "Avg values stats: ";
+              "min"=>format!("{}", min),
+              "max"=>format!("{}", max),
+              "avg"=>format!("{}", avg),
+              "std_dev"=>format!("{}", std_dev));
+
+        /*
+        info!(log, "All values stats: ";
+              "min"=>format!("{}", min),
+              "max"=>format!("{}", max),
+              "avg"=>format!("{}", avg),
+              "std_dev"=>format!("{}", std_dev));
+        */
     }
 
     crate::utils::debug_plt(&dbg_data, None);
