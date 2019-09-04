@@ -5,6 +5,7 @@ use crate::utils::*;
 use std::str::FromStr;
 use clap::{App, Arg};
 use std::fs;
+use rayon::prelude::*;
 
 pub struct RunInfo {
     pub templates: Templates,
@@ -105,6 +106,8 @@ pub fn parse_args() -> RunInfo {
     let stars: Vec<Star> = match fs::metadata(&input_dir) {
         Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
             .unwrap()
+            .collect::<Vec<std::io::Result<fs::DirEntry>>>()
+            .into_par_iter()
             .filter_map(unwrap_parse_star_files)
             .collect(),
         _ => panic!("Error in reading input_dir"),

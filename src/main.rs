@@ -71,6 +71,7 @@ fn main() {
     /* NOTE: This is a per star, per window counting variable */
     let mut iterations = 0;
 
+    let tot_stars = stars.len();
     let max_len: usize
         = stars.iter().map(|star| star.samples.len()).max().unwrap();
     let tot_iter: usize =
@@ -84,6 +85,9 @@ fn main() {
 
     let is_offline = true;
     let mut i = 0;
+    let mut sample_time = 0;
+    let mut true_events = 0;
+    let mut false_events = 0;
     let mut dbg_data: Vec<f32> = Vec::new();
     let mut data: HashMap<String, Vec<f32>> = HashMap::new();
     stars.iter()
@@ -129,13 +133,14 @@ fn main() {
                 star.samples.drain(0..(window_length as usize)).collect()
             })
             .collect();
+        sample_time += window_length;
 
         let window_names = cur_stars
             .iter()
             .map(|star| {
-                &star.uid[..]
+                star.uid.clone()
             })
-            .collect::<Vec<&str>>();
+            .collect::<Vec<String>>();
 
         let ip = inner_product(
             &templates.templates,
@@ -146,12 +151,40 @@ fn main() {
             200,
         );
 
+        let ALERT_THRESH = 0.042;
+        let mut detected_stars = std::collections::HashSet::new();
         ip
             .iter()
             .zip(window_names)
             .for_each(|(val, star)| {
-                data.get_mut(star).unwrap().push(*val);
+                if *val > ALERT_THRESH {
+                    // TODO this should be a command line option
+                    if sample_time >= 40320 && sample_time <= 46080 {
+                        crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
+                              "time"=>format!("{}", sample_time),
+                              "star"=>format!("{}", star),
+                        );
+                        true_events += 1;
+                    } else {
+                        crit!(log, "{}", "FALSE EVENT DETECTED".on_red();
+                              "time"=>format!("{}", sample_time),
+                              "star"=>format!("{}", star),
+                        );
+                        false_events += 1;
+                    }
+
+                    detected_stars.insert(star.clone());
+                }
+
+                data.get_mut(&star).unwrap().push(*val);
             });
+
+        // taint detected stars
+        // for now just remove
+        stars = stars
+            .into_iter()
+            .filter(|star| !detected_stars.contains(&star.uid))
+            .collect();
 
         dbg_data.push(ip[0]);
     }
@@ -271,6 +304,13 @@ fn main() {
               "std_dev"=>format!("{}", std_dev));
         */
     }
+
+    info!(log, "{}", "Run Stats".on_green();
+          "num_events_detected"=>true_events+false_events,
+          "num_true_events"=>true_events,
+          "num_false_events"=>false_events,
+          "num_stars"=>tot_stars,
+          "max_star_len"=>max_len);
 
     crate::utils::debug_plt(&dbg_data, None);
 

@@ -31,7 +31,7 @@ pub struct Star {
     pub samples: Vec<f32>,
     pub star_type: StarType,
     pub model_type: StarModelType,
-    pub model: Box<dyn StarModel>,
+    pub model: Box<dyn StarModel + Send>,
     pub sample_rate: i32,
 }
 
@@ -62,7 +62,8 @@ impl StarModel for NoneModel {
 }
 
 // [ ] TODO implement model functionality
-pub fn parse_model(mtype: StarModelType, _mfile: String) -> Box<dyn StarModel> {
+pub fn parse_model(mtype: StarModelType, _mfile: String)
+                   -> Box<dyn StarModel + Send> {
     match mtype {
         StarModelType::None => Box::new(NoneModel {}),
         //_ => Box::new(NoneModel {}),

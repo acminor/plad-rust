@@ -32,4 +32,5 @@ slog-async = "2.3.0"
 jemallocator = "0.3.0"
 lazy_static = "1.4.0"
 colored = "1.8"
+rayon = "1.2.0"
 #arrayfire = { path="./crates/arrayfire-rust" }
