@@ -28,7 +28,7 @@ use log::*;
 
 use arrayfire as AF;
 
-use clap::{App, Arg};
+use colored::*;
 
 use std::str::FromStr;
 use std::cell::RefCell;
@@ -191,11 +191,36 @@ fn main() {
                   .flat_map(|(key, val)| {
                       val.clone()
                   }).collect());
-        info!(log, "All values stats: ";
+        info!(log, "{}", "All values stats:".on_blue();
               "min"=>format!("{}", min),
               "max"=>format!("{}", max),
               "avg"=>format!("{}", avg),
               "std_dev"=>format!("{}", std_dev));
+    }
+
+    {
+        let ch_sz = 500;
+        let mut group_stats = Vec::new();
+        for (key, star) in data.iter() {
+            for (i, chunk) in star.chunks(ch_sz).enumerate() {
+                if group_stats.len() <= i {
+                    let temp = chunk.clone().to_vec();
+                    group_stats.push(temp);
+                } else {
+                    let mut temp = chunk.clone().to_vec();
+                    group_stats[i].append(&mut temp);
+                }
+            }
+        }
+
+        group_stats.iter().enumerate().for_each(|(i, group)| {
+            let (min, max, avg, std_dev) = stats(&group);
+            info!(log, "{}", format!("Group {} values stats:", i).on_green();
+                  "min"=>format!("{}", min),
+                  "max"=>format!("{}", max),
+                  "avg"=>format!("{}", avg),
+                  "std_dev"=>format!("{}", std_dev));
+        })
     }
 
     { // TODO comment ???
@@ -208,34 +233,31 @@ fn main() {
         };
 
         let mins = star_stats()
-            .by_ref()
             .map(|tup| {tup.0})
             .collect::<Vec<f32>>();
         let maxs = star_stats()
-            .by_ref()
             .map(|tup| {tup.1})
             .collect::<Vec<f32>>();
         let avgs = star_stats()
-            .by_ref()
             .map(|tup| {tup.2})
             .collect::<Vec<f32>>();
 
         let (min, max, avg, std_dev) = stats(&mins);
-        info!(log, "Min values stats: ";
+        info!(log, "{}", "Min values stats: ".on_red();
               "min"=>format!("{}", min),
               "max"=>format!("{}", max),
               "avg"=>format!("{}", avg),
               "std_dev"=>format!("{}", std_dev));
 
         let (min, max, avg, std_dev) = stats(&maxs);
-        info!(log, "Max values stats: ";
+        info!(log, "{}", "Max values stats: ".on_red();
               "min"=>format!("{}", min),
               "max"=>format!("{}", max),
               "avg"=>format!("{}", avg),
               "std_dev"=>format!("{}", std_dev));
 
         let (min, max, avg, std_dev) = stats(&avgs);
-        info!(log, "Avg values stats: ";
+        info!(log, "{}", "Avg values stats: ".on_red();
               "min"=>format!("{}", min),
               "max"=>format!("{}", max),
               "avg"=>format!("{}", avg),

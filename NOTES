@@ -1,0 +1,9 @@
++ On the use of abs instead of real
+  - From looking at data, we noticed that somethtimes the outtput
+    was negative. This can be fixed by adding a scalar constant to
+    the input data to make sure it lies above 0.
+  - However, tthis means that sometimes are "event" detection magittude
+    lies (above 0) but below instead of above the signal envelope. TThus,
+    we use abs which gives a magnitude and should be fine for working with.
+    - we should test and continue
+    - on the one graph visually observed, it seems to have negilgable effects
