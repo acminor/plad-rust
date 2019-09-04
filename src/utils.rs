@@ -34,6 +34,7 @@ pub fn inner_product(
         );
 
         let stars = {
+            let stars = AF::add(&stars, &(20.0 as f32), false);
             let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
             AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
         };
@@ -62,7 +63,7 @@ pub fn inner_product(
             // as in SO questions try using abs to get pos. vals.
             // https://{{so}}.com/questions/6740545/understanding-fft-output
             // https://dsp.{{se}}.com/questions/20500/negative-values-of-the-fft
-            let res_af = AF::abs(&res_af);
+            //let res_af = AF::abs(&res_af);
 
             let res_af = AF::max(&res_af, 0);
             //println!("max dims: {}", res_af.dims());

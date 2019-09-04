@@ -89,7 +89,9 @@ pub fn parse_template_file(file_name: String) -> Templates {
                         );
 
                         let fft_bs = AF::fft(&template, 1.0, max_len as i64);
-                        AF::rows(&fft_bs, 0, (real_len - 1) as u64)
+                        let temp = AF::rows(&fft_bs, 0, (real_len - 1) as u64);
+                        //temp
+                        AF::conjg(&temp)
                     }).collect();
 
                 let mut chunk = chunk.drain(0..chunk.len());
