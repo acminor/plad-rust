@@ -21,7 +21,6 @@ mod cli;
 mod log;
 
 use star::*;
-use template::*;
 use utils::*;
 use cli::*;
 use log::*;
@@ -30,16 +29,13 @@ use arrayfire as AF;
 
 use colored::*;
 
-use std::str::FromStr;
-use std::cell::RefCell;
-use std::marker::PhantomData;
 use std::collections::HashMap;
 
 use cpuprofiler::PROFILER;
 
-static prof: bool = false;
+static PROF: bool = false;
 fn main() {
-    if prof {
+    if PROF {
         PROFILER
             .lock()
             .unwrap()
@@ -151,13 +147,13 @@ fn main() {
             200,
         );
 
-        let ALERT_THRESH = 1.0;
+        let alert_thresh = 1.0;
         let mut detected_stars = std::collections::HashSet::new();
         ip
             .iter()
             .zip(window_names)
             .for_each(|(val, star)| {
-                if *val > ALERT_THRESH {
+                if *val > alert_thresh {
                     // TODO this should be a command line option
                     if sample_time >= 40320 && sample_time <= 46080 {
                         crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
@@ -221,7 +217,7 @@ fn main() {
         let (min, max, avg, std_dev) =
             stats(&data
                   .iter()
-                  .flat_map(|(key, val)| {
+                  .flat_map(|(_key, val)| {
                       val.clone()
                   }).collect());
         info!(log, "{}", "All values stats:".on_blue();
@@ -234,7 +230,7 @@ fn main() {
     {
         let ch_sz = 500;
         let mut group_stats = Vec::new();
-        for (key, star) in data.iter() {
+        for (_key, star) in data.iter() {
             for (i, chunk) in star.chunks(ch_sz).enumerate() {
                 if group_stats.len() <= i {
                     let temp = chunk.clone().to_vec();
@@ -260,7 +256,7 @@ fn main() {
         let star_stats = || {
             data
                 .iter()
-                .map(|(key, val)| {
+                .map(|(_key, val)| {
                     stats(val)
                 })
         };
@@ -314,7 +310,7 @@ fn main() {
 
     crate::utils::debug_plt(&dbg_data, None);
 
-    if prof {
+    if PROF {
         PROFILER.lock().unwrap().stop().expect("Couldn't start");
     }
 
@@ -325,6 +321,4 @@ fn main() {
         1000
     );
     */
-
-    println!("Hello, world!\n");
 }

@@ -36,8 +36,8 @@ pub struct Star {
 }
 
 pub struct StarModelInitErrMsg {
-    problem_entry: String,
-    err_msg: String,
+    _problem_entry: String,
+    _err_msg: String,
 }
 
 pub type StarModelErr = Result<(), StarModelInitErrMsg>;
@@ -51,7 +51,7 @@ pub trait StarModel {
 pub struct NoneModel();
 
 impl StarModel for NoneModel {
-    fn init(&self, args: std::collections::HashMap<String, String>)
+    fn init(&self, _args: std::collections::HashMap<String, String>)
             -> StarModelErr
     {
         Ok(())

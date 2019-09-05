@@ -7,7 +7,6 @@
  * --- For reading GWAC gen data
  */
 
-use crate::utils;
 use crate::star::{Star, StarType, StarModelType, parse_model};
 use std::fs;
 

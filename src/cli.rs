@@ -1,11 +1,9 @@
 use crate::dat_star;
 use crate::star::*;
 use crate::template::*;
-use crate::utils::*;
 use std::str::FromStr;
 use clap::{App, Arg};
 use std::fs;
-use rayon::prelude::*;
 
 pub struct RunInfo {
     pub templates: Templates,

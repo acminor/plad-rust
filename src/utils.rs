@@ -1,7 +1,6 @@
 use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
-use num::Complex;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -22,7 +21,7 @@ pub fn inner_product(
 ) -> Vec<f32> {
     let mut res: Vec<f32> = Vec::new();
     for signals in signals.chunks(signal_group_len) {
-        let num_stars = signals.len();
+        let _num_stars = signals.len();
         let signals = &signals
             .iter()
             .flat_map(|signal| signal.into_iter())
@@ -45,8 +44,10 @@ pub fn inner_product(
         //     of templates output and max of them
         //     -- for now only works bc large template groups (only one group)
         for template_group in templates {
+            /*
             println!("stars dim: {}", stars.dims());
             println!("temps dim: {}", template_group.templates.dims());
+            */
 
             // [ ] TODO add in Delta x scale
             let res_af = AF::matmul(

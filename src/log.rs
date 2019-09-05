@@ -1,7 +1,4 @@
 use slog::Drain;
-use std::sync::Once;
-use std::rc::Rc;
-use std::mem::zeroed;
 
 lazy_static! {
     static ref LOG: slog::Logger = {
