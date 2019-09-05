@@ -45,8 +45,8 @@ pub fn inner_product(
         //     of templates output and max of them
         //     -- for now only works bc large template groups (only one group)
         for template_group in templates {
-            //println!("stars dim: {}", stars.dims());
-            //println!("temps dim: {}", template_group.templates.dims());
+            println!("stars dim: {}", stars.dims());
+            println!("temps dim: {}", template_group.templates.dims());
 
             // [ ] TODO add in Delta x scale
             let res_af = AF::matmul(

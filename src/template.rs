@@ -77,7 +77,7 @@ pub fn parse_template_file(file_name: String) -> Templates {
             max_len/2 - 1
         };
 
-        temp.chunks(2560)
+        temp.chunks(2800)
             .map(|chunk| {
                 let chunk_len = chunk.len();
 

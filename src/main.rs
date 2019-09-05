@@ -37,10 +37,18 @@ use std::collections::HashMap;
 
 use cpuprofiler::PROFILER;
 
+static prof: bool = false;
 fn main() {
+    if prof {
+        PROFILER
+            .lock()
+            .unwrap()
+            .start("./prof.profile")
+            .expect("Couldn't start");
+    }
+
     AF::info();
 
-    let prof = false;
     let log = get_root_logger();
     let run_info = parse_args();
 
@@ -54,14 +62,6 @@ fn main() {
         noise_stddev,
         window_length,
     } = run_info;
-
-    if prof {
-        PROFILER
-            .lock()
-            .unwrap()
-            .start("./prof.profile")
-            .expect("Couldn't start");
-    }
 
     let templates = templates;
     let mut stars = stars;
@@ -151,7 +151,7 @@ fn main() {
             200,
         );
 
-        let ALERT_THRESH = 0.042;
+        let ALERT_THRESH = 1.0;
         let mut detected_stars = std::collections::HashSet::new();
         ip
             .iter()

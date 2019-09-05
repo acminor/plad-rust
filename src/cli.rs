@@ -103,14 +103,15 @@ pub fn parse_args() -> RunInfo {
     let input_dirs: Vec<String> =
         matches.values_of("input_dir").unwrap().map(|s| s.to_string()).collect();
     let input_dir = &input_dirs[0];
-    let stars: Vec<Star> = match fs::metadata(&input_dir) {
-        Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
-            .unwrap()
-            .collect::<Vec<std::io::Result<fs::DirEntry>>>()
-            .into_par_iter()
-            .filter_map(unwrap_parse_star_files)
-            .collect(),
-        _ => panic!("Error in reading input_dir"),
+
+    let stars: Vec<Star> = {
+        match fs::metadata(&input_dir) {
+            Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
+                .unwrap()
+                .filter_map(unwrap_parse_star_files)
+                .collect(),
+            _ => panic!("Error in reading input_dir"),
+        }
     };
 
     println!("{}", stars.len());

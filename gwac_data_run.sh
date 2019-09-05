@@ -13,18 +13,19 @@ function safe_call {
 
     RUST_BACKTRACE=1 cargo run $opt --\
                   --input /data/star_extra_data/star_dataset/data/gwac \
-                  --templates-file data/templates-25x25.toml \
+                  --templates-file \
+                    data/templates-1800.0d87616.0-0.1d50.0-25x25.toml \
                   --noise .06 \
                   --rho 4.0 \
-                  --window-length 30
+                  --window-length $2
 }
 
 case $1 in
     "release")
-        safe_call $1
+        safe_call $1 $2
         ;;
     "debug")
-        safe_call ""
+        safe_call "" $2
         ;;
     *)
         echo "Must use either release or debug as options."
