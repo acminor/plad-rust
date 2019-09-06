@@ -1,0 +1,62 @@
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+   Compiling match_filter v0.1.0 (/home/austin/libraries/rust_stuff/match_filter)
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+    Finished release [optimized] target(s) in 5.71s
+     Running `target/release/match_filter --input /data/star_extra_data/star_dataset/data/gwac --templates-file data/templates-25x25.toml --noise .06 --rho 4.0 --window-length 60`
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+J Dims: [1422 625 1 1]
+3240
+Window length: 60
+Total iterations needed: 2488320
+thread 'main' panicked at 'assertion failed: AfError::SUCCESS as i32 <= t && t <= AfError::ERR_UNKNOWN as i32', /home/austin/.cargo/registry/src/github.com-1ecc6299db9ec823/arrayfire-3.6.1/src/util.rs:75:9
+stack backtrace:
+   0: backtrace::backtrace::libunwind::trace
+             at /cargo/registry/src/github.com-1ecc6299db9ec823/backtrace-0.3.34/src/backtrace/libunwind.rs:88
+   1: backtrace::backtrace::trace_unsynchronized
+             at /cargo/registry/src/github.com-1ecc6299db9ec823/backtrace-0.3.34/src/backtrace/mod.rs:66
+   2: std::sys_common::backtrace::_print
+             at src/libstd/sys_common/backtrace.rs:47
+   3: std::sys_common::backtrace::print
+             at src/libstd/sys_common/backtrace.rs:36
+   4: std::panicking::default_hook::{{closure}}
+             at src/libstd/panicking.rs:200
+   5: std::panicking::default_hook
+             at src/libstd/panicking.rs:214
+   6: std::panicking::rust_panic_with_hook
+             at src/libstd/panicking.rs:477
+   7: std::panicking::begin_panic
+   8: arrayfire::error::handle_error_general
+   9: arrayfire::error::HANDLE_ERROR
+  10: match_filter::utils::inner_product
+  11: match_filter::main
+  12: std::rt::lang_start::{{closure}}
+  13: std::rt::lang_start_internal::{{closure}}
+             at src/libstd/rt.rs:49
+  14: std::panicking::try::do_call
+             at src/libstd/panicking.rs:296
+  15: __rust_maybe_catch_panic
+             at src/libpanic_unwind/lib.rs:80
+  16: std::panicking::try
+             at src/libstd/panicking.rs:275
+  17: std::panic::catch_unwind
+             at src/libstd/panic.rs:394
+  18: std::rt::lang_start_internal
+             at src/libstd/rt.rs:48
+  19: main
+  20: __libc_start_main
+  21: _start
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+ArrayFire v3.6.1 (CUDA, 64-bit Linux, build b443e146)
+Platform: CUDA Toolkit 10.1, Driver: 430.40
+[0] GeForce MX150, 2003 MB, CUDA Compute 6.1

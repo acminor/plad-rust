@@ -10,3 +10,9 @@
   + [ ] Rust Tokio/Future Capn Proto Plugin Manager
     + [ ] start python processes
     + [ ] predict using these
++ [ ] Investigate/email about proper microlensing generation
+      (differences with my version vs NFD's)
+    + [ ] NFD templates performed badly (why?)
+    + [ ] only need to generate along one dim.
+      + investigate effects and proper scaling
+    + [ ] compress templates by looking at width measures properly

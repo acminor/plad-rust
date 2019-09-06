@@ -8,6 +8,9 @@ extern crate slog_async;
 
 extern crate jemallocator;
 
+#[macro_use]
+extern crate arrayfire;
+
 // [ ] TODO Test if this speeds up the program: also what about memory pressure
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
@@ -49,6 +52,8 @@ fn main() {
     let run_info = parse_args();
 
     AF::set_backend(AF::Backend::CUDA);
+    //AF::set_backend(AF::Backend::OPENCL);
+    AF::set_device(0);
 
     let RunInfo {
         stars,
@@ -75,7 +80,8 @@ fn main() {
         / window_length as usize;
 
     println!(
-        "Total iterations needed: {}",
+        "Window length: {}\nTotal iterations needed: {}",
+        window_length,
         tot_iter
     );
 
@@ -91,6 +97,7 @@ fn main() {
             data.insert(star.uid.clone(), Vec::new());
         });
     loop {
+        println!("Stars left: {}", stars.len());
         if log_timer.elapsed() > std::time::Duration::from_secs(2) {
             // TODO implement logging logic
             let sps = iterations as f32 / now.elapsed().as_secs() as f32;
@@ -141,6 +148,7 @@ fn main() {
         let ip = inner_product(
             &templates.templates,
             &windows,
+            window_length as usize,
             noise_stddev,
             true,
             200,

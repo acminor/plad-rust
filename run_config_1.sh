@@ -14,7 +14,7 @@ function safe_call {
     RUST_BACKTRACE=1 cargo run $opt --\
                   --input data/stars \
                   --templates-file \
-                    data/templates-1800.0d87616.0-0.1d50.0-50x50.toml \
+                    data/templates-1800.0d87616.0-0.1d50.0-25x25.toml \
                   --noise .06 \
                   --rho 4.0 \
                   --window-length 30

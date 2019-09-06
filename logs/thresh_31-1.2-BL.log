@@ -1,0 +1,65 @@
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+   Compiling match_filter v0.1.0 (/home/austin/libraries/rust_stuff/match_filter)
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+    Finished release [optimized] target(s) in 4.63s
+     Running `target/release/match_filter --input /data/star_extra_data/star_dataset/data/threshold --templates-file data/templates-25x25.toml --noise .06 --rho 4.0 --window-length 31`
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+J Dims: [1422 625 1 1]
+5616
+Window length: 31
+Total iterations needed: 3544109
+Sep 05 16:27:31.896 INFO %Progress: 2.0599818%, StarsPerTenSec: 365040, StarsPerSec: 36504, EstTimeLeft: 95.088234s, IterationsLeft: 3471101, TotTime: 2s
+Sep 05 16:27:34.009 INFO %Progress: 4.595344%, StarsPerTenSec: 407160, StarsPerSec: 40716, EstTimeLeft: 83.044624s, IterationsLeft: 3381245, TotTime: 4s
+Sep 05 16:27:36.109 INFO %Progress: 7.1307063%, StarsPerTenSec: 421200, StarsPerSec: 42120, EstTimeLeft: 78.143135s, IterationsLeft: 3291389, TotTime: 6s
+Sep 05 16:27:38.163 INFO %Progress: 9.666068%, StarsPerTenSec: 428220, StarsPerSec: 42822, EstTimeLeft: 74.76374s, IterationsLeft: 3201533, TotTime: 8s
+Sep 05 16:27:40.196 INFO %Progress: 12.20143%, StarsPerTenSec: 432432, StarsPerSec: 43243.2, EstTimeLeft: 71.9576s, IterationsLeft: 3111677, TotTime: 10s
+Sep 05 16:27:42.203 INFO %Progress: 14.736793%, StarsPerTenSec: 435240, StarsPerSec: 43524, EstTimeLeft: 69.42884s, IterationsLeft: 3021821, TotTime: 12s
+Sep 05 16:27:44.312 INFO %Progress: 17.430614%, StarsPerTenSec: 441257.16, StarsPerSec: 44125.715, EstTimeLeft: 66.31845s, IterationsLeft: 2926349, TotTime: 14s
+Sep 05 16:27:46.410 INFO %Progress: 20.124437%, StarsPerTenSec: 445770, StarsPerSec: 44577, EstTimeLeft: 63.50533s, IterationsLeft: 2830877, TotTime: 16s
+Sep 05 16:27:48.461 INFO %Progress: 22.81826%, StarsPerTenSec: 449280, StarsPerSec: 44928, EstTimeLeft: 60.884193s, IterationsLeft: 2735405, TotTime: 18s
+Sep 05 16:27:50.489 INFO %Progress: 25.512081%, StarsPerTenSec: 452088, StarsPerSec: 45208.8, EstTimeLeft: 58.394226s, IterationsLeft: 2639933, TotTime: 20s
+Sep 05 16:27:52.602 INFO %Progress: 28.364363%, StarsPerTenSec: 456938.16, StarsPerSec: 45693.816, EstTimeLeft: 55.562115s, IterationsLeft: 2538845, TotTime: 22s
+Sep 05 16:27:54.713 INFO %Progress: 31.216648%, StarsPerTenSec: 460980, StarsPerSec: 46098, EstTimeLeft: 52.882057s, IterationsLeft: 2437757, TotTime: 24s
+Sep 05 16:27:56.787 INFO %Progress: 34.06893%, StarsPerTenSec: 464400, StarsPerSec: 46440, EstTimeLeft: 50.31587s, IterationsLeft: 2336669, TotTime: 26s
+Sep 05 16:27:58.825 INFO %Progress: 36.92121%, StarsPerTenSec: 451216.56, StarsPerSec: 45121.656, EstTimeLeft: 49.54563s, IterationsLeft: 2235581, TotTime: 29s
+Sep 05 16:28:00.834 INFO %Progress: 39.773495%, StarsPerTenSec: 454714.84, StarsPerSec: 45471.484, EstTimeLeft: 46.941353s, IterationsLeft: 2134493, TotTime: 31s
+Sep 05 16:28:02.921 INFO %Progress: 42.784237%, StarsPerTenSec: 459490.9, StarsPerSec: 45949.09, EstTimeLeft: 44.13121s, IterationsLeft: 2027789, TotTime: 33s
+Sep 05 16:28:04.972 INFO %Progress: 45.79498%, StarsPerTenSec: 463721.13, StarsPerSec: 46372.113, EstTimeLeft: 41.427593s, IterationsLeft: 1921085, TotTime: 35s
+Sep 05 16:28:06.984 INFO %Progress: 48.80572%, StarsPerTenSec: 467494.06, StarsPerSec: 46749.406, EstTimeLeft: 38.810783s, IterationsLeft: 1814381, TotTime: 37s
+Sep 05 16:28:09.064 INFO %Progress: 51.974922%, StarsPerTenSec: 472320, StarsPerSec: 47232, EstTimeLeft: 36.036182s, IterationsLeft: 1702061, TotTime: 39s
+Sep 05 16:28:11.110 INFO %Progress: 55.144127%, StarsPerTenSec: 476675.13, StarsPerSec: 47667.51, EstTimeLeft: 33.35062s, IterationsLeft: 1589741, TotTime: 41s
+Sep 05 16:28:13.117 INFO %Progress: 58.313328%, StarsPerTenSec: 480625.13, StarsPerSec: 48062.51, EstTimeLeft: 30.73957s, IterationsLeft: 1477421, TotTime: 43s
+Sep 05 16:28:15.184 INFO %Progress: 61.640995%, StarsPerTenSec: 485472, StarsPerSec: 48547.2, EstTimeLeft: 28.003366s, IterationsLeft: 1359485, TotTime: 45s
+Sep 05 16:28:17.206 INFO %Progress: 64.96866%, StarsPerTenSec: 489906.38, StarsPerSec: 48990.637, EstTimeLeft: 25.342577s, IterationsLeft: 1241549, TotTime: 47s
+Sep 05 16:28:19.278 INFO %Progress: 68.45478%, StarsPerTenSec: 495124.88, StarsPerSec: 49512.49, EstTimeLeft: 22.580101s, IterationsLeft: 1117997, TotTime: 49s
+Sep 05 16:28:21.303 INFO %Progress: 71.9409%, StarsPerTenSec: 499934.1, StarsPerSec: 49993.41, EstTimeLeft: 19.891521s, IterationsLeft: 994445, TotTime: 51s
+Sep 05 16:28:23.370 INFO %Progress: 75.58549%, StarsPerTenSec: 505440, StarsPerSec: 50544, EstTimeLeft: 17.119282s, IterationsLeft: 865277, TotTime: 53s
+Sep 05 16:28:25.390 INFO %Progress: 79.23007%, StarsPerTenSec: 510545.47, StarsPerSec: 51054.547, EstTimeLeft: 14.418089s, IterationsLeft: 736109, TotTime: 55s
+Sep 05 16:28:27.448 INFO %Progress: 83.03311%, StarsPerTenSec: 516277.88, StarsPerSec: 51627.79, EstTimeLeft: 11.647312s, IterationsLeft: 601325, TotTime: 57s
+Sep 05 16:28:29.525 INFO %Progress: 86.99462%, StarsPerTenSec: 522573.56, StarsPerSec: 52257.355, EstTimeLeft: 8.82029s, IterationsLeft: 460925, TotTime: 59s
+Sep 05 16:28:31.540 INFO %Progress: 90.816956%, StarsPerTenSec: 527647.9, StarsPerSec: 52764.785, EstTimeLeft: 6.168072s, IterationsLeft: 325457, TotTime: 61s
+Sep 05 16:28:33.586 INFO %Progress: 94.83941%, StarsPerTenSec: 533525.7, StarsPerSec: 53352.57, EstTimeLeft: 3.4280822s, IterationsLeft: 182897, TotTime: 63s
+Sep 05 16:28:35.588 INFO %Progress: 98.79685%, StarsPerTenSec: 538687.4, StarsPerSec: 53868.74, EstTimeLeft: 0.7915723s, IterationsLeft: 42641, TotTime: 65s
+Sep 05 16:28:36.210 INFO [44mAll values stats:[0m, std_dev: 0.017694842, avg: 0.021233397, max: 0.3216268, min: 0.0000014404553
+Sep 05 16:28:36.222 INFO [42mGroup 0 values stats:[0m, std_dev: 0.016798608, avg: 0.020814223, max: 0.0841838, min: 0.0000014404553
+Sep 05 16:28:36.224 INFO [42mGroup 1 values stats:[0m, std_dev: 0.020838391, avg: 0.022897208, max: 0.3216268, min: 0.0000032831222
+Sep 05 16:28:36.244 INFO [41mMin values stats: [0m, std_dev: 0.00046950785, avg: 0.00043712827, max: 0.0055697598, min: 0.0000014404553
+Sep 05 16:28:36.244 INFO [41mMax values stats: [0m, std_dev: 0.047428746, avg: 0.0834558, max: 0.3216268, min: 0.0045244163
+Sep 05 16:28:36.244 INFO [41mAvg values stats: [0m, std_dev: 0.010864273, avg: 0.021230495, max: 0.04776675, min: 0.0013793838
+Sep 05 16:28:36.244 INFO [42mRun Stats[0m, max_star_len: 22060, num_stars: 5616, num_false_events: 0, num_true_events: 0, num_events_detected: 0
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ArrayFire v3.6.1 (CUDA, 64-bit Linux, build b443e146)
+Platform: CUDA Toolkit 10.1, Driver: 430.40
+[0] GeForce MX150, 2003 MB, CUDA Compute 6.1

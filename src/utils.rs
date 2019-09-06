@@ -1,6 +1,7 @@
 use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
+use arrayfire::print_gen;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -9,6 +10,7 @@ use crate::template::*;
 pub fn inner_product(
     templates: &Vec<TemplateGroup>,
     signals: &Vec<Vec<f32>>,
+    window_length: usize,
     // [ ] TODO include in calculations
     //  - ie work on estitmation, etc.
     _snf: f32,
@@ -29,14 +31,20 @@ pub fn inner_product(
             .collect::<Vec<f32>>()[..];
         let stars = AF_Array::new(
             signals,
-            AF_Dim4::new(&[30 as u64, (signals.len() / 30) as u64, 1, 1]),
+            // [ ] TODO 2nd term should be # of stars???
+            AF_Dim4::new(&[window_length as u64,
+                           (signals.len() / window_length) as u64, 1, 1]),
         );
 
         let stars = {
             //let stars = AF::add(&stars, &(20.0 as f32), false);
-            let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
+            println!("{}", templates[0].fft_len);
+            //let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
+            let fft_bs = AF::fft(&stars, 1.0, templates[0].fft_len as i64);
             AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
         };
+
+        stars.eval();
 
         //let stars = AF::conjg(&stars);
         //let stars = AF::transpose(&stars, false);
@@ -44,10 +52,8 @@ pub fn inner_product(
         //     of templates output and max of them
         //     -- for now only works bc large template groups (only one group)
         for template_group in templates {
-            /*
-            println!("stars dim: {}", stars.dims());
-            println!("temps dim: {}", template_group.templates.dims());
-            */
+            //println!("stars dim: {}", stars.dims());
+            //println!("temps dim: {}", template_group.templates.dims());
 
             // [ ] TODO add in Delta x scale
             let res_af = AF::matmul(
@@ -68,6 +74,7 @@ pub fn inner_product(
             let res_af = AF::abs(&res_af);
 
             let res_af = AF::max(&res_af, 0);
+            res_af.eval();
             //println!("max dims: {}", res_af.dims());
             let mut temp: Vec<f32> = Vec::new();
             temp.resize(res_af.elements(), 0.0);

@@ -1,0 +1,400 @@
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+   Compiling match_filter v0.1.0 (/home/austin/libraries/rust_stuff/match_filter)
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+    Finished release [optimized] target(s) in 5.73s
+     Running `target/release/match_filter --input /data/star_extra_data/star_dataset/data/gwac --templates-file data/templates-25x25.toml --noise .06 --rho 4.0 --window-length 31`
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+J Dims: [1422 625 1 1]
+3240
+Window length: 31
+Total iterations needed: 4816103
+Sep 05 16:39:57.733 INFO %Progress: 0.9418403%, StarsPerTenSec: 226800, StarsPerSec: 22680, EstTimeLeft: 210.35022s, IterationsLeft: 4770743, TotTime: 2s
+Sep 05 16:39:59.734 INFO %Progress: 2.0182292%, StarsPerTenSec: 243000, StarsPerSec: 24300, EstTimeLeft: 194.19354s, IterationsLeft: 4718903, TotTime: 4s
+Sep 05 16:40:01.839 INFO %Progress: 3.1618927%, StarsPerTenSec: 253800, StarsPerSec: 25380, EstTimeLeft: 183.75977s, IterationsLeft: 4663823, TotTime: 6s
+Sep 05 16:40:03.924 INFO %Progress: 4.305556%, StarsPerTenSec: 259200, StarsPerSec: 25920, EstTimeLeft: 177.80644s, IterationsLeft: 4608743, TotTime: 8s
+Sep 05 16:40:06.015 INFO %Progress: 5.449219%, StarsPerTenSec: 262440, StarsPerSec: 26244, EstTimeLeft: 173.51254s, IterationsLeft: 4553663, TotTime: 10s
+Sep 05 16:40:08.062 INFO %Progress: 6.5928826%, StarsPerTenSec: 264600, StarsPerSec: 26460, EstTimeLeft: 170.01448s, IterationsLeft: 4498583, TotTime: 12s
+Sep 05 16:40:10.098 INFO %Progress: 7.7365456%, StarsPerTenSec: 266142.84, StarsPerSec: 26614.285, EstTimeLeft: 166.95932s, IterationsLeft: 4443503, TotTime: 14s
+Sep 05 16:40:12.117 INFO %Progress: 8.880208%, StarsPerTenSec: 267300, StarsPerSec: 26730, EstTimeLeft: 164.17595s, IterationsLeft: 4388423, TotTime: 16s
+Sep 05 16:40:14.127 INFO %Progress: 10.023871%, StarsPerTenSec: 268200, StarsPerSec: 26820, EstTimeLeft: 161.57133s, IterationsLeft: 4333343, TotTime: 18s
+Sep 05 16:40:16.132 INFO %Progress: 11.167535%, StarsPerTenSec: 268920, StarsPerSec: 26892, EstTimeLeft: 159.09055s, IterationsLeft: 4278263, TotTime: 20s
+Sep 05 16:40:18.217 INFO %Progress: 12.378473%, StarsPerTenSec: 270981.8, StarsPerSec: 27098.182, EstTimeLeft: 155.7279s, IterationsLeft: 4219943, TotTime: 22s
+Sep 05 16:40:20.292 INFO %Progress: 13.589411%, StarsPerTenSec: 272700, StarsPerSec: 27270, EstTimeLeft: 152.60811s, IterationsLeft: 4161623, TotTime: 24s
+Sep 05 16:40:22.342 INFO %Progress: 14.800347%, StarsPerTenSec: 274153.84, StarsPerSec: 27415.385, EstTimeLeft: 149.67154s, IterationsLeft: 4103303, TotTime: 26s
+Sep 05 16:40:24.370 INFO %Progress: 16.011286%, StarsPerTenSec: 275400, StarsPerSec: 27540, EstTimeLeft: 146.87665s, IterationsLeft: 4044983, TotTime: 28s
+Sep 05 16:40:26.410 INFO %Progress: 17.222223%, StarsPerTenSec: 276480, StarsPerSec: 27648, EstTimeLeft: 144.19354s, IterationsLeft: 3986663, TotTime: 30s
+Sep 05 16:40:28.516 INFO %Progress: 18.500435%, StarsPerTenSec: 278437.5, StarsPerSec: 27843.75, EstTimeLeft: 140.9689s, IterationsLeft: 3925103, TotTime: 32s
+Sep 05 16:40:30.533 INFO %Progress: 19.711372%, StarsPerTenSec: 279211.75, StarsPerSec: 27921.176, EstTimeLeft: 138.48926s, IterationsLeft: 3866783, TotTime: 34s
+Sep 05 16:40:32.635 INFO %Progress: 20.989586%, StarsPerTenSec: 273210.8, StarsPerSec: 27321.082, EstTimeLeft: 139.27791s, IterationsLeft: 3805223, TotTime: 37s
+Sep 05 16:40:34.722 INFO %Progress: 22.267796%, StarsPerTenSec: 274984.63, StarsPerSec: 27498.46, EstTimeLeft: 136.14082s, IterationsLeft: 3743663, TotTime: 39s
+Sep 05 16:40:36.785 INFO %Progress: 23.54601%, StarsPerTenSec: 276585.38, StarsPerSec: 27658.537, EstTimeLeft: 133.12718s, IterationsLeft: 3682103, TotTime: 41s
+Sep 05 16:40:38.824 INFO %Progress: 24.82422%, StarsPerTenSec: 278037.22, StarsPerSec: 27803.72, EstTimeLeft: 130.21793s, IterationsLeft: 3620543, TotTime: 43s
+Sep 05 16:40:40.844 INFO %Progress: 26.102432%, StarsPerTenSec: 279360, StarsPerSec: 27936, EstTimeLeft: 127.39773s, IterationsLeft: 3558983, TotTime: 45s
+Sep 05 16:40:42.942 INFO %Progress: 27.447918%, StarsPerTenSec: 281259.56, StarsPerSec: 28125.957, EstTimeLeft: 124.23339s, IterationsLeft: 3494183, TotTime: 47s
+Sep 05 16:40:45.024 INFO %Progress: 28.793404%, StarsPerTenSec: 283004.1, StarsPerSec: 28300.408, EstTimeLeft: 121.177864s, IterationsLeft: 3429383, TotTime: 49s
+Sep 05 16:40:47.073 INFO %Progress: 30.13889%, StarsPerTenSec: 284611.75, StarsPerSec: 28461.176, EstTimeLeft: 118.21658s, IterationsLeft: 3364583, TotTime: 51s
+Sep 05 16:40:49.102 INFO %Progress: 31.484377%, StarsPerTenSec: 286098.1, StarsPerSec: 28609.81, EstTimeLeft: 115.33746s, IterationsLeft: 3299783, TotTime: 53s
+Sep 05 16:40:51.107 INFO %Progress: 32.829865%, StarsPerTenSec: 287476.38, StarsPerSec: 28747.637, EstTimeLeft: 112.530396s, IterationsLeft: 3234983, TotTime: 55s
+Sep 05 16:40:53.186 INFO %Progress: 34.242622%, StarsPerTenSec: 289326.3, StarsPerSec: 28932.63, EstTimeLeft: 109.45921s, IterationsLeft: 3166943, TotTime: 57s
+Sep 05 16:40:55.256 INFO %Progress: 35.655384%, StarsPerTenSec: 291050.84, StarsPerSec: 29105.084, EstTimeLeft: 106.47291s, IterationsLeft: 3098903, TotTime: 59s
+Sep 05 16:40:57.289 INFO %Progress: 37.068142%, StarsPerTenSec: 292662.3, StarsPerSec: 29266.23, EstTimeLeft: 103.56178s, IterationsLeft: 3030863, TotTime: 61s
+Sep 05 16:40:59.295 INFO %Progress: 38.480904%, StarsPerTenSec: 294171.44, StarsPerSec: 29417.143, EstTimeLeft: 100.71757s, IterationsLeft: 2962823, TotTime: 63s
+Sep 05 16:41:01.373 INFO %Progress: 39.960938%, StarsPerTenSec: 296086.16, StarsPerSec: 29608.615, EstTimeLeft: 97.65884s, IterationsLeft: 2891543, TotTime: 65s
+Sep 05 16:41:03.463 INFO %Progress: 41.44097%, StarsPerTenSec: 297886.56, StarsPerSec: 29788.656, EstTimeLeft: 94.675735s, IterationsLeft: 2820263, TotTime: 67s
+Sep 05 16:41:05.480 INFO %Progress: 42.78646%, StarsPerTenSec: 298643.47, StarsPerSec: 29864.348, EstTimeLeft: 92.26597s, IterationsLeft: 2755463, TotTime: 69s
+Sep 05 16:41:07.564 INFO %Progress: 44.266495%, StarsPerTenSec: 300270.44, StarsPerSec: 30027.043, EstTimeLeft: 89.39219s, IterationsLeft: 2684183, TotTime: 71s
+Sep 05 16:41:09.620 INFO %Progress: 45.679256%, StarsPerTenSec: 297291.9, StarsPerSec: 29729.19, EstTimeLeft: 87.99914s, IterationsLeft: 2616143, TotTime: 74s
+Sep 05 16:41:11.668 INFO %Progress: 47.15929%, StarsPerTenSec: 298847.38, StarsPerSec: 29884.736, EstTimeLeft: 85.155945s, IterationsLeft: 2544863, TotTime: 76s
+Sep 05 16:41:13.673 INFO %Progress: 48.504776%, StarsPerTenSec: 299492.3, StarsPerSec: 29949.23, EstTimeLeft: 82.80891s, IterationsLeft: 2480063, TotTime: 78s
+Sep 05 16:41:15.688 INFO %Progress: 49.984814%, StarsPerTenSec: 300915, StarsPerSec: 30091.5, EstTimeLeft: 80.04862s, IterationsLeft: 2408783, TotTime: 80s
+Sep 05 16:41:17.763 INFO %Progress: 51.599396%, StarsPerTenSec: 303058.53, StarsPerSec: 30305.854, EstTimeLeft: 76.916595s, IterationsLeft: 2331023, TotTime: 82s
+Sep 05 16:41:19.830 INFO %Progress: 53.213978%, StarsPerTenSec: 305100, StarsPerSec: 30510, EstTimeLeft: 73.853264s, IterationsLeft: 2253263, TotTime: 84s
+Sep 05 16:41:21.845 INFO %Progress: 54.82856%, StarsPerTenSec: 307046.5, StarsPerSec: 30704.65, EstTimeLeft: 70.852554s, IterationsLeft: 2175503, TotTime: 86s
+Sep 05 16:41:23.923 INFO %Progress: 56.443142%, StarsPerTenSec: 308904.56, StarsPerSec: 30890.455, EstTimeLeft: 67.9091s, IterationsLeft: 2097743, TotTime: 88s
+Sep 05 16:41:25.967 INFO %Progress: 58.05773%, StarsPerTenSec: 310680, StarsPerSec: 31068, EstTimeLeft: 65.01812s, IterationsLeft: 2019983, TotTime: 90s
+Sep 05 16:41:28.041 INFO %Progress: 59.806858%, StarsPerTenSec: 313082.63, StarsPerSec: 31308.262, EstTimeLeft: 61.828503s, IterationsLeft: 1935743, TotTime: 92s
+Sep 05 16:41:30.044 INFO %Progress: 61.555992%, StarsPerTenSec: 315383, StarsPerSec: 31538.299, EstTimeLeft: 58.706497s, IterationsLeft: 1851503, TotTime: 94s
+Sep 05 16:41:32.061 INFO %Progress: 63.305122%, StarsPerTenSec: 317587.5, StarsPerSec: 31758.75, EstTimeLeft: 55.646492s, IterationsLeft: 1767263, TotTime: 96s
+Sep 05 16:41:34.083 INFO %Progress: 65.12153%, StarsPerTenSec: 320032.66, StarsPerSec: 32003.266, EstTimeLeft: 52.48786s, IterationsLeft: 1679783, TotTime: 98s
+Sep 05 16:41:36.129 INFO %Progress: 67.00521%, StarsPerTenSec: 322704, StarsPerSec: 32270.4, EstTimeLeft: 49.242123s, IterationsLeft: 1589063, TotTime: 100s
+Sep 05 16:41:38.202 INFO %Progress: 68.95617%, StarsPerTenSec: 325588.25, StarsPerSec: 32558.824, EstTimeLeft: 45.920055s, IterationsLeft: 1495103, TotTime: 102s
+Sep 05 16:41:40.210 INFO %Progress: 70.90712%, StarsPerTenSec: 328361.53, StarsPerSec: 32836.152, EstTimeLeft: 42.670742s, IterationsLeft: 1401143, TotTime: 104s
+Sep 05 16:41:42.245 INFO %Progress: 72.925354%, StarsPerTenSec: 331335.88, StarsPerSec: 33133.586, EstTimeLeft: 39.35412s, IterationsLeft: 1303943, TotTime: 106s
+Sep 05 16:41:44.284 INFO %Progress: 74.94358%, StarsPerTenSec: 334200, StarsPerSec: 33420, EstTimeLeft: 36.10841s, IterationsLeft: 1206743, TotTime: 108s
+Sep 05 16:41:46.285 INFO %Progress: 76.96181%, StarsPerTenSec: 336960, StarsPerSec: 33696, EstTimeLeft: 32.928032s, IterationsLeft: 1109543, TotTime: 110s
+Sep 05 16:41:48.301 INFO %Progress: 79.114586%, StarsPerTenSec: 340200, StarsPerSec: 34020, EstTimeLeft: 29.566814s, IterationsLeft: 1005863, TotTime: 112s
+Sep 05 16:41:50.347 INFO %Progress: 81.40192%, StarsPerTenSec: 343894.72, StarsPerSec: 34389.473, EstTimeLeft: 26.045849s, IterationsLeft: 895703, TotTime: 114s
+Sep 05 16:41:52.360 INFO %Progress: 83.756516%, StarsPerTenSec: 347741.38, StarsPerSec: 34774.137, EstTimeLeft: 22.49669s, IterationsLeft: 782303, TotTime: 116s
+Sep 05 16:41:54.400 INFO %Progress: 86.17839%, StarsPerTenSec: 351732.2, StarsPerSec: 35173.22, EstTimeLeft: 18.92528s, IterationsLeft: 665663, TotTime: 118s
+Sep 05 16:41:56.447 INFO %Progress: 88.73481%, StarsPerTenSec: 356130, StarsPerSec: 35613, EstTimeLeft: 15.234408s, IterationsLeft: 542543, TotTime: 120s
+Sep 05 16:41:58.467 INFO %Progress: 91.35851%, StarsPerTenSec: 360649.2, StarsPerSec: 36064.918, EstTimeLeft: 11.539829s, IterationsLeft: 416183, TotTime: 122s
+Sep 05 16:42:00.502 INFO %Progress: 94.049484%, StarsPerTenSec: 365283.88, StarsPerSec: 36528.387, EstTimeLeft: 7.8454876s, IterationsLeft: 286583, TotTime: 124s
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.095_0.800_0.510_2.040_1.047.dat, time: 43679
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.766_0.700_0.840_3.360_4.189.dat, time: 43679
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.539_0.900_0.510_2.040_3.142.dat, time: 43679
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.270_0.600_0.320_1.280_4.189.dat, time: 43679
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.433_0.900_0.840_3.360_2.094.dat, time: 43679
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.104_0.300_1.520_6.080_3.142.dat, time: 43679
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.210_0.600_0.320_1.280_3.142.dat, time: 43679
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.614_1.000_7.490_29.960_4.189.dat, time: 43679
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.329_0.400_0.320_1.280_5.236.dat, time: 43679
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.831_0.500_7.490_29.960_3.142.dat, time: 43679
+Sep 05 16:42:01.036 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.509_0.200_0.320_1.280_1.047.dat, time: 43679
+Sep 05 16:42:01.037 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.285_0.400_0.510_2.040_3.142.dat, time: 43679
+Sep 05 16:42:01.037 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.181_0.500_7.490_29.960_5.236.dat, time: 43679
+Sep 05 16:42:01.037 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.666_0.400_0.510_2.040_0.000.dat, time: 43679
+Sep 05 16:42:01.037 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.300_0.300_0.840_3.360_2.094.dat, time: 43679
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.831_1.000_7.490_29.960_4.189.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.036_0.900_7.490_29.960_0.000.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.412_0.800_0.510_2.040_1.047.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.100_0.200_0.840_3.360_3.142.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.285_0.500_0.510_2.040_5.236.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.253_0.500_7.490_29.960_1.047.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.759_0.900_7.490_29.960_0.000.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.591_0.800_1.520_6.080_1.047.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.689_0.500_0.320_1.280_5.236.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.244_0.600_1.520_6.080_3.142.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.032_0.500_0.510_2.040_1.047.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.591_0.400_1.520_6.080_1.047.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.090_0.200_0.320_1.280_3.142.dat, time: 43710
+Sep 05 16:42:01.150 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.300_0.500_0.840_3.360_3.142.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.731_1.000_1.520_6.080_3.142.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.397_0.700_7.490_29.960_4.189.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.500_0.800_0.840_3.360_3.142.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.104_0.700_1.520_6.080_5.236.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.285_0.400_0.510_2.040_4.189.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.666_0.800_0.510_2.040_5.236.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.759_0.400_7.490_29.960_2.094.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.686_0.800_7.490_29.960_0.000.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.539_0.700_0.510_2.040_2.094.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.569_0.800_0.320_1.280_5.236.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.300_1.000_0.840_3.360_3.142.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.313_0.600_1.520_6.080_5.236.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.689_0.800_0.320_1.280_5.236.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.449_0.200_0.320_1.280_0.000.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.603_0.500_0.510_2.040_3.142.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.244_0.200_1.520_6.080_5.236.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.244_0.500_1.520_6.080_0.000.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.159_0.200_0.510_2.040_4.189.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.366_0.200_0.840_3.360_0.000.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.090_0.500_0.320_1.280_2.094.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.509_0.300_0.320_1.280_2.094.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.325_0.600_7.490_29.960_4.189.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.801_0.700_1.520_6.080_4.189.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.100_0.900_0.840_3.360_2.094.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.030_0.900_0.320_1.280_1.047.dat, time: 43710
+Sep 05 16:42:01.151 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.666_0.900_0.510_2.040_1.047.dat, time: 43710
+Sep 05 16:42:01.436 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.233_0.600_0.840_3.360_0.000.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.452_0.700_1.520_6.080_5.236.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.159_0.700_0.510_2.040_5.236.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.452_0.200_1.520_6.080_5.236.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.109_0.300_7.490_29.960_5.236.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.300_0.300_0.840_3.360_4.189.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.689_0.200_0.320_1.280_2.094.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.629_0.700_0.320_1.280_5.236.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.470_0.900_7.490_29.960_4.189.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.700_0.900_0.840_3.360_5.236.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.801_0.800_1.520_6.080_0.000.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.729_0.800_0.510_2.040_3.142.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.542_0.400_7.490_29.960_1.047.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.150_0.600_0.320_1.280_4.189.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.181_0.900_7.490_29.960_3.142.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.412_0.400_0.510_2.040_3.142.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.433_1.000_0.840_3.360_2.094.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.285_0.800_0.510_2.040_3.142.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.159_0.200_0.510_2.040_2.094.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.449_0.600_0.320_1.280_0.000.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.104_1.000_1.520_6.080_0.000.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.470_0.600_7.490_29.960_3.142.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.801_0.800_1.520_6.080_1.047.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.270_0.800_0.320_1.280_4.189.dat, time: 43896
+Sep 05 16:42:01.437 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.542_0.800_7.490_29.960_3.142.dat, time: 43896
+Sep 05 16:42:01.438 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.449_0.800_0.320_1.280_1.047.dat, time: 43896
+Sep 05 16:42:01.438 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.412_0.700_0.510_2.040_5.236.dat, time: 43896
+Sep 05 16:42:01.438 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.686_1.000_7.490_29.960_0.000.dat, time: 43896
+Sep 05 16:42:01.438 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.036_0.700_7.490_29.960_1.047.dat, time: 43896
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.470_1.000_7.490_29.960_4.189.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.329_0.700_0.320_1.280_3.142.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.729_0.500_0.510_2.040_1.047.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.731_0.400_1.520_6.080_4.189.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.181_0.400_7.490_29.960_4.189.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.366_0.900_0.840_3.360_3.142.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.449_0.300_0.320_1.280_2.094.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.222_0.800_0.510_2.040_1.047.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.629_0.500_0.320_1.280_4.189.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.539_0.400_0.510_2.040_5.236.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.686_0.600_7.490_29.960_2.094.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.222_0.200_0.510_2.040_2.094.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.389_0.400_0.320_1.280_2.094.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.759_0.800_7.490_29.960_4.189.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.566_0.200_0.840_3.360_2.094.dat, time: 43927
+Sep 05 16:42:01.491 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.476_1.000_0.510_2.040_2.094.dat, time: 43927
+Sep 05 16:42:01.492 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.166_0.800_0.840_3.360_5.236.dat, time: 43927
+Sep 05 16:42:01.787 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.159_0.800_0.510_2.040_5.236.dat, time: 44113
+Sep 05 16:42:01.787 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.470_0.600_7.490_29.960_0.000.dat, time: 44113
+Sep 05 16:42:01.787 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.100_1.000_0.840_3.360_3.142.dat, time: 44113
+Sep 05 16:42:01.787 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.150_0.800_0.320_1.280_0.000.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.389_0.200_0.320_1.280_0.000.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.035_1.000_1.520_6.080_4.189.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.159_0.500_0.510_2.040_2.094.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.569_0.900_0.320_1.280_3.142.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.222_0.300_0.510_2.040_4.189.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.150_0.900_0.320_1.280_4.189.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.603_0.200_0.510_2.040_1.047.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.452_0.600_1.520_6.080_0.000.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.731_0.500_1.520_6.080_4.189.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.035_0.300_1.520_6.080_3.142.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.542_0.800_7.490_29.960_2.094.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.150_0.600_0.320_1.280_1.047.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.452_0.800_1.520_6.080_0.000.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.449_1.000_0.320_1.280_1.047.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.831_0.600_7.490_29.960_5.236.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.629_0.900_0.320_1.280_1.047.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.766_0.900_0.840_3.360_0.000.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.104_0.600_1.520_6.080_5.236.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.100_0.200_0.840_3.360_4.189.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.603_0.600_0.510_2.040_1.047.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.033_1.000_0.840_3.360_3.142.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.100_1.000_0.840_3.360_0.000.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.036_0.500_7.490_29.960_5.236.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.383_0.400_1.520_6.080_1.047.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.150_0.400_0.320_1.280_5.236.dat, time: 44113
+Sep 05 16:42:01.788 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.325_0.900_7.490_29.960_0.000.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.100_1.000_0.840_3.360_1.047.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.603_0.600_0.510_2.040_5.236.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.500_0.700_0.840_3.360_3.142.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.509_0.800_0.320_1.280_1.047.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.449_0.600_0.320_1.280_5.236.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.383_0.400_1.520_6.080_2.094.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.285_0.500_0.510_2.040_1.047.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.759_1.000_7.490_29.960_0.000.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.325_0.900_7.490_29.960_3.142.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.033_1.000_0.840_3.360_5.236.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.253_0.300_7.490_29.960_2.094.dat, time: 44113
+Sep 05 16:42:01.789 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.313_0.900_1.520_6.080_2.094.dat, time: 44113
+Sep 05 16:42:01.840 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.033_1.000_0.840_3.360_0.000.dat, time: 44144
+Sep 05 16:42:01.840 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.452_0.400_1.520_6.080_1.047.dat, time: 44144
+Sep 05 16:42:01.841 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.831_0.700_7.490_29.960_2.094.dat, time: 44144
+Sep 05 16:42:01.841 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.766_0.300_0.840_3.360_2.094.dat, time: 44144
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.104_0.600_1.520_6.080_4.189.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.686_0.800_7.490_29.960_2.094.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.150_0.600_0.320_1.280_5.236.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.603_0.600_0.510_2.040_3.142.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.569_0.500_0.320_1.280_4.189.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.731_0.900_1.520_6.080_2.094.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.729_0.900_0.510_2.040_4.189.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.270_0.800_0.320_1.280_1.047.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.452_0.800_1.520_6.080_1.047.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.412_0.300_0.510_2.040_0.000.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.159_0.500_0.510_2.040_1.047.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.603_0.700_0.510_2.040_5.236.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.389_1.000_0.320_1.280_1.047.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.166_1.000_0.840_3.360_4.189.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.759_0.600_7.490_29.960_4.189.dat, time: 44330
+Sep 05 16:42:02.114 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.349_0.300_0.510_2.040_1.047.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.603_0.300_0.510_2.040_2.094.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.689_0.900_0.320_1.280_1.047.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.244_0.300_1.520_6.080_4.189.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.412_1.000_0.510_2.040_5.236.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.729_0.900_0.510_2.040_5.236.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.801_0.500_1.520_6.080_4.189.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.542_0.200_7.490_29.960_5.236.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.366_0.800_0.840_3.360_3.142.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.349_0.400_0.510_2.040_5.236.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.109_0.700_7.490_29.960_2.094.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.181_0.800_7.490_29.960_4.189.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.661_0.800_1.520_6.080_3.142.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.569_0.200_0.320_1.280_2.094.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.109_1.000_7.490_29.960_5.236.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.104_0.700_1.520_6.080_2.094.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.731_0.400_1.520_6.080_5.236.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.210_0.700_0.320_1.280_2.094.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.470_0.500_7.490_29.960_1.047.dat, time: 44330
+Sep 05 16:42:02.115 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.397_1.000_7.490_29.960_5.236.dat, time: 44330
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.731_0.200_1.520_6.080_2.094.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.032_0.800_0.510_2.040_2.094.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.729_1.000_0.510_2.040_2.094.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.233_1.000_0.840_3.360_2.094.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.452_0.700_1.520_6.080_4.189.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.210_0.400_0.320_1.280_2.094.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.731_0.800_1.520_6.080_0.000.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.166_0.800_0.840_3.360_1.047.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.104_1.000_1.520_6.080_3.142.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.270_0.800_0.320_1.280_2.094.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.166_0.600_0.840_3.360_3.142.dat, time: 44516
+Sep 05 16:42:02.387 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.349_1.000_0.510_2.040_3.142.dat, time: 44516
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.244_0.300_1.520_6.080_5.236.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.313_0.900_1.520_6.080_0.000.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.633_0.400_0.840_3.360_3.142.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.329_0.800_0.320_1.280_2.094.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.222_0.700_0.510_2.040_3.142.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.366_0.500_0.840_3.360_0.000.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.689_0.800_0.320_1.280_3.142.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.210_0.700_0.320_1.280_1.047.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.036_0.300_7.490_29.960_4.189.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.509_1.000_0.320_1.280_3.142.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.150_0.800_0.320_1.280_1.047.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.766_0.500_0.840_3.360_5.236.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.766_0.300_0.840_3.360_4.189.dat, time: 44547
+Sep 05 16:42:02.434 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.542_0.600_7.490_29.960_2.094.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.095_0.700_0.510_2.040_4.189.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.032_0.800_0.510_2.040_0.000.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.591_1.000_1.520_6.080_1.047.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.470_0.200_7.490_29.960_3.142.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.166_0.200_0.840_3.360_2.094.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.801_0.400_1.520_6.080_2.094.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.166_0.900_0.840_3.360_1.047.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.689_0.500_0.320_1.280_1.047.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.389_0.600_0.320_1.280_0.000.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.700_0.600_0.840_3.360_0.000.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.181_0.700_7.490_29.960_2.094.dat, time: 44547
+Sep 05 16:42:02.435 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.766_0.900_0.840_3.360_2.094.dat, time: 44547
+Sep 05 16:42:02.529 INFO %Progress: 96.72912%, StarsPerTenSec: 369728.1, StarsPerSec: 36972.81, EstTimeLeft: 4.2606716s, IterationsLeft: 157529, TotTime: 126s
+Sep 05 16:42:02.701 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.629_0.500_0.320_1.280_0.000.dat, time: 44733
+Sep 05 16:42:02.701 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.661_0.400_1.520_6.080_1.047.dat, time: 44733
+Sep 05 16:42:02.701 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.731_0.800_1.520_6.080_4.189.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.700_0.200_0.840_3.360_5.236.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.729_0.800_0.510_2.040_1.047.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.159_0.900_0.510_2.040_1.047.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.032_0.800_0.510_2.040_4.189.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.174_0.500_1.520_6.080_2.094.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.539_0.200_0.510_2.040_5.236.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.222_0.800_0.510_2.040_5.236.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.366_0.900_0.840_3.360_4.189.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.159_0.400_0.510_2.040_3.142.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.569_0.500_0.320_1.280_0.000.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.614_0.900_7.490_29.960_5.236.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.566_0.400_0.840_3.360_3.142.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.383_0.600_1.520_6.080_0.000.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.397_0.500_7.490_29.960_2.094.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.109_0.400_7.490_29.960_2.094.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.433_0.800_0.840_3.360_0.000.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.285_0.300_0.510_2.040_5.236.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.036_0.800_7.490_29.960_5.236.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.452_1.000_1.520_6.080_3.142.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.383_0.700_1.520_6.080_1.047.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.397_0.200_7.490_29.960_4.189.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.500_0.900_0.840_3.360_4.189.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.389_0.900_0.320_1.280_0.000.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.449_0.600_0.320_1.280_3.142.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.759_0.300_7.490_29.960_0.000.dat, time: 44733
+Sep 05 16:42:02.702 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.433_0.400_0.840_3.360_2.094.dat, time: 44733
+Sep 05 16:42:02.749 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.285_0.200_0.510_2.040_2.094.dat, time: 44764
+Sep 05 16:42:02.749 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.542_0.500_7.490_29.960_2.094.dat, time: 44764
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.383_0.300_1.520_6.080_0.000.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.253_0.600_7.490_29.960_4.189.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.035_0.600_1.520_6.080_5.236.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.032_0.600_0.510_2.040_2.094.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.759_0.900_7.490_29.960_4.189.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.700_0.800_0.840_3.360_5.236.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.253_0.700_7.490_29.960_5.236.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.629_0.600_0.320_1.280_1.047.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.801_0.600_1.520_6.080_0.000.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.476_0.300_0.510_2.040_2.094.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.030_0.700_0.320_1.280_4.189.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.412_0.200_0.510_2.040_1.047.dat, time: 44950
+Sep 05 16:42:03.004 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.174_0.300_1.520_6.080_5.236.dat, time: 44950
+Sep 05 16:42:03.005 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.614_0.800_7.490_29.960_4.189.dat, time: 44950
+Sep 05 16:42:03.005 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.509_0.900_0.320_1.280_2.094.dat, time: 44950
+Sep 05 16:42:03.005 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.104_1.000_1.520_6.080_2.094.dat, time: 44950
+Sep 05 16:42:03.005 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.801_0.900_1.520_6.080_5.236.dat, time: 44950
+Sep 05 16:42:03.005 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.569_0.200_0.320_1.280_5.236.dat, time: 44950
+Sep 05 16:42:03.005 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.100_0.500_0.840_3.360_3.142.dat, time: 44950
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.325_0.800_7.490_29.960_2.094.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.349_0.700_0.510_2.040_0.000.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.366_1.000_0.840_3.360_0.000.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.313_0.800_1.520_6.080_0.000.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.801_0.800_1.520_6.080_2.094.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.325_0.700_7.490_29.960_3.142.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.539_0.500_0.510_2.040_4.189.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.766_0.800_0.840_3.360_3.142.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.633_0.800_0.840_3.360_3.142.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.500_0.700_0.840_3.360_1.047.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.389_1.000_0.320_1.280_3.142.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.389_0.200_0.320_1.280_1.047.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.300_0.900_0.840_3.360_2.094.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.689_0.500_0.320_1.280_4.189.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.233_1.000_0.840_3.360_5.236.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.253_0.800_7.490_29.960_5.236.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.801_0.400_1.520_6.080_3.142.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.566_0.200_0.840_3.360_3.142.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.313_0.900_1.520_6.080_1.047.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.831_1.000_7.490_29.960_0.000.dat, time: 45167
+Sep 05 16:42:03.296 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.349_0.800_0.510_2.040_2.094.dat, time: 45167
+Sep 05 16:42:03.543 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.032_0.700_0.510_2.040_1.047.dat, time: 45353
+Sep 05 16:42:03.543 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.100_0.300_0.840_3.360_1.047.dat, time: 45353
+Sep 05 16:42:03.544 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.313_0.500_1.520_6.080_4.189.dat, time: 45353
+Sep 05 16:42:03.544 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.090_0.200_0.320_1.280_5.236.dat, time: 45353
+Sep 05 16:42:03.544 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.603_0.600_0.510_2.040_0.000.dat, time: 45353
+Sep 05 16:42:03.544 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.566_0.300_0.840_3.360_5.236.dat, time: 45353
+Sep 05 16:42:03.832 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.522_0.900_1.520_6.080_2.094.dat, time: 45570
+Sep 05 16:42:03.832 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.036_0.600_7.490_29.960_3.142.dat, time: 45570
+Sep 05 16:42:03.832 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.500_0.600_0.840_3.360_3.142.dat, time: 45570
+Sep 05 16:42:03.832 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.566_1.000_0.840_3.360_3.142.dat, time: 45570
+Sep 05 16:42:03.832 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.233_0.800_0.840_3.360_3.142.dat, time: 45570
+Sep 05 16:42:03.832 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.689_0.200_0.320_1.280_5.236.dat, time: 45570
+Sep 05 16:42:03.833 CRIT [44mTRUE EVENT DETECTED[0m, star: /data/star_extra_data/star_dataset/data/gwac/0.068_0.270_0.200_0.320_1.280_5.236.dat, time: 45570
+Sep 05 16:42:04.506 INFO [44mAll values stats:[0m, std_dev: 0.0061214166, avg: 0.008128109, max: 0.3045194, min: 0.000006713403
+Sep 05 16:42:04.522 INFO [42mGroup 0 values stats:[0m, std_dev: 0.0041439105, avg: 0.007760837, max: 0.040338874, min: 0.000014949512
+Sep 05 16:42:04.525 INFO [42mGroup 1 values stats:[0m, std_dev: 0.0041441224, avg: 0.007777979, max: 0.040296786, min: 0.00000912624
+Sep 05 16:42:04.527 INFO [42mGroup 2 values stats:[0m, std_dev: 0.008934316, avg: 0.00888026, max: 0.3045194, min: 0.000006713403
+Sep 05 16:42:04.549 INFO [41mMin values stats: [0m, std_dev: 0.000082802086, avg: 0.00014011787, max: 0.00056595594, min: 0.000006713403
+Sep 05 16:42:04.550 INFO [41mMax values stats: [0m, std_dev: 0.06739739, avg: 0.08557615, max: 0.3045194, min: 0.015598828
+Sep 05 16:42:04.550 INFO [41mAvg values stats: [0m, std_dev: 0.0009153286, avg: 0.008131026, max: 0.010482977, min: 0.0055585094
+Sep 05 16:42:04.550 INFO [42mRun Stats[0m, max_star_len: 46080, num_stars: 3240, num_false_events: 0, num_true_events: 304, num_events_detected: 304
+ERROR: ld.so: object 'libdlfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ERROR: ld.so: object 'libvglfaker.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+ArrayFire v3.6.1 (CUDA, 64-bit Linux, build b443e146)
+Platform: CUDA Toolkit 10.1, Driver: 430.40
+[0] GeForce MX150, 2003 MB, CUDA Compute 6.1

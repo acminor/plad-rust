@@ -50,18 +50,6 @@ pub fn parse_template_file(file_name: String) -> Templates {
             serde::Deserialize::deserialize(&mut de)
                 .expect("Failed to deserialize templates");
 
-        /*
-        let temp = temp
-            .into_iter()
-            .map(|template| {
-                template
-                    .into_iter()
-                    .map(|(x, y)| Complex::new(x, y))
-                    .collect()
-            })
-            .collect::<Vec<Vec<Complex<f32>>>>();
-        */
-
         let max_len = temp
             .iter()
             .map(|template| template.len())
@@ -90,7 +78,6 @@ pub fn parse_template_file(file_name: String) -> Templates {
 
                         let fft_bs = AF::fft(&template, 1.0, max_len as i64);
                         let temp = AF::rows(&fft_bs, 0, (real_len - 1) as u64);
-                        //temp
                         AF::conjg(&temp)
                     }).collect();
 
