@@ -101,7 +101,7 @@ pub fn debug_plt(data: &[f32], _x_range: Option<&Vec<f32>>) {
     {
         let root = SVGBackend::new(&img_path, (1280, 920))
             .into_drawing_area();
-        root.fill(&White).expect("Trouble with plotting.");
+        root.fill(&WHITE).expect("Trouble with plotting.");
         let mut chart = ChartBuilder::on(&root)
             .caption("Debug plot", ("Arial", 50).into_font())
             .margin(5)
@@ -114,7 +114,7 @@ pub fn debug_plt(data: &[f32], _x_range: Option<&Vec<f32>>) {
             .draw_series(
                 LineSeries::new(
                     data.iter().cloned().enumerate().map(|(x,y)| (x as u64, y)),
-                    &Red
+                    &RED
                 )
             )
             .expect("Problem drawing data.");
