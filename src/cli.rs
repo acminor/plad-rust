@@ -112,8 +112,6 @@ pub fn parse_args() -> RunInfo {
         }
     };
 
-    println!("{}", stars.len());
-
     RunInfo {
         templates: templates,
         stars: stars,

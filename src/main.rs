@@ -79,10 +79,10 @@ fn main() {
         stars.iter().map(|star| star.samples.len()).sum::<usize>()
         / window_length as usize;
 
-    println!(
-        "Window length: {}\nTotal iterations needed: {}",
-        window_length,
-        tot_iter
+    info!(
+        log, "";
+        "window_length"=>format!("{}", window_length),
+        "total_iters_needed"=>tot_iter,
     );
 
     let is_offline = true;
@@ -97,9 +97,7 @@ fn main() {
             data.insert(star.uid.clone(), Vec::new());
         });
     loop {
-        //println!("Stars left: {}", stars.len());
         if log_timer.elapsed() > std::time::Duration::from_secs(2) {
-            // TODO implement logging logic
             let sps = iterations as f32 / now.elapsed().as_secs() as f32;
             let pp = (iterations as f32)/(tot_iter as f32) * 100.0;
             info!(log, "";
@@ -192,6 +190,25 @@ fn main() {
 
         dbg_data.push(ip[0]);
     }
+
+    compute_and_disp_stats(&data);
+
+    info!(log, "{}", "Run Stats".on_green();
+          "num_events_detected"=>true_events+false_events,
+          "num_true_events"=>true_events,
+          "num_false_events"=>false_events,
+          "num_stars"=>tot_stars,
+          "max_star_len"=>max_len);
+
+    crate::utils::debug_plt(&dbg_data, None);
+
+    if PROF {
+        PROFILER.lock().unwrap().stop().expect("Couldn't start");
+    }
+}
+
+fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>) {
+    let log = get_root_logger();
 
     let stats = |data: &Vec<f32>| {
         let mut avg = 0.0;
@@ -299,34 +316,5 @@ fn main() {
               "max"=>format!("{}", max),
               "avg"=>format!("{}", avg),
               "std_dev"=>format!("{}", std_dev));
-
-        /*
-        info!(log, "All values stats: ";
-              "min"=>format!("{}", min),
-              "max"=>format!("{}", max),
-              "avg"=>format!("{}", avg),
-              "std_dev"=>format!("{}", std_dev));
-        */
     }
-
-    info!(log, "{}", "Run Stats".on_green();
-          "num_events_detected"=>true_events+false_events,
-          "num_true_events"=>true_events,
-          "num_false_events"=>false_events,
-          "num_stars"=>tot_stars,
-          "max_star_len"=>max_len);
-
-    crate::utils::debug_plt(&dbg_data, None);
-
-    if PROF {
-        PROFILER.lock().unwrap().stop().expect("Couldn't start");
-    }
-
-    /*
-    println!(
-        "{} stars per second @ {} templates",
-        iterations / now.elapsed().as_secs(),
-        1000
-    );
-    */
 }

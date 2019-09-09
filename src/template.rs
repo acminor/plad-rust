@@ -91,20 +91,12 @@ pub fn parse_template_file(file_name: String) -> Templates {
 
                     chunk_out
                 };
-                println!("J Dims: {}", chunk_out.dims());
-                //let chunk_out = AF::transpose(&chunk_out, false);
 
                 let mut buf: Vec<Complex<f32>> = Vec::new();
                 buf.resize(chunk_out.elements(), Complex::new(0.0, 0.0 as f32));
                 chunk_out.lock();
                 chunk_out.host(&mut buf);
                 chunk_out.unlock();
-
-                // [ ] TODO check that plot is correct
-                /*
-                crate::utils::debug_plt(
-                    &buf.iter().map(|x| x.re).collect(), None);
-                */
 
                 TemplateGroup {
                     templates: chunk_out,

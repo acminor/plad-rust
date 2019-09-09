@@ -66,7 +66,6 @@ pub fn parse_model(mtype: StarModelType, _mfile: String)
                    -> Box<dyn StarModel + Send> {
     match mtype {
         StarModelType::None => Box::new(NoneModel {}),
-        //_ => Box::new(NoneModel {}),
     }
 }
 
