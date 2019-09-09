@@ -18,7 +18,8 @@ function safe_call {
                   --templates-file ${DATA} \
                   --noise .06 \
                   --rho 4.0 \
-                  --window-length $2
+                  --window-length $2 \
+                  --alert-threshold 1.62
 }
 
 case $1 in

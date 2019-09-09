@@ -4,6 +4,9 @@
 extern crate lazy_static;
 
 #[macro_use]
+extern crate clap;
+
+#[macro_use]
 extern crate slog;
 extern crate slog_term;
 extern crate slog_async;
@@ -46,11 +49,10 @@ fn main() {
             .expect("Couldn't start");
     }
 
-    AF::info();
-
     let log = get_root_logger();
     let run_info = parse_args();
 
+    AF::info();
     AF::set_backend(AF::Backend::CUDA);
     //AF::set_backend(AF::Backend::OPENCL);
     AF::set_device(0);
@@ -62,6 +64,7 @@ fn main() {
         _rho,
         noise_stddev,
         window_length,
+        alert_threshold,
     } = run_info;
 
     let templates = templates;
@@ -90,7 +93,6 @@ fn main() {
     let mut sample_time = 0;
     let mut true_events = 0;
     let mut false_events = 0;
-    let mut dbg_data: Vec<f32> = Vec::new();
     let mut data: HashMap<String, Vec<f32>> = HashMap::new();
     stars.iter()
         .for_each(|star| {
@@ -153,13 +155,12 @@ fn main() {
             200,
         );
 
-        let alert_thresh = 100.0;
         let mut detected_stars = std::collections::HashSet::new();
         ip
             .iter()
             .zip(window_names)
             .for_each(|(val, star)| {
-                if *val > alert_thresh {
+                if *val > alert_threshold {
                     // TODO this should be a command line option
                     if sample_time >= 40320 && sample_time <= 46080 {
                         crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
@@ -187,8 +188,6 @@ fn main() {
             .into_iter()
             .filter(|star| !detected_stars.contains(&star.uid))
             .collect();
-
-        dbg_data.push(ip[0]);
     }
 
     compute_and_disp_stats(&data);
@@ -200,7 +199,9 @@ fn main() {
           "num_stars"=>tot_stars,
           "max_star_len"=>max_len);
 
-    crate::utils::debug_plt(&dbg_data, None);
+    for (_, star_data) in data.iter() {
+        crate::utils::debug_plt(&star_data, None);
+    }
 
     if PROF {
         PROFILER.lock().unwrap().stop().expect("Couldn't start");

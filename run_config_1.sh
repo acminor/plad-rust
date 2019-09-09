@@ -17,7 +17,8 @@ function safe_call {
                     data/templates-1800.0d87616.0-0.1d50.0-25x25.toml \
                   --noise .06 \
                   --rho 4.0 \
-                  --window-length 30
+                  --window-length 30 \
+                  --alert-threshold 100.0
 }
 
 case $1 in

@@ -15,6 +15,7 @@ pub struct RunInfo {
     pub _rho: f32,
     pub noise_stddev: f32,
     pub window_length: i32,
+    pub alert_threshold: f32,
 }
 
 fn unwrap_parse_star_files(file: std::io::Result<fs::DirEntry>) -> Option<Star> {
@@ -47,7 +48,7 @@ fn unwrap_parse_star_files(file: std::io::Result<fs::DirEntry>) -> Option<Star> 
 
 pub fn parse_args() -> RunInfo {
     let matches = App::new("Matched Filter")
-        .version("0.1")
+        .version(crate_version!())
         .author("Austin C. Minor (米诺) <austin.chase.m@gmail.com>")
         .about("TODO")
         .arg(
@@ -92,6 +93,14 @@ pub fn parse_args() -> RunInfo {
                 .takes_value(true)
                 .required(true),
         )
+        .arg(
+            Arg::with_name("alert_threshold")
+                .short("a")
+                .long("alert-threshold")
+                .help("TODO")
+                .takes_value(true)
+                .required(true)
+        )
         .get_matches();
 
     let templates = parse_template_file(
@@ -117,11 +126,14 @@ pub fn parse_args() -> RunInfo {
         stars,
         // [ ] TODO see earlier fixme
         _rho: f32::from_str(matches.value_of("rho").unwrap()).unwrap(),
-        noise_stddev: f32::from_str(matches.value_of("noise").unwrap())
-            .unwrap(),
+        noise_stddev: f32::from_str(
+            matches.value_of("noise").unwrap()
+        ).unwrap(),
         window_length: i32::from_str(
             matches.value_of("window_length").unwrap(),
-        )
-        .unwrap(),
+        ).unwrap(),
+        alert_threshold: f32::from_str(
+            matches.value_of("alert_threshold").unwrap()
+        ).unwrap(),
     }
 }
