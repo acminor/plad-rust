@@ -1,15 +1,14 @@
 use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
-use arrayfire::print_gen;
 use std::path::Path;
 use std::path::PathBuf;
 
 use crate::template::*;
 
 pub fn inner_product(
-    templates: &Vec<TemplateGroup>,
-    signals: &Vec<Vec<f32>>,
+    templates: &[TemplateGroup],
+    signals: &[Vec<f32>],
     window_length: usize,
     // [ ] TODO include in calculations
     //  - ie work on estitmation, etc.
@@ -26,7 +25,7 @@ pub fn inner_product(
         let num_stars = signals.len();
         let signals = &signals
             .iter()
-            .flat_map(|signal| signal.into_iter())
+            .flat_map(|signal| signal.iter())
             .cloned()
             .collect::<Vec<f32>>()[..];
         let stars = AF_Array::new(
@@ -80,13 +79,13 @@ pub fn inner_product(
 }
 
 // [ ] TODO add _x_range functionality
-pub fn debug_plt(data: &Vec<f32>, _x_range: Option<&Vec<f32>>) {
+pub fn debug_plt(data: &[f32], _x_range: Option<&Vec<f32>>) {
     use std::process::Command;
     use plotters::prelude::*;
     use tempfile::tempdir;
 
-    let mut max_val = -10000000.0;
-    let mut min_val = 10000000.0;
+    let mut max_val = -10_000_000.0;
+    let mut min_val = 10_000_000.0;
     for &val in data {
         if val > max_val {
             max_val = val;
@@ -134,7 +133,7 @@ pub fn debug_plt(data: &Vec<f32>, _x_range: Option<&Vec<f32>>) {
 //
 // -- assumes file is a file on disk and not a directory due to
 //    previous checks
-pub fn normalize_local_data_paths(star_file: &str, data_file: &String) -> String {
+pub fn normalize_local_data_paths(star_file: &str, data_file: &str) -> String {
     match Path::new(star_file).parent() {
         Some(base_dir) => {
             [base_dir.to_str().unwrap(), &data_file[..]]

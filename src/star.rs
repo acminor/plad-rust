@@ -98,8 +98,8 @@ pub fn parse_star_file(star_file: &str) -> Star {
     Star {
         id: star_toml.id,
         uid: star_file.to_string(),
-        samples: samples,
-        star_type: star_type,
+        samples,
+        star_type,
         model_type: StarModelType::None,
         model: parse_model(StarModelType::None, "".to_string()),
         sample_rate: star_toml.sample_rate,

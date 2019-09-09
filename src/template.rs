@@ -27,12 +27,8 @@ pub struct Templates {
 }
 
 pub fn parse_template_file(file_name: String) -> Templates {
-    let contents = {
-        let contents = fs::read_to_string(file_name)
-            .expect("Failed to read Templates TOML file");
-
-        contents
-    };
+    let contents = fs::read_to_string(file_name)
+        .expect("Failed to read Templates TOML file");
 
     let template_toml: TemplateToml =
         toml::from_str(&contents).expect("Failed to parse Templates TOML file");
@@ -70,7 +66,7 @@ pub fn parse_template_file(file_name: String) -> Templates {
                 let chunk_len = chunk.len();
 
                 let mut chunk: Vec<AF_Array<Complex<f32>>> =
-                    chunk.into_iter().map(|template| {
+                    chunk.iter().map(|template| {
                         let template = AF_Array::new(
                             &template,
                             AF_Dim4::new(&[template.len() as u64, 1, 1, 1])
@@ -109,7 +105,7 @@ pub fn parse_template_file(file_name: String) -> Templates {
     };
 
     Templates {
-        templates: templates,
+        templates,
         pre_fft: true,
     }
 }

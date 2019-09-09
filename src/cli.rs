@@ -113,8 +113,8 @@ pub fn parse_args() -> RunInfo {
     };
 
     RunInfo {
-        templates: templates,
-        stars: stars,
+        templates,
+        stars,
         // [ ] TODO see earlier fixme
         _rho: f32::from_str(matches.value_of("rho").unwrap()).unwrap(),
         noise_stddev: f32::from_str(matches.value_of("noise").unwrap())

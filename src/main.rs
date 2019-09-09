@@ -7,8 +7,6 @@ extern crate slog_term;
 extern crate slog_async;
 
 extern crate jemallocator;
-
-#[macro_use]
 extern crate arrayfire;
 
 // [ ] TODO Test if this speeds up the program: also what about memory pressure
@@ -116,7 +114,7 @@ fn main() {
             .filter(|star| star.samples.len() >= (window_length as usize))
             .collect::<Vec<&mut Star>>();
 
-        if cur_stars.len() == 0 && is_offline {
+        if cur_stars.is_empty() && is_offline {
             break;
         }
 
@@ -133,7 +131,7 @@ fn main() {
 
                 star.samples.drain(0..(window_length as usize)).collect()
             })
-            .collect();
+            .collect::<Vec<Vec<f32>>>();
         sample_time += window_length;
 
         let window_names = cur_stars
@@ -144,8 +142,8 @@ fn main() {
             .collect::<Vec<String>>();
 
         let ip = inner_product(
-            &templates.templates,
-            &windows,
+            &templates.templates[..],
+            &windows[..],
             window_length as usize,
             noise_stddev,
             true,
@@ -163,14 +161,14 @@ fn main() {
                     // TODO this should be a command line option
                     if sample_time >= 40320 && sample_time <= 46080 {
                         crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
-                              "time"=>format!("{}", sample_time),
-                              "star"=>format!("{}", star),
+                              "time"=>sample_time.to_string(),
+                              "star"=>star.to_string(),
                         );
                         true_events += 1;
                     } else {
                         crit!(log, "{}", "FALSE EVENT DETECTED".on_red();
-                              "time"=>format!("{}", sample_time),
-                              "star"=>format!("{}", star),
+                              "time"=>sample_time.to_string(),
+                              "star"=>star.to_string(),
                         );
                         false_events += 1;
                     }
@@ -232,7 +230,7 @@ fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>) {
             std_dev += datum*datum;
         }
 
-        avg = avg/len;
+        avg /= len;
         std_dev = (std_dev/len - avg*avg).sqrt();
 
         (min, max, avg, std_dev)
@@ -246,10 +244,10 @@ fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>) {
                       val.clone()
                   }).collect());
         info!(log, "{}", "All values stats:".on_blue();
-              "min"=>format!("{}", min),
-              "max"=>format!("{}", max),
-              "avg"=>format!("{}", avg),
-              "std_dev"=>format!("{}", std_dev));
+              "min"=>min.to_string(),
+              "max"=>max.to_string(),
+              "avg"=>avg.to_string(),
+              "std_dev"=>std_dev.to_string());
     }
 
     {
@@ -258,10 +256,10 @@ fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>) {
         for (_key, star) in data.iter() {
             for (i, chunk) in star.chunks(ch_sz).enumerate() {
                 if group_stats.len() <= i {
-                    let temp = chunk.clone().to_vec();
+                    let temp = chunk.to_vec();
                     group_stats.push(temp);
                 } else {
-                    let mut temp = chunk.clone().to_vec();
+                    let mut temp = chunk.to_vec();
                     group_stats[i].append(&mut temp);
                 }
             }
@@ -270,10 +268,10 @@ fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>) {
         group_stats.iter().enumerate().for_each(|(i, group)| {
             let (min, max, avg, std_dev) = stats(&group);
             info!(log, "{}", format!("Group {} values stats:", i).on_green();
-                  "min"=>format!("{}", min),
-                  "max"=>format!("{}", max),
-                  "avg"=>format!("{}", avg),
-                  "std_dev"=>format!("{}", std_dev));
+                  "min"=>min.to_string(),
+                  "max"=>max.to_string(),
+                  "avg"=>avg.to_string(),
+                  "std_dev"=>std_dev.to_string());
         })
     }
 
@@ -298,23 +296,23 @@ fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>) {
 
         let (min, max, avg, std_dev) = stats(&mins);
         info!(log, "{}", "Min values stats: ".on_red();
-              "min"=>format!("{}", min),
-              "max"=>format!("{}", max),
-              "avg"=>format!("{}", avg),
-              "std_dev"=>format!("{}", std_dev));
+              "min"=>min.to_string(),
+              "max"=>max.to_string(),
+              "avg"=>avg.to_string(),
+              "std_dev"=>std_dev.to_string());
 
         let (min, max, avg, std_dev) = stats(&maxs);
         info!(log, "{}", "Max values stats: ".on_red();
-              "min"=>format!("{}", min),
-              "max"=>format!("{}", max),
-              "avg"=>format!("{}", avg),
-              "std_dev"=>format!("{}", std_dev));
+              "min"=>min.to_string(),
+              "max"=>max.to_string(),
+              "avg"=>avg.to_string(),
+              "std_dev"=>std_dev.to_string());
 
         let (min, max, avg, std_dev) = stats(&avgs);
         info!(log, "{}", "Avg values stats: ".on_red();
-              "min"=>format!("{}", min),
-              "max"=>format!("{}", max),
-              "avg"=>format!("{}", avg),
-              "std_dev"=>format!("{}", std_dev));
+              "min"=>min.to_string(),
+              "max"=>max.to_string(),
+              "avg"=>avg.to_string(),
+              "std_dev"=>std_dev.to_string());
     }
 }
