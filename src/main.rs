@@ -1,3 +1,5 @@
+#![feature(proc_macro_hygiene)]
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -151,7 +153,7 @@ fn main() {
             200,
         );
 
-        let alert_thresh = 1.0;
+        let alert_thresh = 100.0;
         let mut detected_stars = std::collections::HashSet::new();
         ip
             .iter()

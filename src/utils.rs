@@ -3,6 +3,7 @@ use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
 use std::path::Path;
 use std::path::PathBuf;
+use inline_python::python;
 
 use crate::template::*;
 
@@ -80,50 +81,17 @@ pub fn inner_product(
 
 // [ ] TODO add _x_range functionality
 pub fn debug_plt(data: &[f32], _x_range: Option<&Vec<f32>>) {
-    use std::process::Command;
-    use plotters::prelude::*;
-    use tempfile::tempdir;
+    let c = inline_python::Context::new();
+    python! {
+        #![context = &c]
+        import matplotlib.pyplot as plt
+        from unittest.mock import patch
+        import sys
+        sys.argv.append("test")
 
-    let mut max_val = -10_000_000.0;
-    let mut min_val = 10_000_000.0;
-    for &val in data {
-        if val > max_val {
-            max_val = val;
-        }
-
-        if val < min_val {
-            min_val = val;
-        }
+        plt.plot('data)
+        plt.show()
     }
-
-    let dir = tempdir().expect("trouble creating tmp dir");
-    let img_path = dir.path().join("img.svg");
-    {
-        let root = SVGBackend::new(&img_path, (1280, 920))
-            .into_drawing_area();
-        root.fill(&WHITE).expect("Trouble with plotting.");
-        let mut chart = ChartBuilder::on(&root)
-            .caption("Debug plot", ("Arial", 50).into_font())
-            .margin(5)
-            .x_label_area_size(30)
-            .y_label_area_size(30)
-            .build_ranged(0..data.len() as u64, min_val..max_val)
-            .expect("Trouble building chart.");
-        chart.configure_mesh().draw().expect("Trouble with plotting.");
-        chart
-            .draw_series(
-                LineSeries::new(
-                    data.iter().cloned().enumerate().map(|(x,y)| (x as u64, y)),
-                    &RED
-                )
-            )
-            .expect("Problem drawing data.");
-    }
-
-    Command::new("/usr/bin/eog")
-        .arg(dir.path().join("img.svg"))
-        .status()
-        .expect("problem creating process");
 }
 
 // since the each data path has a file located locally from it
