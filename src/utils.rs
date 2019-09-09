@@ -38,9 +38,15 @@ pub fn inner_product(
 
         let stars = {
             //let stars = AF::add(&stars, &(20.0 as f32), false);
-            println!("{}", templates[0].fft_len);
+            //println!("{}", templates[0].fft_len);
             //let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
-            let fft_bs = AF::fft(&stars, 1.0, templates[0].fft_len as i64);
+            /*
+            DOES NOT WORK -- maybe investigate later but having good results now
+            let stars = AF::add(&stars, &0.001f32, false);
+            let stars = AF::log10(&stars);
+            let stars = AF::mul(&stars, &-2.5f32, false);
+            */
+            let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
             AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
         };
 
@@ -63,7 +69,7 @@ pub fn inner_product(
                 AF::MatProp::NONE,
             );
 
-            let res_af = AF::transpose(&res_af, false);
+            //let res_af = AF::transpose(&res_af, false);
             //println!("mult dims: {}", res_af.dims());
 
             //let res_af = AF::real(&res_af);
@@ -73,7 +79,7 @@ pub fn inner_product(
             // --- can be fixed will describe in other doc
             let res_af = AF::abs(&res_af);
 
-            let res_af = AF::max(&res_af, 0);
+            let res_af = AF::max(&res_af, 1);
             res_af.eval();
             //println!("max dims: {}", res_af.dims());
             let mut temp: Vec<f32> = Vec::new();

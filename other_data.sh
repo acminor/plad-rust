@@ -3,6 +3,8 @@
 source ./src_env.sh > /dev/null
 source ~/.zshenv > /dev/null
 
+DATA="data/templates-1800.0d87616.0-0.1d50.0-600x600.toml"
+
 function safe_call {
     if [[ $1 == "" ]]
     then
@@ -13,8 +15,7 @@ function safe_call {
 
     RUST_BACKTRACE=1 cargo run $opt --\
                   --input /data/star_extra_data/star_dataset/data/threshold \
-                  --templates-file \
-                  data/templates-25x25.toml \
+                  --templates-file ${DATA} \
                   --noise .06 \
                   --rho 4.0 \
                   --window-length $2

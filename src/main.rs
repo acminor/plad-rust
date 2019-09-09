@@ -97,7 +97,7 @@ fn main() {
             data.insert(star.uid.clone(), Vec::new());
         });
     loop {
-        println!("Stars left: {}", stars.len());
+        //println!("Stars left: {}", stars.len());
         if log_timer.elapsed() > std::time::Duration::from_secs(2) {
             // TODO implement logging logic
             let sps = iterations as f32 / now.elapsed().as_secs() as f32;
