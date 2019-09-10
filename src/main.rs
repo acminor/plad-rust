@@ -199,8 +199,8 @@ fn main() {
           "num_stars"=>tot_stars,
           "max_star_len"=>max_len);
 
-    for (_, star_data) in data.iter() {
-        crate::utils::debug_plt(&star_data, None);
+    for (star_title, star_data) in data.iter() {
+        crate::utils::debug_plt(&star_data, star_title, None);
     }
 
     if PROF {

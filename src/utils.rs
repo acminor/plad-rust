@@ -80,7 +80,7 @@ pub fn inner_product(
 }
 
 // [ ] TODO add _x_range functionality
-pub fn debug_plt(data: &[f32], _x_range: Option<&Vec<f32>>) {
+pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
     let c = inline_python::Context::new();
     python! {
         #![context = &c]
@@ -89,6 +89,7 @@ pub fn debug_plt(data: &[f32], _x_range: Option<&Vec<f32>>) {
         import sys
         sys.argv.append("test")
 
+        plt.title('title)
         plt.plot('data)
         plt.show()
     }
