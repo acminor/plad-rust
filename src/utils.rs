@@ -90,7 +90,28 @@ pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
         sys.argv.append("test")
 
         plt.title('title)
-        plt.plot('data)
+        plt.plot('data, marker="o", ls="")
+        plt.show()
+    }
+}
+
+pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
+    let c = inline_python::Context::new();
+    python! {
+        #![context = &c]
+        import matplotlib.pyplot as plt
+        from unittest.mock import patch
+        import sys
+        sys.argv.append("test")
+
+        temp = []
+        for d in 'data:
+            temp.append(d)
+            for i in range(0, 59):
+                temp.append(None)
+        plt.title('title)
+        plt.plot(temp, marker="o", ls="")
+        plt.plot('data2, marker="x", ls="")
         plt.show()
     }
 }

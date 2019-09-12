@@ -7,6 +7,9 @@ extern crate lazy_static;
 extern crate clap;
 
 #[macro_use]
+extern crate serde_derive;
+
+#[macro_use]
 extern crate slog;
 extern crate slog_term;
 extern crate slog_async;
@@ -23,6 +26,7 @@ mod template;
 mod utils;
 mod python;
 mod dat_star;
+mod json_star;
 mod cli;
 mod log;
 
@@ -53,8 +57,8 @@ fn main() {
     let run_info = parse_args();
 
     AF::info();
-    AF::set_backend(AF::Backend::CUDA);
     //AF::set_backend(AF::Backend::OPENCL);
+    AF::set_backend(AF::Backend::CUDA);
     AF::set_device(0);
 
     let RunInfo {
@@ -94,9 +98,11 @@ fn main() {
     let mut true_events = 0;
     let mut false_events = 0;
     let mut data: HashMap<String, Vec<f32>> = HashMap::new();
+    let mut data2: HashMap<String, Vec<f32>> = HashMap::new();
     stars.iter()
         .for_each(|star| {
             data.insert(star.uid.clone(), Vec::new());
+            data2.insert(star.uid.clone(), Vec::new());
         });
     loop {
         if log_timer.elapsed() > std::time::Duration::from_secs(2) {
@@ -133,7 +139,10 @@ fn main() {
             .map(|star| {
                 iterations += 1;
 
-                star.samples.drain(0..(window_length as usize)).collect()
+                let temp: Vec<f32> = star.samples.drain(0..(window_length as usize)).collect();
+                data2.get_mut(&star.uid).unwrap().append(&mut temp.clone());
+
+                temp
             })
             .collect::<Vec<Vec<f32>>>();
         sample_time += window_length;
@@ -199,8 +208,12 @@ fn main() {
           "num_stars"=>tot_stars,
           "max_star_len"=>max_len);
 
-    for (star_title, star_data) in data.iter() {
-        crate::utils::debug_plt(&star_data, star_title, None);
+    let mut data = data.iter().collect::<Vec<(&String, &Vec<f32>)>>();
+    data.sort_unstable_by(|a, b| a.1.partial_cmp(b.1).unwrap());
+    data.reverse();
+    for (star_title, star_data) in data.into_iter() {
+        //crate::utils::debug_plt(&star_data, star_title, None);
+        crate::utils::debug_plt_2(&star_data, data2.get(star_title).unwrap(), star_title, None);
     }
 
     if PROF {

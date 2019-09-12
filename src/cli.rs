@@ -1,3 +1,4 @@
+use crate::json_star;
 use crate::dat_star;
 use crate::star::*;
 use crate::template::*;
@@ -33,6 +34,11 @@ fn unwrap_parse_star_files(file: std::io::Result<fs::DirEntry>) -> Option<Star> 
                             Some(dat_star::parse_star_file(
                                 file.path().as_path().to_str().unwrap(),
                             ))
+                        },
+                        Some(ext) if ext == "json" => {
+                            json_star::parse_star_file(
+                                file.path().as_path().to_str().unwrap(),
+                            )
                         },
                         _ => None,
                     }
