@@ -27,6 +27,7 @@ mod utils;
 mod python;
 mod dat_star;
 mod json_star;
+mod toml_star;
 mod cli;
 mod log;
 mod sw_star;
@@ -35,6 +36,7 @@ use star::*;
 use utils::*;
 use cli::*;
 use log::*;
+use sw_star::*;
 
 use arrayfire as AF;
 
@@ -72,6 +74,15 @@ fn main() {
         alert_threshold,
     } = run_info;
 
+    let stars = stars.into_iter().map(|star| {
+        SWStar::new()
+            .set_star(star)
+            .set_availables(0, 1)
+            .set_max_buffer_len(100)
+            .set_window_lens(15, 60)
+            .build()
+    }).collect::<Vec<SWStar>>();
+
     let templates = templates;
     let mut stars = stars;
 
@@ -82,9 +93,15 @@ fn main() {
 
     let tot_stars = stars.len();
     let max_len: usize
-        = stars.iter().map(|star| star.samples.len()).max().unwrap();
+        = stars
+        .iter()
+        .filter_map(|sw| sw.star.samples.as_ref())
+        .map(|samps| samps.len()).max().unwrap();
     let tot_iter: usize =
-        stars.iter().map(|star| star.samples.len()).sum::<usize>()
+        stars
+        .iter()
+        .filter_map(|sw| sw.star.samples.as_ref())
+        .map(|samps| samps.len()).sum::<usize>()
         / window_length as usize;
 
     info!(
@@ -102,9 +119,9 @@ fn main() {
     let mut data2: HashMap<String, Vec<f32>> = HashMap::new();
     let mut adps: Vec<f32> = Vec::new();
     stars.iter()
-        .for_each(|star| {
-            data.insert(star.uid.clone(), Vec::new());
-            data2.insert(star.uid.clone(), Vec::new());
+        .for_each(|sw| {
+            data.insert(sw.star.uid.clone(), Vec::new());
+            data2.insert(sw.star.uid.clone(), Vec::new());
         });
     loop {
         if log_timer.elapsed() > std::time::Duration::from_secs(2) {
@@ -121,14 +138,32 @@ fn main() {
 
             log_timer = std::time::Instant::now();
         }
+
+        /*
         let mut cur_stars = stars
             .iter_mut()
             .filter(|star| star.samples.len() >= (window_length as usize))
             .collect::<Vec<&mut Star>>();
 
+        // FIXME will never exit for now
         if cur_stars.is_empty() && is_offline {
             break;
         }
+        */
+
+        stars.iter().for_each(|sw| {
+            sw.star.samples.as_ref().map(|samps| {
+                let tick_index = {
+                    *sw.star.samples_tick_index.borrow()
+                };
+
+                if tick_index < samps.len() {
+                    sw.tick(samps[tick_index]);
+                    iterations += 1;
+                    sw.star.samples_tick_index.replace(tick_index+1);
+                }
+            });
+        });
 
         if i == -1 {
             break;
@@ -136,30 +171,44 @@ fn main() {
             i+=1;
         }
 
-        let windows = cur_stars
-            .iter_mut()
-            .map(|star| {
-                iterations += 1;
+        let window_names =
+            stars
+            .iter()
+            .filter_map(|sw| {
+                if sw.is_ready() {
+                    Some(sw.star.uid.clone())
+                } else {
+                    None
+                }
+            })
+            .collect::<String>();
 
-                let temp: Vec<f32> = star.samples
-                    .drain(0..(window_length as usize)).collect();
-                data2.get_mut(&star.uid).unwrap().append(&mut temp.clone());
+        let windows =
+            stars
+            .iter()
+            .filter_map(|sw| {
+                let window = match sw.window() {
+                    Some(window) => window,
+                    _ => return None
+                };
 
-                temp
+                //Some(sw, window)
+                Some(window)
             })
             .collect::<Vec<Vec<f32>>>();
+
         sample_time += window_length;
 
-        let window_names = cur_stars
+        let window_names = stars
             .iter()
-            .map(|star| {
-                star.uid.clone()
+            .map(|sw| {
+                sw.star.uid.clone()
             })
             .collect::<Vec<String>>();
 
         let ip = inner_product(
             &templates.templates[..],
-            &windows[..],
+            &windows,
             window_length as usize,
             noise_stddev,
             true,
@@ -212,7 +261,7 @@ fn main() {
         // for now just remove
         stars = stars
             .into_iter()
-            .filter(|star| !detected_stars.contains(&star.uid))
+            .filter(|sw| !detected_stars.contains(&sw.star.uid))
             .collect();
     }
 

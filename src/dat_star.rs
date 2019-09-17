@@ -28,7 +28,8 @@ pub fn parse_star_file(star_file: &str) -> Star {
     Star {
         id: star_file.to_string(),
         uid: star_file.to_string(),
-        samples: star_data,
+        samples: Some(star_data),
+        samples_tick_index: std::cell::RefCell::new(0),
         star_type: StarType::Unknown,
         model_type: StarModelType::None,
         model: parse_model(StarModelType::None, "".to_string()),

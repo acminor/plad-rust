@@ -81,7 +81,8 @@ pub fn parse_star_file(star_file: &str) -> Option<Star> {
             Star {
                 id: key.to_string(),
                 uid: key.to_string(),
-                samples: data,
+                samples: Some(data),
+                samples_tick_index: std::cell::RefCell::new(0),
                 star_type: StarType::Unknown,
                 model_type: StarModelType::None,
                 model: parse_model(StarModelType::None, "".to_string()),

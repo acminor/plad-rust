@@ -1,5 +1,6 @@
 use crate::json_star;
 use crate::dat_star;
+use crate::toml_star;
 use crate::star::*;
 use crate::template::*;
 use std::str::FromStr;
@@ -26,7 +27,7 @@ fn unwrap_parse_star_files(file: std::io::Result<fs::DirEntry>) -> Option<Star> 
                 if file_type.is_file() {
                     match file.path().extension() {
                         Some(ext) if ext == "toml" => {
-                            Some(parse_star_file(
+                            Some(toml_star::parse_star_file(
                                 file.path().as_path().to_str().unwrap(),
                             ))
                         },
