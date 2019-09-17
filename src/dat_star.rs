@@ -23,6 +23,8 @@ pub fn parse_star_file(star_file: &str) -> Star {
                 .expect("Failed to parse f(t) data")
         }).collect();
 
+    //crate::utils::debug_plt(&star_data, &star_file.to_string(), None);
+
     Star {
         id: star_file.to_string(),
         uid: star_file.to_string(),

@@ -4,6 +4,7 @@ use arrayfire::Dim4 as AF_Dim4;
 use std::path::Path;
 use std::path::PathBuf;
 use inline_python::python;
+use regex::Regex;
 
 use crate::template::*;
 
@@ -37,7 +38,7 @@ pub fn inner_product(
         );
 
         let stars = {
-            let fft_bs = AF::fft_r2c(&stars, 0.65, templates[0].fft_len as i64);
+            let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
             AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
         };
 
@@ -92,9 +93,45 @@ pub fn inner_product(
     res
 }
 
+pub fn uid_to_t0_tp(uid: &str) -> Option<(f32,f32)> {
+    let adp_parser = Regex::new(r"(?x) # makes white space insignificant and adds comment support
+                                  (\d+\.\d{3}) # sigma
+                                  _(\d+\.\d{3}) # T_prime
+                                  _(\d+\.\d{3}) # T
+                                  _(\d+\.\d{3}) # A_prime
+                                  _(\d+\.\d{3}) # relative
+                                  _(\d+\.\d{3}).dat # phi").unwrap();
+
+    let res = adp_parser.captures(&uid).map(|caps| {
+        let t_prime = caps.get(2).unwrap().as_str().parse::<f32>().unwrap();
+        //println!("T': {}", t_prime);
+        let samples_per_hour =
+            60.0 // minutes in an hour
+            * (60.0/15.0); // samples in a second (240)
+        let signal_time_in_samples =
+            t_prime // length of signal (days)
+            * 24.0 // hours in a day
+            * samples_per_hour;
+        let end_of_signal =
+            8.0 // hours per day
+            * samples_per_hour
+            * 24.0; // total sample days
+        let center_of_signal =
+            end_of_signal
+            - (signal_time_in_samples/2.0); // center of signal
+        //println!("uid: {}", uid);
+        //println!("t0: {}", center_of_signal);
+        (center_of_signal, signal_time_in_samples)
+    });
+
+    res
+}
+
 // [ ] TODO add _x_range functionality
 pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
     let c = inline_python::Context::new();
+
+    let (t0, _) = uid_to_t0_tp(title).unwrap();
     python! {
         #![context = &c]
         import matplotlib.pyplot as plt
@@ -103,7 +140,9 @@ pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
         sys.argv.append("test")
 
         plt.title('title)
+        plt.xticks([i for i in range(0, len('data), 2000)])
         plt.plot('data, marker="o", ls="")
+        plt.plot('t0, -1, marker="x", ls="")
         plt.show()
     }
 }

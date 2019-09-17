@@ -4,8 +4,8 @@ source ~/.zshenv > /dev/null
 source ./src_env.sh > /dev/null
 
 TEMPS="data/templates-1800.0d87616.0-0.1d50.0-600x600.toml"
-#DATA="/data/star_extra_data/star_dataset/data/gwac"
-DATA="/home/austin/research/star_subset"
+DATA="/data/star_extra_data/star_dataset/data/gwac"
+#DATA="/home/austin/research/star_subset"
 
 function safe_call {
     if [[ $1 == "" ]]

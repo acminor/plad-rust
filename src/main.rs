@@ -99,6 +99,7 @@ fn main() {
     let mut false_events = 0;
     let mut data: HashMap<String, Vec<f32>> = HashMap::new();
     let mut data2: HashMap<String, Vec<f32>> = HashMap::new();
+    let mut adps: Vec<f32> = Vec::new();
     stars.iter()
         .for_each(|star| {
             data.insert(star.uid.clone(), Vec::new());
@@ -173,6 +174,20 @@ fn main() {
                 if *val > alert_threshold {
                     // TODO this should be a command line option
                     if sample_time >= 40320 && sample_time <= 46080 {
+                        // Compute ADP if we have the information to in NFD files
+                        // NOTE uses formula from NFD paper
+                        uid_to_t0_tp(&star).map(|(t0, t_prime)| {
+                            let adp = ((sample_time as f32 - t0)/t_prime) * 100.0;
+                            /*
+                            crit!(log, "{}", "adp".on_blue();
+                                  "t0"=>t0.to_string(),
+                                  "tp"=>t_prime.to_string(),
+                                  "sample_time"=>sample_time.to_string(),
+                                  "adp"=>adp.to_string(),
+                            );
+                            */
+                            adps.push(adp);
+                        });
                         crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
                               "time"=>sample_time.to_string(),
                               "star"=>star.to_string(),
@@ -200,7 +215,7 @@ fn main() {
             .collect();
     }
 
-    compute_and_disp_stats(&data);
+    compute_and_disp_stats(&data, &adps);
 
     info!(log, "{}", "Run Stats".on_green();
           "num_events_detected"=>true_events+false_events,
@@ -247,7 +262,7 @@ fn main() {
     }
 }
 
-fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>) {
+fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>, adps: &Vec<f32>) {
     let log = get_root_logger();
 
     let stats = |data: &Vec<f32>| {
@@ -277,6 +292,16 @@ fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>) {
 
         (min, max, avg, std_dev)
     };
+
+    {
+        let (min, max, avg, std_dev) =
+            stats(&adps);
+        info!(log, "{}", "ADP stats:".on_blue();
+              "min"=>min.to_string(),
+              "max"=>max.to_string(),
+              "avg"=>avg.to_string(),
+              "std_dev"=>std_dev.to_string());
+    }
 
     { // over all values
         let (min, max, avg, std_dev) =
