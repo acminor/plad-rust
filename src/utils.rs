@@ -22,7 +22,7 @@ pub fn inner_product(
     signal_group_len: usize,
 ) -> Vec<f32> {
     let mut res: Vec<f32> = Vec::new();
-    for signals in signals.chunks(signal_group_len) {
+    for signals in signals.chunks(signal_group_len) { //1) {//signal_group_len) {
         let num_stars = signals.len();
         let signals = &signals
             .iter()
@@ -37,11 +37,11 @@ pub fn inner_product(
         );
 
         let stars = {
-            let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
+            let fft_bs = AF::fft_r2c(&stars, 0.65, templates[0].fft_len as i64);
             AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
         };
 
-        stars.eval();
+        //stars.eval();
 
         //let stars = AF::conjg(&stars);
         //let stars = AF::transpose(&stars, false);
@@ -56,6 +56,19 @@ pub fn inner_product(
                 AF::MatProp::TRANS,
                 AF::MatProp::NONE,
             );
+
+            //let stars = AF::transpose(&stars, false);
+            /*
+            let stars = AF::tile(&stars, AF_Dim4::new(
+                &[num_stars as u64, template_group.num_templates as u64, 1, 1]));
+            let res_af = AF::mul(
+                &stars,
+                &template_group.templates,
+                false,
+            );
+
+            let res_af = AF::ifft(&res_af, 1.0, window_length as i64);
+            */
 
             // as in SO questions try using abs to get pos. vals.
             // https://{{so}}.com/questions/6740545/understanding-fft-output
@@ -95,7 +108,7 @@ pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
     }
 }
 
-pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
+pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, window_len: usize) {
     let c = inline_python::Context::new();
     python! {
         #![context = &c]
@@ -107,11 +120,18 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, _x_range: Option<&V
         temp = []
         for d in 'data:
             temp.append(d)
-            for i in range(0, 59):
+            for i in range(0, 'window_len - 1):
                 temp.append(None)
+        temp2 = []
+        for i in range(0, len('data2)):
+            if temp[i] is None:
+                temp2.append(None)
+            else:
+                temp2.append(abs(temp[i]-'data2[i]))
         plt.title('title)
         plt.plot(temp, marker="o", ls="")
         plt.plot('data2, marker="x", ls="")
+        plt.plot(temp2, marker="s", ls="")
         plt.show()
     }
 }

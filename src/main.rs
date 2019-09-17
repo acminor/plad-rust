@@ -139,7 +139,8 @@ fn main() {
             .map(|star| {
                 iterations += 1;
 
-                let temp: Vec<f32> = star.samples.drain(0..(window_length as usize)).collect();
+                let temp: Vec<f32> = star.samples
+                    .drain(0..(window_length as usize)).collect();
                 data2.get_mut(&star.uid).unwrap().append(&mut temp.clone());
 
                 temp
@@ -209,11 +210,36 @@ fn main() {
           "max_star_len"=>max_len);
 
     let mut data = data.iter().collect::<Vec<(&String, &Vec<f32>)>>();
-    data.sort_unstable_by(|a, b| a.1.partial_cmp(b.1).unwrap());
+    data.sort_unstable_by(|a, b| {
+        let max_a = {
+            let mut temp_max = -1.0f32;
+            for &i in a.1.iter(){
+                if i > temp_max {
+                    temp_max = i;
+                }
+            }
+
+            temp_max
+        };
+
+        let max_b = {
+            let mut temp_max = -1.0f32;
+            for &i in b.1.iter() {
+                if i > temp_max {
+                    temp_max = i;
+                }
+            }
+
+            temp_max
+        };
+
+        max_a.partial_cmp(&max_b).unwrap()
+    });
     data.reverse();
     for (star_title, star_data) in data.into_iter() {
         //crate::utils::debug_plt(&star_data, star_title, None);
-        crate::utils::debug_plt_2(&star_data, data2.get(star_title).unwrap(), star_title, None);
+        crate::utils::debug_plt_2(&star_data, data2.get(star_title).unwrap(),
+                                  star_title, window_length as usize);
     }
 
     if PROF {
