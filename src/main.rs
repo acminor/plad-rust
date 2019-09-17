@@ -29,6 +29,7 @@ mod dat_star;
 mod json_star;
 mod cli;
 mod log;
+mod sw_star;
 
 use star::*;
 use utils::*;
