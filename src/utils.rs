@@ -171,23 +171,25 @@ pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
     }
 }
 
-pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, window_len: (usize, usize)) {
+pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
     let c = inline_python::Context::new();
-    let window_len = window_len.0;
     python! {
         #![context = &c]
         import matplotlib.pyplot as plt
-        from unittest.mock import patch
         import sys
         sys.argv.append("test")
 
         temp = []
         for d in 'data:
             temp.append(d)
-            for i in range(0, 'window_len - 1):
+            for i in range(0, 'skip_delta-1):
                 temp.append(None)
+
         temp2 = []
-        for i in range(0, len('data2)):
+        // do this since we early terminate on successful detection
+        // thus the lengths will be off
+        length = min(len('data2), len(temp))
+        for i in range(0, length):
             if temp[i] is None:
                 temp2.append(None)
             else:

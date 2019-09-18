@@ -71,10 +71,10 @@ fn main() {
         _rho,
         noise_stddev,
         window_length,
+        skip_delta,
         alert_threshold,
     } = run_info;
 
-    let skip_delta = 30;//window_length as u32;
     let stars = stars.into_iter().map(|star| {
         // TODO make command line variables
         SWStar::new()
@@ -122,7 +122,9 @@ fn main() {
     stars.iter()
         .for_each(|sw| {
             data.insert(sw.star.uid.clone(), Vec::new());
-            data2.insert(sw.star.uid.clone(), Vec::new());
+            sw.star.samples.as_ref().map(|samps| {
+                data2.insert(sw.star.uid.clone(), samps.clone());
+            });
         });
     loop {
         if log_timer.elapsed() > std::time::Duration::from_secs(2) {
@@ -292,7 +294,7 @@ fn main() {
     for (star_title, star_data) in data.into_iter() {
         //crate::utils::debug_plt(&star_data, star_title, None);
         crate::utils::debug_plt_2(&star_data, data2.get(star_title).unwrap(),
-                                  star_title, window_length);
+                                  star_title, skip_delta);
     }
 
     if PROF {

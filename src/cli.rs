@@ -17,6 +17,7 @@ pub struct RunInfo {
     pub _rho: f32,
     pub noise_stddev: f32,
     pub window_length: (usize, usize),
+    pub skip_delta: u32,
     pub alert_threshold: f32,
 }
 
@@ -120,6 +121,13 @@ pub fn parse_args() -> RunInfo {
                 .takes_value(true)
         )
         .arg(
+            Arg::with_name("skip_delta")
+                .long("skip-delta")
+                .help("TODO")
+                .takes_value(true)
+                .required(true)
+        )
+        .arg(
             Arg::with_name("alert_threshold")
                 .short("a")
                 .long("alert-threshold")
@@ -183,6 +191,11 @@ pub fn parse_args() -> RunInfo {
             matches.value_of("noise").unwrap()
         ).unwrap(),
         window_length,
+        skip_delta: matches
+            .value_of("skip_delta")
+            .unwrap()
+            .parse::<u32>()
+            .expect("Problem parsing skip_delta"),
         alert_threshold: f32::from_str(
             matches.value_of("alert_threshold").unwrap()
         ).unwrap(),
