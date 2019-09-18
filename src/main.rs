@@ -74,14 +74,15 @@ fn main() {
         alert_threshold,
     } = run_info;
 
-    let skip_delta = 1;//window_length as u32;
+    let skip_delta = 30;//window_length as u32;
     let stars = stars.into_iter().map(|star| {
         // TODO make command line variables
         SWStar::new()
             .set_star(star)
             .set_availables(0, skip_delta)
             .set_max_buffer_len(100)
-            .set_window_lens(window_length as u32, window_length as u32)
+            //.set_window_lens(window_length as u32, window_length as u32)
+            .set_window_lens(15, 60)
             .build()
     }).collect::<Vec<SWStar>>();
 
@@ -245,7 +246,7 @@ fn main() {
             .filter(|sw| detected_stars.contains(&sw.star.uid))
             .for_each(|sw| {
                 sw.star.samples.as_ref().map(|samps| {
-                    iterations += (samps.len() - *sw.star.samples_tick_index.borrow());
+                    iterations += samps.len() - *sw.star.samples_tick_index.borrow();
                 });
             });
         stars = stars

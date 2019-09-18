@@ -25,15 +25,40 @@ pub fn inner_product(
     let mut res: Vec<f32> = Vec::new();
     for signals in signals.chunks(signal_group_len) { //1) {//signal_group_len) {
         let num_stars = signals.len();
+        let signal_max_len = signals
+            .iter()
+            .map(|signal| signal.len())
+            .max()
+            .unwrap();
+        // Zero pad the results to make sure all signals have
+        // same length regardless of window size. This does not
+        // have any effect on output (except binning which is
+        // discussed in the ni article below).
+        //
+        // Corresponds to perfect interpolation as pointed out by
+        // https://math.stackexchange.com/questions/26432/
+        //   discrete-fourier-transform-effects-of-zero-padding-compared-to-time-domain-inte
+        // and with stated theorem referenced here
+        // https://ccrma.stanford.edu/~jos/dft/Zero_Padding_Theorem_Spectral.html
+        //
+        // See here for an analysis of zero padding
+        // - http://www.ni.com/tutorial/4880/en/
         let signals = &signals
             .iter()
-            .flat_map(|signal| signal.iter())
+            .flat_map(|signal| {
+                signal
+                    .iter()
+                    .chain(
+                        std::iter::repeat(&0.0f32)
+                            .take(signal_max_len - signal.len())
+                    )
+            })
             .cloned()
             .collect::<Vec<f32>>()[..];
         let stars = AF_Array::new(
             signals,
             // [ ] TODO 2nd term should be # of stars???
-            AF_Dim4::new(&[window_length as u64,
+            AF_Dim4::new(&[signal_max_len as u64,//window_length as u64,
                            num_stars as u64, 1, 1]),
         );
 
