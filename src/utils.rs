@@ -1,10 +1,10 @@
 use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
-use std::path::Path;
-use std::path::PathBuf;
 use inline_python::python;
 use regex::Regex;
+use std::path::Path;
+use std::path::PathBuf;
 
 use crate::template::*;
 
@@ -22,13 +22,11 @@ pub fn inner_product(
     signal_group_len: usize,
 ) -> Vec<f32> {
     let mut res: Vec<f32> = Vec::new();
-    for signals in signals.chunks(signal_group_len) { //1) {//signal_group_len) {
+    for signals in signals.chunks(signal_group_len) {
+        //1) {//signal_group_len) {
         let num_stars = signals.len();
-        let signal_max_len = signals
-            .iter()
-            .map(|signal| signal.len())
-            .max()
-            .unwrap();
+        let signal_max_len =
+            signals.iter().map(|signal| signal.len()).max().unwrap();
         // Zero pad the results to make sure all signals have
         // same length regardless of window size. This does not
         // have any effect on output (except binning which is
@@ -45,20 +43,17 @@ pub fn inner_product(
         let signals = &signals
             .iter()
             .flat_map(|signal| {
-                signal
-                    .iter()
-                    .chain(
-                        std::iter::repeat(&0.0f32)
-                            .take(signal_max_len - signal.len())
-                    )
+                signal.iter().chain(
+                    std::iter::repeat(&0.0f32)
+                        .take(signal_max_len - signal.len()),
+                )
             })
             .cloned()
             .collect::<Vec<f32>>()[..];
         let stars = AF_Array::new(
             signals,
             // [ ] TODO 2nd term should be # of stars???
-            AF_Dim4::new(&[signal_max_len as u64,
-                           num_stars as u64, 1, 1]),
+            AF_Dim4::new(&[signal_max_len as u64, num_stars as u64, 1, 1]),
         );
 
         let stars = {
@@ -117,34 +112,32 @@ pub fn inner_product(
     res
 }
 
-pub fn uid_to_t0_tp(uid: &str) -> Option<(f32,f32)> {
-    let adp_parser = Regex::new(r"(?x) # makes white space insignificant and adds comment support
+pub fn uid_to_t0_tp(uid: &str) -> Option<(f32, f32)> {
+    let adp_parser = Regex::new(
+        r"(?x) # makes white space insignificant and adds comment support
                                   (\d+\.\d{3}) # sigma
                                   _(\d+\.\d{3}) # T_prime
                                   _(\d+\.\d{3}) # T
                                   _(\d+\.\d{3}) # A_prime
                                   _(\d+\.\d{3}) # relative
-                                  _(\d+\.\d{3}).dat # phi").unwrap();
+                                  _(\d+\.\d{3}).dat # phi",
+    )
+    .unwrap();
 
     let res = adp_parser.captures(&uid).map(|caps| {
         let t_prime = caps.get(2).unwrap().as_str().parse::<f32>().unwrap();
         //println!("T': {}", t_prime);
-        let samples_per_hour =
-            60.0 // minutes in an hour
+        let samples_per_hour = 60.0 // minutes in an hour
             * (60.0/15.0); // samples in a second (240)
-        let signal_time_in_samples =
-            t_prime // length of signal (days)
+        let signal_time_in_samples = t_prime // length of signal (days)
             * 24.0 // hours in a day
             * samples_per_hour;
-        let end_of_signal =
-            8.0 // hours per day
+        let end_of_signal = 8.0 // hours per day
             * samples_per_hour
             * 24.0; // total sample days
-        let center_of_signal =
-            end_of_signal
-            - (signal_time_in_samples/2.0); // center of signal
-        //println!("uid: {}", uid);
-        //println!("t0: {}", center_of_signal);
+        let center_of_signal = end_of_signal - (signal_time_in_samples / 2.0); // center of signal
+                                                                               //println!("uid: {}", uid);
+                                                                               //println!("t0: {}", center_of_signal);
         (center_of_signal, signal_time_in_samples)
     });
 
@@ -214,15 +207,12 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
 //    previous checks
 pub fn normalize_local_data_paths(star_file: &str, data_file: &str) -> String {
     match Path::new(star_file).parent() {
-        Some(base_dir) => {
-            [base_dir.to_str().unwrap(), &data_file[..]]
-                .iter()
-                .collect::<PathBuf>()
-                .to_str().unwrap()
-                .to_string()
-        },
-        None => {
-            data_file.to_string()
-        }
+        Some(base_dir) => [base_dir.to_str().unwrap(), &data_file[..]]
+            .iter()
+            .collect::<PathBuf>()
+            .to_str()
+            .unwrap()
+            .to_string(),
+        None => data_file.to_string(),
     }
 }

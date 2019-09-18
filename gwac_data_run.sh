@@ -22,8 +22,8 @@ function safe_call {
                   --noise .06 \
                   --rho 4.0 \
                   --window-length $2 \
-                  --skip-delta 120 \
-                  --fragment 4 \
+                  --skip-delta 30 \
+                  --fragment 1 \
                   --alert-threshold 1.1
 }
 

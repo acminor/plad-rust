@@ -1,11 +1,11 @@
-use crate::json_star;
 use crate::dat_star;
-use crate::toml_star;
+use crate::json_star;
 use crate::star::*;
 use crate::template::*;
-use std::str::FromStr;
+use crate::toml_star;
 use clap::{App, Arg};
 use std::fs;
+use std::str::FromStr;
 
 pub struct RunInfo {
     pub templates: Templates,
@@ -22,7 +22,9 @@ pub struct RunInfo {
     pub alert_threshold: f32,
 }
 
-fn unwrap_parse_star_files(file: std::io::Result<fs::DirEntry>) -> Option<Star> {
+fn unwrap_parse_star_files(
+    file: std::io::Result<fs::DirEntry>,
+) -> Option<Star> {
     match file {
         Ok(file) => match file.file_type() {
             Ok(file_type) => {
@@ -32,17 +34,17 @@ fn unwrap_parse_star_files(file: std::io::Result<fs::DirEntry>) -> Option<Star> 
                             Some(toml_star::parse_star_file(
                                 file.path().as_path().to_str().unwrap(),
                             ))
-                        },
+                        }
                         Some(ext) if ext == "dat" => {
                             Some(dat_star::parse_star_file(
                                 file.path().as_path().to_str().unwrap(),
                             ))
-                        },
+                        }
                         Some(ext) if ext == "json" => {
                             json_star::parse_star_file(
                                 file.path().as_path().to_str().unwrap(),
                             )
-                        },
+                        }
                         _ => None,
                     }
                 } else {
@@ -103,7 +105,7 @@ pub fn parse_args() -> RunInfo {
                 .conflicts_with("min_window_length")
                 .conflicts_with("max_window_length")
                 .required_unless("min_window_length")
-                .required_unless("max_window_length")
+                .required_unless("max_window_length"),
         )
         .arg(
             Arg::with_name("min_window_length")
@@ -111,7 +113,7 @@ pub fn parse_args() -> RunInfo {
                 .help("TODO")
                 .requires("max_window_length")
                 .required_unless("window_length")
-                .takes_value(true)
+                .takes_value(true),
         )
         .arg(
             Arg::with_name("max_window_length")
@@ -119,14 +121,14 @@ pub fn parse_args() -> RunInfo {
                 .help("TODO")
                 .requires("min_window_length")
                 .required_unless("window_length")
-                .takes_value(true)
+                .takes_value(true),
         )
         .arg(
             Arg::with_name("skip_delta")
                 .long("skip-delta")
                 .help("TODO")
                 .takes_value(true)
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("alert_threshold")
@@ -134,7 +136,7 @@ pub fn parse_args() -> RunInfo {
                 .long("alert-threshold")
                 .help("TODO")
                 .takes_value(true)
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("fragment")
@@ -143,7 +145,7 @@ pub fn parse_args() -> RunInfo {
                 .help("number of fragments to split stars into")
                 .default_value("1")
                 .takes_value(true)
-                .required(false)
+                .required(false),
         )
         .get_matches();
 
@@ -151,8 +153,11 @@ pub fn parse_args() -> RunInfo {
         matches.value_of("templates_file").unwrap().to_string(),
     );
 
-    let input_dirs: Vec<String> =
-        matches.values_of("input_dir").unwrap().map(|s| s.to_string()).collect();
+    let input_dirs: Vec<String> = matches
+        .values_of("input_dir")
+        .unwrap()
+        .map(|s| s.to_string())
+        .collect();
     let input_dir = &input_dirs[0];
 
     let stars: Vec<Star> = {
@@ -168,7 +173,8 @@ pub fn parse_args() -> RunInfo {
     let window_length = {
         match matches.value_of("window_length") {
             Some(win_len) => {
-                let win_len = usize::from_str(win_len).expect("Trouble parsing window_length");
+                let win_len = usize::from_str(win_len)
+                    .expect("Trouble parsing window_length");
                 (win_len, win_len)
             }
             None => {
@@ -184,7 +190,9 @@ pub fn parse_args() -> RunInfo {
                     .expect("Trouble parsing max_window_len");
 
                 if max_len < min_len {
-                    panic!("max_window_len must be greater than min_window_len");
+                    panic!(
+                        "max_window_len must be greater than min_window_len"
+                    );
                 }
 
                 (min_len, max_len)
@@ -197,9 +205,8 @@ pub fn parse_args() -> RunInfo {
         stars,
         // [ ] TODO see earlier fixme
         _rho: f32::from_str(matches.value_of("rho").unwrap()).unwrap(),
-        noise_stddev: f32::from_str(
-            matches.value_of("noise").unwrap()
-        ).unwrap(),
+        noise_stddev: f32::from_str(matches.value_of("noise").unwrap())
+            .unwrap(),
         window_length,
         skip_delta: matches
             .value_of("skip_delta")
@@ -207,8 +214,9 @@ pub fn parse_args() -> RunInfo {
             .parse::<u32>()
             .expect("Problem parsing skip_delta"),
         alert_threshold: f32::from_str(
-            matches.value_of("alert_threshold").unwrap()
-        ).unwrap(),
+            matches.value_of("alert_threshold").unwrap(),
+        )
+        .unwrap(),
         // TODO
         // - make plural
         // - add check for greater than 0
