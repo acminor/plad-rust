@@ -4,7 +4,7 @@ use crate::toml_star;
 use crate::star::*;
 use crate::template::*;
 use std::str::FromStr;
-use clap::{App, Arg};
+use clap::{App, Arg, ArgGroup};
 use std::fs;
 
 pub struct RunInfo {
@@ -16,7 +16,7 @@ pub struct RunInfo {
     //    no need to add here
     pub _rho: f32,
     pub noise_stddev: f32,
-    pub window_length: i32,
+    pub window_length: (usize, usize),
     pub alert_threshold: f32,
 }
 
@@ -98,7 +98,26 @@ pub fn parse_args() -> RunInfo {
                 .long("window-length")
                 .help("TODO")
                 .takes_value(true)
-                .required(true),
+                .conflicts_with("min_window_length")
+                .conflicts_with("max_window_length")
+                .required_unless("min_window_length")
+                .required_unless("max_window_length")
+        )
+        .arg(
+            Arg::with_name("min_window_length")
+                .long("min-window-length")
+                .help("TODO")
+                .requires("max_window_length")
+                .required_unless("window_length")
+                .takes_value(true)
+        )
+        .arg(
+            Arg::with_name("max_window_length")
+                .long("max-window-length")
+                .help("TODO")
+                .requires("min_window_length")
+                .required_unless("window_length")
+                .takes_value(true)
         )
         .arg(
             Arg::with_name("alert_threshold")
@@ -128,6 +147,33 @@ pub fn parse_args() -> RunInfo {
         }
     };
 
+    let window_length = {
+        match matches.value_of("window_length") {
+            Some(win_len) => {
+                let win_len = usize::from_str(win_len).expect("Trouble parsing window_length");
+                (win_len, win_len)
+            }
+            None => {
+                let min_len = matches
+                    .value_of("min_window_len")
+                    .expect("Must have window_length or min_window_len")
+                    .parse::<usize>()
+                    .expect("Trouble parsing min_window_len");
+                let max_len = matches
+                    .value_of("max_window_len")
+                    .expect("Must have window_length or max_window_len")
+                    .parse::<usize>()
+                    .expect("Trouble parsing max_window_len");
+
+                if max_len < min_len {
+                    panic!("max_window_len must be greater than min_window_len");
+                }
+
+                (min_len, max_len)
+            }
+        }
+    };
+
     RunInfo {
         templates,
         stars,
@@ -136,9 +182,7 @@ pub fn parse_args() -> RunInfo {
         noise_stddev: f32::from_str(
             matches.value_of("noise").unwrap()
         ).unwrap(),
-        window_length: i32::from_str(
-            matches.value_of("window_length").unwrap(),
-        ).unwrap(),
+        window_length,
         alert_threshold: f32::from_str(
             matches.value_of("alert_threshold").unwrap()
         ).unwrap(),

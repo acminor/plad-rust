@@ -81,8 +81,7 @@ fn main() {
             .set_star(star)
             .set_availables(0, skip_delta)
             .set_max_buffer_len(100)
-            //.set_window_lens(window_length as u32, window_length as u32)
-            .set_window_lens(15, 60)
+            .set_window_lens(window_length.0 as u32, window_length.1 as u32)
             .build()
     }).collect::<Vec<SWStar>>();
 
@@ -108,7 +107,7 @@ fn main() {
 
     info!(
         log, "";
-        "window_length"=>format!("{}", window_length),
+        "window_length"=>format!("{:?}", window_length),
         "total_iters_needed"=>tot_iter,
     );
 
@@ -185,7 +184,7 @@ fn main() {
             })
             .collect::<Vec<Vec<f32>>>();
 
-        sample_time += 1;//window_length;
+        sample_time += 1;
 
         let window_names = stars
             .iter()
@@ -197,7 +196,6 @@ fn main() {
         let ip = inner_product(
             &templates.templates[..],
             &windows,
-            window_length as usize,
             noise_stddev,
             true,
             200,
@@ -294,7 +292,7 @@ fn main() {
     for (star_title, star_data) in data.into_iter() {
         //crate::utils::debug_plt(&star_data, star_title, None);
         crate::utils::debug_plt_2(&star_data, data2.get(star_title).unwrap(),
-                                  star_title, window_length as usize);
+                                  star_title, window_length);
     }
 
     if PROF {

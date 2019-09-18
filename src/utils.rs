@@ -11,7 +11,6 @@ use crate::template::*;
 pub fn inner_product(
     templates: &[TemplateGroup],
     signals: &[Vec<f32>],
-    window_length: usize,
     // [ ] TODO include in calculations
     //  - ie work on estitmation, etc.
     _snf: f32,
@@ -58,7 +57,7 @@ pub fn inner_product(
         let stars = AF_Array::new(
             signals,
             // [ ] TODO 2nd term should be # of stars???
-            AF_Dim4::new(&[signal_max_len as u64,//window_length as u64,
+            AF_Dim4::new(&[signal_max_len as u64,
                            num_stars as u64, 1, 1]),
         );
 
@@ -172,8 +171,9 @@ pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
     }
 }
 
-pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, window_len: usize) {
+pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, window_len: (usize, usize)) {
     let c = inline_python::Context::new();
+    let window_len = window_len.0;
     python! {
         #![context = &c]
         import matplotlib.pyplot as plt
