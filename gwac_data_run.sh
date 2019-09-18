@@ -15,6 +15,7 @@ function safe_call {
         opt="--$1"
     fi
 
+    # fragment should cut time to run by x
     RUST_BACKTRACE=1 cargo run $opt --\
                   --input ${DATA} \
                   --templates-file ${TEMPS} \
@@ -22,6 +23,7 @@ function safe_call {
                   --rho 4.0 \
                   --window-length $2 \
                   --skip-delta 120 \
+                  --fragment 4 \
                   --alert-threshold 1.1
 }
 

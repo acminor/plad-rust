@@ -71,18 +71,21 @@ fn main() {
         noise_stddev,
         window_length,
         skip_delta,
+        fragment,
         alert_threshold,
     } = run_info;
 
-    let stars = stars.into_iter().map(|star| {
-        // TODO make command line variables
-        SWStar::new()
-            .set_star(star)
-            .set_availables(0, skip_delta)
-            .set_max_buffer_len(100)
-            .set_window_lens(window_length.0 as u32, window_length.1 as u32)
-            .build()
-    }).collect::<Vec<SWStar>>();
+    let stars = stars
+        .into_iter()
+        .zip((0..fragment).cycle())
+        .map(|(star, fragment)| {
+            SWStar::new()
+                .set_star(star)
+                .set_availables(fragment, skip_delta)
+                .set_max_buffer_len(100)
+                .set_window_lens(window_length.0 as u32, window_length.1 as u32)
+                .build()
+        }).collect::<Vec<SWStar>>();
 
     let templates = templates;
     let mut stars = stars;

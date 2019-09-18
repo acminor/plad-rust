@@ -189,6 +189,8 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
         temp2 = []
         // do this since we early terminate on successful detection
         // thus the lengths will be off
+        //
+        // will also be off by fragment logic but should be minor so ignore
         length = min(len('data2), len(temp))
         for i in range(0, length):
             if temp[i] is None:

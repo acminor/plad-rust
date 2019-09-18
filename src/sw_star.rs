@@ -11,7 +11,7 @@ pub struct SWStar {
     pub cur_window_len: RefCell<u32>,
     // These are for keeping track of iterations between matched filtering
     // ex. once every X iterations
-    available_pos: u32, // starting at X iteration (for initialization)
+    //available_pos: u32, // starting at X iteration (for initialization)
     available_count: RefCell<u32>, // have X left
     available_delta: u32, // every X
 }
@@ -60,7 +60,7 @@ impl SWStar {
             *self.available_count.borrow()
         };
 
-        if !(cur_window_len < self.min_window_len) {
+        if cur_window_len >= self.min_window_len {
             self.available_count.replace(available_count-1);
         }
     }
@@ -111,9 +111,13 @@ impl SWStarBuilder {
             cur_window_len: RefCell::new(0),
             buffer: RefCell::new(Vec::new()),
             _max_buffer_len: self.max_buffer_len.unwrap(),
-            available_pos: self.available_pos.unwrap(),
+            //available_pos: self.available_pos.unwrap(),
             available_delta: self.available_delta.unwrap(),
-            available_count: RefCell::new(self.available_delta.unwrap()),
+            // ex. let 'o' be the start pos and 'x' not do anything
+            //     8 be delta and 8 be min and max window
+            // 1) xxxxxxxoxxxxxxxo -- available_pos = 0
+            // 2) xxxxxxxxoxxxxxxxo -- available_pos = 1
+            available_count: RefCell::new(self.available_pos.unwrap()+1),
         }
     }
 }

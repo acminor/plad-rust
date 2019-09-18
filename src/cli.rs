@@ -17,6 +17,7 @@ pub struct RunInfo {
     pub _rho: f32,
     pub noise_stddev: f32,
     pub window_length: (usize, usize),
+    pub fragment: u32,
     pub skip_delta: u32,
     pub alert_threshold: f32,
 }
@@ -135,6 +136,15 @@ pub fn parse_args() -> RunInfo {
                 .takes_value(true)
                 .required(true)
         )
+        .arg(
+            Arg::with_name("fragment")
+                .short("a")
+                .long("fragment")
+                .help("number of fragments to split stars into")
+                .default_value("1")
+                .takes_value(true)
+                .required(false)
+        )
         .get_matches();
 
     let templates = parse_template_file(
@@ -199,5 +209,13 @@ pub fn parse_args() -> RunInfo {
         alert_threshold: f32::from_str(
             matches.value_of("alert_threshold").unwrap()
         ).unwrap(),
+        // TODO
+        // - make plural
+        // - add check for greater than 0
+        fragment: matches
+            .value_of("fragment")
+            .unwrap()
+            .parse::<u32>()
+            .expect("Problem parsing fragment"),
     }
 }
