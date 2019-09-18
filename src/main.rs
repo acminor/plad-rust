@@ -74,12 +74,14 @@ fn main() {
         alert_threshold,
     } = run_info;
 
+    let skip_delta = 1;//window_length as u32;
     let stars = stars.into_iter().map(|star| {
+        // TODO make command line variables
         SWStar::new()
             .set_star(star)
-            .set_availables(0, 1)
+            .set_availables(0, skip_delta)
             .set_max_buffer_len(100)
-            .set_window_lens(15, 60)
+            .set_window_lens(window_length as u32, window_length as u32)
             .build()
     }).collect::<Vec<SWStar>>();
 
@@ -101,8 +103,7 @@ fn main() {
         stars
         .iter()
         .filter_map(|sw| sw.star.samples.as_ref())
-        .map(|samps| samps.len()).sum::<usize>()
-        / window_length as usize;
+        .map(|samps| samps.len()).sum::<usize>();
 
     info!(
         log, "";
@@ -139,17 +140,9 @@ fn main() {
             log_timer = std::time::Instant::now();
         }
 
-        /*
-        let mut cur_stars = stars
-            .iter_mut()
-            .filter(|star| star.samples.len() >= (window_length as usize))
-            .collect::<Vec<&mut Star>>();
-
-        // FIXME will never exit for now
-        if cur_stars.is_empty() && is_offline {
+        if iterations == tot_iter && is_offline {
             break;
         }
-        */
 
         stars.iter().for_each(|sw| {
             sw.star.samples.as_ref().map(|samps| {
@@ -187,17 +180,11 @@ fn main() {
             stars
             .iter()
             .filter_map(|sw| {
-                let window = match sw.window() {
-                    Some(window) => window,
-                    _ => return None
-                };
-
-                //Some(sw, window)
-                Some(window)
+                sw.window()
             })
             .collect::<Vec<Vec<f32>>>();
 
-        sample_time += window_length;
+        sample_time += 1;//window_length;
 
         let window_names = stars
             .iter()
@@ -228,25 +215,19 @@ fn main() {
                         // NOTE uses formula from NFD paper
                         uid_to_t0_tp(&star).map(|(t0, t_prime)| {
                             let adp = ((sample_time as f32 - t0)/t_prime) * 100.0;
-                            /*
-                            crit!(log, "{}", "adp".on_blue();
-                                  "t0"=>t0.to_string(),
-                                  "tp"=>t_prime.to_string(),
-                                  "sample_time"=>sample_time.to_string(),
-                                  "adp"=>adp.to_string(),
-                            );
-                            */
                             adps.push(adp);
                         });
                         crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
                               "time"=>sample_time.to_string(),
                               "star"=>star.to_string(),
+                              "val"=>val.to_string(),
                         );
                         true_events += 1;
                     } else {
                         crit!(log, "{}", "FALSE EVENT DETECTED".on_red();
                               "time"=>sample_time.to_string(),
                               "star"=>star.to_string(),
+                              "val"=>val.to_string(),
                         );
                         false_events += 1;
                     }
@@ -259,6 +240,14 @@ fn main() {
 
         // taint detected stars
         // for now just remove
+        stars
+            .iter()
+            .filter(|sw| detected_stars.contains(&sw.star.uid))
+            .for_each(|sw| {
+                sw.star.samples.as_ref().map(|samps| {
+                    iterations += (samps.len() - *sw.star.samples_tick_index.borrow());
+                });
+            });
         stars = stars
             .into_iter()
             .filter(|sw| !detected_stars.contains(&sw.star.uid))
