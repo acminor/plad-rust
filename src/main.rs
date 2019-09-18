@@ -42,8 +42,76 @@ use arrayfire as AF;
 use colored::*;
 
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex, Barrier, mpsc::{Sender,Receiver,TryRecvError}};
+use std::sync::mpsc::channel;
 
 use cpuprofiler::PROFILER;
+
+struct RunState {
+    total_iterations: usize,
+    is_offline: bool,
+    stars: Arc<Mutex<Vec<SWStar>>>,
+    computation_end: Arc<Barrier>,
+    tick_end: Arc<Barrier>,
+    iterations_chan: Receiver<usize>,
+    shutdown_chan: Sender<bool>,
+}
+
+// computation_end is a misnomer, it merely means that all the data for the current window
+//   has been copied and thus stars can be safely updated without producing unintended results
+// tick_end signifies that main can start the next computation
+fn tick_driver(state: RunState) {
+    let mut iterations = 0;
+    let mut log_timer = std::time::Instant::now();
+    let now = std::time::Instant::now();
+    let log = log::get_root_logger();
+    loop {
+        if log_timer.elapsed() > std::time::Duration::from_secs(2) {
+            let sps = iterations as f32 / now.elapsed().as_secs() as f32;
+            let pp = (iterations as f32)/(state.total_iterations as f32) * 100.0;
+            info!(log, "";
+                  "TotTime"=>format!("{}s", now.elapsed().as_secs()),
+                  "IterationsLeft"=>format!("{}", state.total_iterations - iterations as usize),
+                  "EstTimeLeft"=>format!("{}s", (state.total_iterations - iterations as usize)
+                                         as f32/sps as f32),
+                  "StarsPerSec"=>format!("{}", sps),
+                  "StarsPerTenSec"=>format!("{}", sps*10.0),
+                  "%Progress"=>format!("{}%", pp));
+
+            log_timer = std::time::Instant::now();
+        }
+
+        // FIXME do error handling with shutdown chan here at some point
+        match state.iterations_chan.try_recv() {
+            Ok(val) => iterations += val,
+            _ => (),
+        }
+
+        if iterations == state.total_iterations && state.is_offline {
+            state.shutdown_chan.send(true).unwrap();
+            break;
+        }
+
+        state.computation_end.wait();
+        {
+            let stars_l = state.stars.lock().unwrap();
+            stars_l.iter().for_each(|sw| {
+                sw.star.samples.as_ref().map(|samps| {
+                    let tick_index = {
+                        *sw.star.samples_tick_index.borrow()
+                    };
+
+                    if tick_index < samps.len() {
+                        sw.tick(samps[tick_index]);
+                        iterations += 1;
+                        sw.star.samples_tick_index.replace(tick_index+1);
+                    }
+                });
+            });
+        }
+        state.tick_end.wait();
+    }
+}
 
 static PROF: bool = false;
 fn main() {
@@ -59,7 +127,6 @@ fn main() {
     let run_info = parse_args();
 
     AF::info();
-    //AF::set_backend(AF::Backend::OPENCL);
     AF::set_backend(AF::Backend::CUDA);
     AF::set_device(0);
 
@@ -87,22 +154,18 @@ fn main() {
                 .build()
         }).collect::<Vec<SWStar>>();
 
+    let stars = Arc::new(Mutex::new(stars));
     let templates = templates;
-    let mut stars = stars;
 
-    let now = std::time::Instant::now();
-    let mut log_timer = std::time::Instant::now();
-    /* NOTE: This is a per star, per window counting variable */
-    let mut iterations = 0;
-
-    let tot_stars = stars.len();
+    let stars_t = stars.lock().unwrap();
+    let tot_stars = stars_t.len();
     let max_len: usize
-        = stars
+        = stars_t
         .iter()
         .filter_map(|sw| sw.star.samples.as_ref())
         .map(|samps| samps.len()).max().unwrap();
     let tot_iter: usize =
-        stars
+        stars_t
         .iter()
         .filter_map(|sw| sw.star.samples.as_ref())
         .map(|samps| samps.len()).sum::<usize>();
@@ -114,59 +177,55 @@ fn main() {
     );
 
     let is_offline = true;
-    let mut i = 0;
     let mut sample_time = 0;
     let mut true_events = 0;
     let mut false_events = 0;
     let mut data: HashMap<String, Vec<f32>> = HashMap::new();
     let mut data2: HashMap<String, Vec<f32>> = HashMap::new();
     let mut adps: Vec<f32> = Vec::new();
-    stars.iter()
+    stars_t.iter()
         .for_each(|sw| {
             data.insert(sw.star.uid.clone(), Vec::new());
             sw.star.samples.as_ref().map(|samps| {
                 data2.insert(sw.star.uid.clone(), samps.clone());
             });
         });
-    loop {
-        if log_timer.elapsed() > std::time::Duration::from_secs(2) {
-            let sps = iterations as f32 / now.elapsed().as_secs() as f32;
-            let pp = (iterations as f32)/(tot_iter as f32) * 100.0;
-            info!(log, "";
-                  "TotTime"=>format!("{}s", now.elapsed().as_secs()),
-                  "IterationsLeft"=>format!("{}", tot_iter - iterations as usize),
-                  "EstTimeLeft"=>format!("{}s", (tot_iter - iterations as usize)
-                                         as f32/sps as f32),
-                  "StarsPerSec"=>format!("{}", sps),
-                  "StarsPerTenSec"=>format!("{}", sps*10.0),
-                  "%Progress"=>format!("{}%", pp));
+    drop(stars_t);
 
-            log_timer = std::time::Instant::now();
-        }
+    let computation_end = Arc::new(Barrier::new(2));
+    let tick_end = Arc::new(Barrier::new(2));
 
-        if iterations == tot_iter && is_offline {
-            break;
-        }
+    let (ic_tx, ic_rx) = channel();
+    let (sd_tx, sd_rx) = channel();
+    {
+        let stars = stars.clone();
+        let tick_end = tick_end.clone();
+        let computation_end = computation_end.clone();
+        std::thread::spawn(move || {
+            let run_state = RunState {
+                stars: stars,
+                iterations_chan: ic_rx,
+                shutdown_chan: sd_tx,
+                tick_end: tick_end,
+                computation_end: computation_end,
+                total_iterations: tot_iter,
+                is_offline,
+            };
 
-        stars.iter().for_each(|sw| {
-            sw.star.samples.as_ref().map(|samps| {
-                let tick_index = {
-                    *sw.star.samples_tick_index.borrow()
-                };
-
-                if tick_index < samps.len() {
-                    sw.tick(samps[tick_index]);
-                    iterations += 1;
-                    sw.star.samples_tick_index.replace(tick_index+1);
-                }
-            });
+            tick_driver(run_state);
         });
+    }
 
-        if i == -1 {
-            break;
-        } else {
-            i+=1;
+    computation_end.wait();
+    loop {
+        tick_end.wait();
+        match sd_rx.try_recv() {
+            Ok(val) if val => break,
+            Err(TryRecvError::Disconnected) => panic!(""),
+            _ => (),
         }
+
+        let mut stars = stars.lock().unwrap();
 
         let window_names =
             stars
@@ -187,6 +246,7 @@ fn main() {
                 sw.window()
             })
             .collect::<Vec<Vec<f32>>>();
+        computation_end.wait();
 
         sample_time += 1;
 
@@ -241,13 +301,13 @@ fn main() {
             .filter(|sw| detected_stars.contains(&sw.star.uid))
             .for_each(|sw| {
                 sw.star.samples.as_ref().map(|samps| {
-                    iterations += samps.len() - *sw.star.samples_tick_index.borrow();
+                    //iterations += samps.len() - *sw.star.samples_tick_index.borrow();
+                    ic_tx.send(samps.len() - *sw.star.samples_tick_index.borrow()).unwrap();
                 });
             });
-        stars = stars
-            .into_iter()
-            .filter(|sw| !detected_stars.contains(&sw.star.uid))
-            .collect();
+
+        stars
+            .retain(|sw| !detected_stars.contains(&sw.star.uid));
     }
 
     compute_and_disp_stats(&data, &adps);
