@@ -42,9 +42,8 @@ pub fn parse_template_file(file_name: String) -> Templates {
 
         let mut de = rmp_serde::Deserializer::new(&contents[..]);
 
-        let temp: Vec<Vec<f32>> =
-            serde::Deserialize::deserialize(&mut de)
-                .expect("Failed to deserialize templates");
+        let temp: Vec<Vec<f32>> = serde::Deserialize::deserialize(&mut de)
+            .expect("Failed to deserialize templates");
 
         let max_len = temp
             .iter()
@@ -55,31 +54,36 @@ pub fn parse_template_file(file_name: String) -> Templates {
         // using the numpy fftfreq reference
         // [ ] TODO check if correct
         // - ie only concerned with pos. freq. in fft
-        let real_len: usize = if max_len % 2 == 1 { // odd
-            (max_len-1)/2
-        } else { // even
-            max_len/2 - 1
+        let real_len: usize = if max_len % 2 == 1 {
+            // odd
+            (max_len - 1) / 2
+        } else {
+            // even
+            max_len / 2 - 1
         };
 
         temp.chunks(2800)
             .map(|chunk| {
                 let chunk_len = chunk.len();
 
-                let mut chunk: Vec<AF_Array<Complex<f32>>> =
-                    chunk.iter().map(|template| {
+                let mut chunk: Vec<AF_Array<Complex<f32>>> = chunk
+                    .iter()
+                    .map(|template| {
                         let template = AF_Array::new(
                             &template,
-                            AF_Dim4::new(&[template.len() as u64, 1, 1, 1])
+                            AF_Dim4::new(&[template.len() as u64, 1, 1, 1]),
                         );
 
                         let fft_bs = AF::fft(&template, 1.0, max_len as i64);
                         let temp = AF::rows(&fft_bs, 0, (real_len - 1) as u64);
                         AF::conjg(&temp)
-                    }).collect();
+                    })
+                    .collect();
 
                 let mut chunk = chunk.drain(0..chunk.len());
                 let chunk_out = {
-                    let mut chunk_out = chunk.next()
+                    let mut chunk_out = chunk
+                        .next()
                         .expect("Should have at least one template.");
                     for lchunk in chunk {
                         chunk_out = AF::join(1, &chunk_out, &lchunk);

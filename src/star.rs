@@ -33,8 +33,10 @@ pub struct StarModelInitErrMsg {
 
 pub type StarModelErr = Result<(), StarModelInitErrMsg>;
 pub trait StarModel {
-    fn init(&self, args: std::collections::HashMap<String, String>)
-            -> StarModelErr;
+    fn init(
+        &self,
+        args: std::collections::HashMap<String, String>,
+    ) -> StarModelErr;
     fn predict(&self, look_backs: Vec<Vec<f32>>, times: Vec<f32>) -> f32;
 }
 
@@ -42,9 +44,10 @@ pub trait StarModel {
 pub struct NoneModel();
 
 impl StarModel for NoneModel {
-    fn init(&self, _args: std::collections::HashMap<String, String>)
-            -> StarModelErr
-    {
+    fn init(
+        &self,
+        _args: std::collections::HashMap<String, String>,
+    ) -> StarModelErr {
         Ok(())
     }
     fn predict(&self, _look_backs: Vec<Vec<f32>>, _times: Vec<f32>) -> f32 {
@@ -53,10 +56,11 @@ impl StarModel for NoneModel {
 }
 
 // [ ] TODO implement model functionality
-pub fn parse_model(mtype: StarModelType, _mfile: String)
-                   -> Box<dyn StarModel + Send> {
+pub fn parse_model(
+    mtype: StarModelType,
+    _mfile: String,
+) -> Box<dyn StarModel + Send> {
     match mtype {
         StarModelType::None => Box::new(NoneModel {}),
     }
 }
-

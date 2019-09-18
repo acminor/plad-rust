@@ -7,21 +7,20 @@
  * --- For reading GWAC gen data
  */
 
-use crate::star::{Star, StarType, StarModelType, parse_model};
+use crate::star::{parse_model, Star, StarModelType, StarType};
 use std::fs;
 
 pub fn parse_star_file(star_file: &str) -> Star {
     let contents =
         fs::read_to_string(&star_file).expect("Failed to read Star DAT file");
-    let star_data: Vec<f32> =
-        contents.lines().map(|line| {
-            line
-                .split_ascii_whitespace()
-                .take(2)
-                .collect::<Vec<&str>>()[1]
+    let star_data: Vec<f32> = contents
+        .lines()
+        .map(|line| {
+            line.split_ascii_whitespace().take(2).collect::<Vec<&str>>()[1]
                 .parse::<f32>()
                 .expect("Failed to parse f(t) data")
-        }).collect();
+        })
+        .collect();
 
     //crate::utils::debug_plt(&star_data, &star_file.to_string(), None);
 

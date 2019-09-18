@@ -1,4 +1,4 @@
-use crate::star::{Star, StarType, StarModelType, parse_model};
+use crate::star::{parse_model, Star, StarModelType, StarType};
 use crate::utils;
 use std::{fs, io::Read};
 
@@ -24,9 +24,11 @@ pub fn parse_star_file(star_file: &str) -> Star {
     };
 
     let samples = {
-        let mut file = fs::File::open(
-            &utils::normalize_local_data_paths(&star_file, &star_toml.samples)
-            ).expect("Failed to read Star samples file");
+        let mut file = fs::File::open(&utils::normalize_local_data_paths(
+            &star_file,
+            &star_toml.samples,
+        ))
+        .expect("Failed to read Star samples file");
         let mut contents: Vec<u8> = Vec::new();
         file.read_to_end(&mut contents)
             .expect("Failed reading contents of Star samples.");

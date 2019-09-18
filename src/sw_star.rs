@@ -1,5 +1,5 @@
-use std::cell::RefCell;
 use crate::star::Star;
+use std::cell::RefCell;
 
 pub struct SWStar {
     pub star: Star,
@@ -13,7 +13,7 @@ pub struct SWStar {
     // ex. once every X iterations
     //available_pos: u32, // starting at X iteration (for initialization)
     available_count: RefCell<u32>, // have X left
-    available_delta: u32, // every X
+    available_delta: u32,          // every X
 }
 
 impl SWStar {
@@ -44,24 +44,20 @@ impl SWStar {
     // pushes new data and advances state variables one time point
     pub fn tick(&self, new_data_point: f32) {
         let mut buff = self.buffer.borrow_mut();
-        let cur_window_len = {
-            *self.cur_window_len.borrow()
-        };
+        let cur_window_len = { *self.cur_window_len.borrow() };
 
         buff.push(new_data_point);
         // FIXME for now use max_window_len as buffer length
         if buff.len() > self.max_window_len as usize {
             buff.remove(0);
         } else {
-            self.cur_window_len.replace(cur_window_len+1);
+            self.cur_window_len.replace(cur_window_len + 1);
         }
 
-        let available_count = {
-            *self.available_count.borrow()
-        };
+        let available_count = { *self.available_count.borrow() };
 
         if cur_window_len >= self.min_window_len {
-            self.available_count.replace(available_count-1);
+            self.available_count.replace(available_count - 1);
         }
     }
     /*
@@ -94,11 +90,11 @@ impl SWStarBuilder {
         self.max_window_len = Some(max);
         self
     }
-    pub fn set_max_buffer_len(mut self, max: u32) -> SWStarBuilder  {
+    pub fn set_max_buffer_len(mut self, max: u32) -> SWStarBuilder {
         self.max_buffer_len = Some(max);
         self
     }
-    pub fn set_availables(mut self, pos: u32, delta: u32) -> SWStarBuilder  {
+    pub fn set_availables(mut self, pos: u32, delta: u32) -> SWStarBuilder {
         self.available_pos = Some(pos);
         self.available_delta = Some(delta);
         self
@@ -117,7 +113,7 @@ impl SWStarBuilder {
             //     8 be delta and 8 be min and max window
             // 1) xxxxxxxoxxxxxxxo -- available_pos = 0
             // 2) xxxxxxxxoxxxxxxxo -- available_pos = 1
-            available_count: RefCell::new(self.available_pos.unwrap()+1),
+            available_count: RefCell::new(self.available_pos.unwrap() + 1),
         }
     }
 }
