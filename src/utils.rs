@@ -152,6 +152,7 @@ pub fn uid_to_t0_tp(uid: &str) -> Option<(f32,f32)> {
 }
 
 // [ ] TODO add _x_range functionality
+#[allow(dead_code)]
 pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
     let c = inline_python::Context::new();
 

@@ -32,7 +32,6 @@ mod cli;
 mod log;
 mod sw_star;
 
-use star::*;
 use utils::*;
 use cli::*;
 use log::*;
@@ -176,7 +175,7 @@ fn main() {
                     None
                 }
             })
-            .collect::<String>();
+            .collect::<Vec<String>>();
 
         let windows =
             stars
@@ -187,13 +186,6 @@ fn main() {
             .collect::<Vec<Vec<f32>>>();
 
         sample_time += 1;
-
-        let window_names = stars
-            .iter()
-            .map(|sw| {
-                sw.star.uid.clone()
-            })
-            .collect::<Vec<String>>();
 
         let ip = inner_product(
             &templates.templates[..],
