@@ -136,8 +136,6 @@ pub fn uid_to_t0_tp(uid: &str) -> Option<(f32, f32)> {
             * samples_per_hour
             * 24.0; // total sample days
         let center_of_signal = end_of_signal - (signal_time_in_samples / 2.0); // center of signal
-                                                                               //println!("uid: {}", uid);
-                                                                               //println!("t0: {}", center_of_signal);
         (center_of_signal, signal_time_in_samples)
     });
 
