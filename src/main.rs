@@ -36,6 +36,7 @@ mod toml_star;
 mod utils;
 mod async_utils;
 mod info_handler;
+mod ticker;
 
 use cli::*;
 use log::*;
@@ -43,6 +44,7 @@ use sw_star::*;
 use utils::*;
 use async_utils::{TwinBarrier, twin_barrier};
 use info_handler::InformationHandler;
+use ticker::Ticker;
 
 use arrayfire as AF;
 
@@ -67,7 +69,7 @@ struct RunState {
     stars: Lock<Vec<SWStar>>,
     computation_end: TwinBarrier,
     tick_end: TwinBarrier,
-    info_handler: InformationHandler,
+    info_handler: Arc<InformationHandler>,
     // FIXME average stars per fragment
     // FIXME average stars per iteration???
 }
@@ -87,31 +89,14 @@ fn tick_driver(state: RunState) {
 
     let mut iterations_chan_tx = info_handler.get_iterations_sender();
     rt.block_on(async move {
-        tokio::spawn(async move {
-            info_handler.progress_log().await;
-        });
-
-        let log = log::get_root_logger();
-        loop {
-            computation_end.wait().await;
-            {
-                let stars_l = stars.lock().await;
-                let mut iterations = 0;
-                stars_l.iter().for_each(|sw| {
-                    sw.star.samples.as_ref().map(|samps| {
-                        let tick_index = { *sw.star.samples_tick_index.borrow() };
-
-                        if tick_index < samps.len() {
-                            sw.tick(samps[tick_index]);
-                            iterations += 1;
-                            sw.star.samples_tick_index.replace(tick_index + 1);
-                        }
-                    });
+        {
+            let info_handler = info_handler.clone();
+                tokio::spawn(async move {
+                    info_handler.progress_log().await;
                 });
-                iterations_chan_tx.send(iterations).await;
-            }
-            tick_end.wait().await;
         }
+
+        Ticker::new(computation_end, tick_end, stars, info_handler).tick().await;
     });
 }
 
@@ -199,7 +184,7 @@ async fn main() {
 
     let (comp_barrier_main, comp_barrier_tick) = twin_barrier();
     let (tick_barrier_main, tick_barrier_tick) = twin_barrier();
-    let info_handler = InformationHandler::new(tot_iter);
+    let info_handler = Arc::new(InformationHandler::new(tot_iter));
     let mut ic_tx = info_handler.get_iterations_sender();
     let sd_rx = info_handler.get_shutdown_receiver();
     {
