@@ -34,22 +34,22 @@ mod sw_star;
 mod template;
 mod toml_star;
 mod utils;
+mod async_utils;
+mod info_handler;
 
 use cli::*;
 use log::*;
 use sw_star::*;
 use utils::*;
+use async_utils::{TwinBarrier, twin_barrier};
+use info_handler::InformationHandler;
 
 use arrayfire as AF;
 
 use colored::*;
 
 use std::collections::HashMap;
-//use std::sync::mpsc::channel;
-use std::sync::{
-    //mpsc::{Receiver, Sender, TryRecvError},
-    Arc, //Barrier, Mutex,
-};
+use std::sync::Arc;
 
 use std::sync::mpsc::channel as sync_channel;
 use std::sync::mpsc::Receiver as SyncReceiver;
@@ -62,29 +62,12 @@ use tokio::sync::{
 
 use cpuprofiler::PROFILER;
 
-struct Barrier {
-    tx_go: Sender<bool>,
-    rx_go: Receiver<bool>,
-}
-
-impl Barrier {
-    async fn tx_go(&mut self) {
-        self.tx_go.send(true).await;
-    }
-
-    async fn rx_go(&mut self) {
-        self.rx_go.recv().await;
-    }
-}
-
 struct RunState {
-    total_iterations: usize,
     is_offline: bool,
     stars: Lock<Vec<SWStar>>,
-    computation_end: Barrier,
-    tick_end: Barrier,
-    iterations_chan: (Sender<usize>, Receiver<usize>),
-    shutdown_chan: SyncSender<bool>,
+    computation_end: TwinBarrier,
+    tick_end: TwinBarrier,
+    info_handler: InformationHandler,
     // FIXME average stars per fragment
     // FIXME average stars per iteration???
 }
@@ -95,71 +78,22 @@ struct RunState {
 fn tick_driver(state: RunState) {
     let mut rt = tokio::runtime::Runtime::new().unwrap();
     let RunState {
-        total_iterations,
         is_offline,
         mut stars,
-        iterations_chan,
         mut computation_end,
         mut tick_end,
-        mut shutdown_chan,
+        info_handler,
     } = state;
 
-    let (mut iterations_chan_tx, mut iterations_chan_rx) = iterations_chan;
+    let mut iterations_chan_tx = info_handler.get_iterations_sender();
     rt.block_on(async move {
         tokio::spawn(async move {
-            let log = log::get_root_logger();
-            let mut iterations = 0;
-            let mut log_timer = std::time::Instant::now();
-            let now = std::time::Instant::now();
-            loop {
-                // FIXME do error handling with shutdown chan here at some point
-                match iterations_chan_rx.recv().await {
-                    Some(val) => iterations += val,
-                    _ => (),
-                }
-
-                if iterations == total_iterations && is_offline {
-                    info!(log, "Sending shutdown signal...");
-                    shutdown_chan.send(true);
-                    return;
-                }
-
-                if log_timer.elapsed() > std::time::Duration::from_secs(2) {
-                    let sps = iterations as f32 / now.elapsed().as_secs() as f32;
-                    let pp =
-                        (iterations as f32) / (total_iterations as f32) * 100.0;
-                    info!(log, "";
-                          "TotTime"=>format!("{}s", now.elapsed().as_secs()),
-                          "IterationsLeft"=>format!("{}",
-                                                    total_iterations -
-                                                    iterations as usize),
-                          "EstTimeLeft"=>format!("{}s", (total_iterations -
-                                                         iterations as usize)
-                                                 as f32/sps as f32),
-                          "StarsPerSec"=>format!("{}", sps),
-                          "StarsPerTenSec"=>format!("{}", sps*10.0),
-                          "%Progress"=>format!("{}%", pp));
-
-                    log_timer = std::time::Instant::now();
-                }
-            }
+            info_handler.progress_log().await;
         });
 
         let log = log::get_root_logger();
         loop {
-            // NOTE this will serve as explanation of other barriers
-            // -- order is really important
-            //
-            // 1) block waiting for main to send
-            // 2) main blocks waiting for tick to send
-            // 3) tick sends after unblock, freeing main
-            // -- thus we have a barrier
-            //
-            // oxo---
-            // \/     o = send, x = block, - = unblocked
-            // xo----
-            computation_end.rx_go().await;
-            computation_end.tx_go().await;
+            computation_end.wait().await;
             {
                 let stars_l = stars.lock().await;
                 let mut iterations = 0;
@@ -176,8 +110,7 @@ fn tick_driver(state: RunState) {
                 });
                 iterations_chan_tx.send(iterations).await;
             }
-            tick_end.rx_go().await;
-            tick_end.tx_go().await;
+            tick_end.wait().await;
         }
     });
 }
@@ -264,63 +197,34 @@ async fn main() {
     });
     drop(stars_t);
 
-    /*
-    let computation_end = Arc::new(Barrier::new(2));
-    let tick_end = Arc::new(Barrier::new(2));
-    */
-
-    let computation_end_main = channel(10);
-    let computation_end_tick = channel(10);
-    let tick_end_main = channel(10);
-    let tick_end_tick = channel(10);
-
-    let computation_barrier_tick = Barrier {
-        tx_go: computation_end_tick.0,
-        rx_go: computation_end_main.1,
-    };
-    let mut computation_barrier_main = Barrier {
-        tx_go: computation_end_main.0,
-        rx_go: computation_end_tick.1,
-    };
-
-    let tick_barrier_tick = Barrier {
-        tx_go: tick_end_tick.0,
-        rx_go: tick_end_main.1,
-    };
-    let mut tick_barrier_main = Barrier {
-        tx_go: tick_end_main.0,
-        rx_go: tick_end_tick.1,
-    };
-
-    let (mut ic_tx, mut ic_rx) = channel(10);
-    let (mut sd_tx, mut sd_rx) = sync_channel();
+    let (comp_barrier_main, comp_barrier_tick) = twin_barrier();
+    let (tick_barrier_main, tick_barrier_tick) = twin_barrier();
+    let info_handler = InformationHandler::new(tot_iter);
+    let mut ic_tx = info_handler.get_iterations_sender();
+    let sd_rx = info_handler.get_shutdown_receiver();
     {
         let stars = stars.clone();
-        let ic_tx = ic_tx.clone();
         std::thread::spawn(move || {
             let run_state = RunState {
                 stars: stars,
-                iterations_chan: (ic_tx, ic_rx),
-                shutdown_chan: sd_tx,
                 tick_end: tick_barrier_tick,
-                computation_end: computation_barrier_tick,
-                total_iterations: tot_iter,
+                computation_end: comp_barrier_tick,
                 is_offline,
+                info_handler,
             };
 
             tick_driver(run_state);
         });
     }
 
-    //computation_end.wait();
-    computation_barrier_main.tx_go().await;
-    computation_barrier_main.rx_go().await;
+    let mut log_timer = std::time::Instant::now();
+    let now = std::time::Instant::now();
+    let mut iterations = 0;
+    comp_barrier_main.wait().await;
     loop {
-        //tick_end.wait();
-        tick_barrier_main.tx_go().await;
-        tick_barrier_main.rx_go().await;
-        match sd_rx.try_recv(){
-            Ok(val) if val => {
+        tick_barrier_main.wait().await;
+        match *sd_rx.get_ref(){
+            true => {
                 info!(log, "Received finished signal...");
                 break;
             }
@@ -350,11 +254,10 @@ async fn main() {
         };
         // NOTE signals can modify stars because now only
         //      working with copied data and not refs
-        //computation_end.wait();
-        computation_barrier_main.tx_go().await;
-        computation_barrier_main.rx_go().await;
+        comp_barrier_main.wait().await;
 
         sample_time += 1;
+        iterations += 1;
 
         let ip = inner_product(
             &templates.templates[..],
