@@ -1,6 +1,4 @@
-use std::sync::Arc;
 use async_std::sync::Mutex;
-//use std::cell::RefCell;
 use tokio::sync as ts;
 use crate::log;
 
@@ -8,31 +6,30 @@ struct Event;
 struct Data;
 
 pub struct InformationHandler {
-    event_chan: (ts::mpsc::Sender<Event>, ts::mpsc::Receiver<Event>),
+    _event_chan: (ts::mpsc::Sender<Event>, ts::mpsc::Receiver<Event>),
     shutdown_chan: (ts::watch::Sender<bool>, ts::watch::Receiver<bool>),
-    ip_data_chan: (ts::mpsc::Sender<Data>, ts::mpsc::Receiver<Data>),
-    org_data_chan: (ts::mpsc::Sender<Data>, ts::mpsc::Receiver<Data>),
+    _ip_data_chan: (ts::mpsc::Sender<Data>, ts::mpsc::Receiver<Data>),
+    _org_data_chan: (ts::mpsc::Sender<Data>, ts::mpsc::Receiver<Data>),
     iterations_chan: (ts::mpsc::Sender<usize>, Mutex<ts::mpsc::Receiver<usize>>),
     total_iterations: usize,
     is_offline: bool,
 }
 
 impl InformationHandler {
-    pub fn new(tot_iters: usize) -> InformationHandler {
-        let event_chan = ts::mpsc::channel(16);
-        let ip_data_chan = ts::mpsc::channel(16);
-        let org_data_chan = ts::mpsc::channel(16);
+    pub fn new(is_offline: bool, tot_iters: usize) -> InformationHandler {
+        let _event_chan = ts::mpsc::channel(16);
+        let _ip_data_chan = ts::mpsc::channel(16);
+        let _org_data_chan = ts::mpsc::channel(16);
         let iterations_chan = ts::mpsc::channel(16);
         let shutdown_chan = ts::watch::channel(false);
         let total_iterations = tot_iters;
-        let is_offline = true;
 
         let iterations_chan = (iterations_chan.0, Mutex::new(iterations_chan.1));
 
         InformationHandler {
-            event_chan,
-            ip_data_chan,
-            org_data_chan,
+            _event_chan,
+            _ip_data_chan,
+            _org_data_chan,
             shutdown_chan,
             total_iterations,
             is_offline,
@@ -57,14 +54,17 @@ impl InformationHandler {
         let now = std::time::Instant::now();
         loop {
             // FIXME do error handling with shutdown chan here at some point
-            match iterations_chan_rx.recv().await {
-                Some(val) => iterations += val,
-                _ => (),
+            if let Some(val) = iterations_chan_rx.recv().await {
+                iterations += val;
             }
 
             if iterations == total_iterations && self.is_offline {
                 info!(log, "Sending shutdown signal...");
-                self.shutdown_chan.0.broadcast(true);
+                match self.shutdown_chan.0.broadcast(true) {
+                    Ok(_) => (),
+                    // TODO look into way to kill entire program from here???
+                    _ => panic!("Problem shutting down program..."),
+                };
                 return;
             }
 

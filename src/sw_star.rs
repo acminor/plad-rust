@@ -17,6 +17,7 @@ pub struct SWStar {
 }
 
 impl SWStar {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new() -> SWStarBuilder {
         Default::default()
     }

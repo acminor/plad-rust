@@ -1,6 +1,7 @@
 use crate::dat_star;
 use crate::json_star;
 use crate::star::*;
+use crate::sw_star::SWStar;
 use crate::template::*;
 use crate::toml_star;
 use clap::{App, Arg};
@@ -9,7 +10,7 @@ use std::str::FromStr;
 
 pub struct RunInfo {
     pub templates: Templates,
-    pub stars: Vec<Star>,
+    pub stars: Vec<SWStar>,
     // [ ] TODO used for noise
     //  - should actually apply noise
     //    in generation of star data
@@ -154,27 +155,6 @@ pub fn parse_args() -> RunInfo {
         )
         .get_matches();
 
-    let templates = parse_template_file(
-        matches.value_of("templates_file").unwrap().to_string(),
-    );
-
-    let input_dirs: Vec<String> = matches
-        .values_of("input_dir")
-        .unwrap()
-        .map(|s| s.to_string())
-        .collect();
-    let input_dir = &input_dirs[0];
-
-    let stars: Vec<Star> = {
-        match fs::metadata(&input_dir) {
-            Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
-                .unwrap()
-                .filter_map(unwrap_parse_star_files)
-                .collect(),
-            _ => panic!("Error in reading input_dir"),
-        }
-    };
-
     let window_length = {
         match matches.value_of("window_length") {
             Some(win_len) => {
@@ -205,32 +185,69 @@ pub fn parse_args() -> RunInfo {
         }
     };
 
+    let detector_opts = DetectorOpts {
+        _rho: f32::from_str(matches.value_of("rho").unwrap()).unwrap(),
+        noise_stddev: f32::from_str(matches.value_of("noise").unwrap())
+            .unwrap(),
+        window_length,
+        skip_delta: matches
+            .value_of("skip_delta")
+            .unwrap()
+            .parse::<u32>()
+            .expect("Problem parsing skip_delta"),
+        alert_threshold: f32::from_str(
+            matches.value_of("alert_threshold").unwrap(),
+        )
+            .unwrap(),
+        // TODO
+        // - make plural
+        // - add check for greater than 0
+        fragment: matches
+            .value_of("fragment")
+            .unwrap()
+            .parse::<u32>()
+            .expect("Problem parsing fragment"),
+    };
+
+    let templates = parse_template_file(
+        matches.value_of("templates_file").unwrap().to_string(),
+    );
+
+    let input_dirs: Vec<String> = matches
+        .values_of("input_dir")
+        .unwrap()
+        .map(|s| s.to_string())
+        .collect();
+    let input_dir = &input_dirs[0];
+
+    let stars: Vec<Star> = {
+        match fs::metadata(&input_dir) {
+            Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
+                .unwrap()
+                .filter_map(unwrap_parse_star_files)
+                .collect(),
+            _ => panic!("Error in reading input_dir"),
+        }
+    };
+
+    let stars = stars
+        .into_iter()
+        .zip((0..detector_opts.fragment).cycle())
+        .map(|(star, fragment)| {
+            SWStar::new()
+                .set_star(star)
+                .set_availables(fragment, detector_opts.skip_delta)
+                .set_max_buffer_len(100)
+                .set_window_lens(detector_opts.window_length.0 as u32,
+                                 detector_opts.window_length.1 as u32)
+                .build()
+        })
+        .collect::<Vec<SWStar>>();
+
     RunInfo {
         templates,
         stars,
         // [ ] TODO see earlier fixme
-        detector_opts: DetectorOpts {
-            _rho: f32::from_str(matches.value_of("rho").unwrap()).unwrap(),
-            noise_stddev: f32::from_str(matches.value_of("noise").unwrap())
-                .unwrap(),
-            window_length,
-            skip_delta: matches
-                .value_of("skip_delta")
-                .unwrap()
-                .parse::<u32>()
-                .expect("Problem parsing skip_delta"),
-            alert_threshold: f32::from_str(
-                matches.value_of("alert_threshold").unwrap(),
-            )
-                .unwrap(),
-            // TODO
-            // - make plural
-            // - add check for greater than 0
-            fragment: matches
-                .value_of("fragment")
-                .unwrap()
-                .parse::<u32>()
-                .expect("Problem parsing fragment"),
-        }
+        detector_opts,
     }
 }

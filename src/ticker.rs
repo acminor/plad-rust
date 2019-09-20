@@ -26,14 +26,14 @@ impl Ticker {
     }
 
     pub async fn tick(&mut self) {
-        let log = log::get_root_logger();
+        let _log = log::get_root_logger();
         loop {
             self.computation_end.wait().await;
             {
                 let stars_l = self.stars.lock().await;
                 let mut iterations = 0;
                 stars_l.iter().for_each(|sw| {
-                    sw.star.samples.as_ref().map(|samps| {
+                    if let Some(samps) = sw.star.samples.as_ref() {
                         let tick_index = { *sw.star.samples_tick_index.borrow() };
 
                         if tick_index < samps.len() {
@@ -41,9 +41,11 @@ impl Ticker {
                             iterations += 1;
                             sw.star.samples_tick_index.replace(tick_index + 1);
                         }
-                    });
+                    }
                 });
-                self.iterations_chan_tx.send(iterations).await;
+                match self.iterations_chan_tx.send(iterations).await {
+                    _ => () // NOTE for now ignore err b/c non-essential
+                };
             }
             self.tick_end.wait().await;
         }

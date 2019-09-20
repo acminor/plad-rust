@@ -6,7 +6,6 @@ extern crate lazy_static;
 #[macro_use]
 extern crate clap;
 
-#[macro_use]
 extern crate tokio;
 
 #[macro_use]
@@ -42,7 +41,6 @@ mod detector;
 use cli::*;
 use log::*;
 use sw_star::*;
-use utils::*;
 use async_utils::{TwinBarrier, twin_barrier};
 use info_handler::InformationHandler;
 use ticker::Ticker;
@@ -55,19 +53,13 @@ use colored::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use std::sync::mpsc::channel as sync_channel;
-use std::sync::mpsc::Receiver as SyncReceiver;
-use std::sync::mpsc::Sender as SyncSender;
-
 use tokio::sync::{
-    mpsc::{Receiver, Sender, error::{RecvError}, channel},
     Lock,
 };
 
 use cpuprofiler::PROFILER;
 
 struct RunState {
-    is_offline: bool,
     stars: Lock<Vec<SWStar>>,
     computation_end: TwinBarrier,
     tick_end: TwinBarrier,
@@ -80,16 +72,14 @@ struct RunState {
 //   has been copied and thus stars can be safely updated without producing unintended results
 // tick_end signifies that main can start the next computation
 fn tick_driver(state: RunState) {
-    let mut rt = tokio::runtime::Runtime::new().unwrap();
+    let rt = tokio::runtime::Runtime::new().unwrap();
     let RunState {
-        is_offline,
-        mut stars,
-        mut computation_end,
-        mut tick_end,
+        stars,
+        computation_end,
+        tick_end,
         info_handler,
     } = state;
 
-    let mut iterations_chan_tx = info_handler.get_iterations_sender();
     rt.block_on(async move {
         {
             let info_handler = info_handler.clone();
@@ -128,26 +118,11 @@ async fn main() {
         detector_opts,
     } = run_info;
 
-    let stars = stars
-        .into_iter()
-        .zip((0..detector_opts.fragment).cycle())
-        .map(|(star, fragment)| {
-            SWStar::new()
-                .set_star(star)
-                .set_availables(fragment, detector_opts.skip_delta)
-                .set_max_buffer_len(100)
-                .set_window_lens(detector_opts.window_length.0 as u32,
-                                 detector_opts.window_length.1 as u32)
-                .build()
-        })
-        .collect::<Vec<SWStar>>();
-
     let mut stars = Lock::new(stars);
-    let templates = templates;
 
     let stars_t = stars.lock().await;
-    let tot_stars = stars_t.len();
-    let max_len: usize = stars_t
+    let _tot_stars = stars_t.len();
+    let _max_len: usize = stars_t
         .iter()
         .filter_map(|sw| sw.star.samples.as_ref())
         .map(|samps| samps.len())
@@ -167,7 +142,7 @@ async fn main() {
     );
 
     let is_offline = true;
-    let info_handler = Arc::new(InformationHandler::new(tot_iter));
+    let info_handler = Arc::new(InformationHandler::new(is_offline, tot_iter));
     let (tick_barrier_main, tick_barrier_tick) = twin_barrier();
     let (comp_barrier_main, comp_barrier_tick) = twin_barrier();
     {
@@ -175,10 +150,9 @@ async fn main() {
         let info_handler = info_handler.clone();
         std::thread::spawn(move || {
             let run_state = RunState {
-                stars: stars,
+                stars,
                 tick_end: tick_barrier_tick,
                 computation_end: comp_barrier_tick,
-                is_offline,
                 info_handler,
             };
 
@@ -188,7 +162,7 @@ async fn main() {
 
     let mut detector = {
         let stars = stars.clone();
-        let into_handler = info_handler.clone();
+        //let into_handler = info_handler.clone();
         let detector_opts = detector_opts.clone();
 
         Detector::new(tick_barrier_main,
@@ -200,7 +174,7 @@ async fn main() {
 
     let (data, data2, adps) = detector.run().await;
 
-    compute_and_disp_stats(&data, &adps);
+    compute_and_disp_stats(&data, &adps[..]);
 
     /*
     info!(log, "{}", "Run Stats".on_green();
@@ -253,10 +227,10 @@ async fn main() {
     }
 }
 
-fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>, adps: &Vec<f32>) {
+fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>, adps: &[f32]) {
     let log = get_root_logger();
 
-    let stats = |data: &Vec<f32>| {
+    let stats = |data: &[f32]| {
         let mut avg = 0.0;
         let mut min = std::f32::INFINITY;
         let mut max = std::f32::NEG_INFINITY;
@@ -288,7 +262,10 @@ fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>, adps: &Vec<f32>) {
     {
         // over all values
         let (min, max, avg, std_dev) =
-            stats(&data.iter().flat_map(|(_key, val)| val.clone()).collect());
+            stats(&data
+                  .iter()
+                  .flat_map(|(_key, val)| val.clone())
+                  .collect::<Vec<f32>>()[..]);
         info!(log, "{}", "All values stats:".on_blue();
               "min"=>min.to_string(),
               "max"=>max.to_string(),

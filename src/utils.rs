@@ -124,7 +124,7 @@ pub fn uid_to_t0_tp(uid: &str) -> Option<(f32, f32)> {
     )
     .unwrap();
 
-    let res = adp_parser.captures(&uid).map(|caps| {
+    adp_parser.captures(&uid).map(|caps| {
         let t_prime = caps.get(2).unwrap().as_str().parse::<f32>().unwrap();
         //println!("T': {}", t_prime);
         let samples_per_hour = 60.0 // minutes in an hour
@@ -137,9 +137,7 @@ pub fn uid_to_t0_tp(uid: &str) -> Option<(f32, f32)> {
             * 24.0; // total sample days
         let center_of_signal = end_of_signal - (signal_time_in_samples / 2.0); // center of signal
         (center_of_signal, signal_time_in_samples)
-    });
-
-    res
+    })
 }
 
 // [ ] TODO add _x_range functionality

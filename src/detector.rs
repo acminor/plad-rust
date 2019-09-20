@@ -10,8 +10,6 @@ use crate::log;
 use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::Lock;
-use arrayfire::Array as AF_Array;
-use num::Complex;
 use colored::*;
 
 pub struct Detector {
@@ -33,7 +31,6 @@ impl Detector {
         let mut ic_tx = self.info_handler.get_iterations_sender();
         let log = log::get_root_logger();
         let mut sample_time = 0;
-        let mut iterations = 0;
         let mut true_events = 0;
         let mut false_events = 0;
 
@@ -45,22 +42,18 @@ impl Detector {
             let stars = self.stars.lock().await;
             stars.iter().for_each(|sw| {
                 data.insert(sw.star.uid.clone(), Vec::new());
-                sw.star.samples.as_ref().map(|samps| {
+                if let Some(samps) = sw.star.samples.as_ref() {
                     data2.insert(sw.star.uid.clone(), samps.clone());
-                });
+                };
             });
         }
 
         self.computation_barrier.wait().await;
         loop {
             self.tick_barrier.wait().await;
-            match *sd_rx.get_ref(){
-                true => {
-                    info!(log, "Received finished signal...");
-                    return (data, data2, adps);
-                    //break;
-                }
-                _ => (),
+            if *sd_rx.get_ref(){
+                info!(log, "Received finished signal...");
+                return (data, data2, adps);
             }
 
             let (windows, window_names) = {
@@ -89,7 +82,6 @@ impl Detector {
             self.computation_barrier.wait().await;
 
             sample_time += 1;
-            iterations += 1;
 
             let ip = inner_product(
                 &self.templates.templates[..],
@@ -107,10 +99,10 @@ impl Detector {
                     if sample_time >= 40320 && sample_time <= 46080 {
                         // Compute ADP if we have the information to in NFD files
                         // NOTE uses formula from NFD paper
-                        uid_to_t0_tp(&star).map(|(t0, t_prime)| {
+                        if let Some((t0, t_prime)) = uid_to_t0_tp(&star) {
                             let adp = ((sample_time as f32 - t0) / t_prime) * 100.0;
                             adps.push(adp);
-                        });
+                        };
                         crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
                               "time"=>sample_time.to_string(),
                               "star"=>star.to_string(),
@@ -142,13 +134,15 @@ impl Detector {
                     .iter()
                     .filter(|sw| detected_stars.contains(&sw.star.uid))
                     .for_each(|sw| {
-                        sw.star.samples.as_ref().map(|samps| {
+                        if let Some(samps) = sw.star.samples.as_ref() {
                             iters +=
                                 samps.len() - *sw.star.samples_tick_index.borrow();
-                        });
+                        };
                     });
 
-                ic_tx.send(iters).await;
+                match ic_tx.send(iters).await {
+                    _ => () // NOTE for now ignore error b/c non-essential
+                };
 
                 stars.retain(|sw| !detected_stars.contains(&sw.star.uid));
             }

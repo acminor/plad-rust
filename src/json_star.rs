@@ -35,8 +35,8 @@ pub fn parse_star_file(star_file: &str) -> Option<Star> {
         Err(_) => return None,
     };
 
-    let data = match data.is_object() {
-        true => match data.get("currentStarId") {
+    let data = if data.is_object() {
+        match data.get("currentStarId") {
             Some(_) => &data["currentStarId"],
             None => match data
                 .as_object()
@@ -48,14 +48,15 @@ pub fn parse_star_file(star_file: &str) -> Option<Star> {
                 Some(val) => val,
                 None => return None,
             },
-        },
-        false => &data,
+        }
+    } else {
+        &data
     };
 
     let mut stars = data
         .as_array()
-        .expect(&format!("Malformed JSON file: {}", star_file))
-        .into_iter()
+        .unwrap_or_else(|| {panic!("Malformed JSON file: {}", star_file)})
+        .iter()
         .map(|star_dp| {
             (
                 star_dp["star_id"]
