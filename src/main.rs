@@ -37,6 +37,7 @@ mod utils;
 mod async_utils;
 mod info_handler;
 mod ticker;
+mod detector;
 
 use cli::*;
 use log::*;
@@ -123,13 +124,17 @@ async fn main() {
         stars,
         templates,
         // [ ] TODO see earlier fixme
+        detector_opts,
+    } = run_info;
+
+    let DetectorOpts {
         _rho,
         noise_stddev,
         window_length,
         skip_delta,
         fragment,
         alert_threshold,
-    } = run_info;
+    } = detector_opts;
 
     let stars = stars
         .into_iter()

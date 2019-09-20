@@ -14,6 +14,10 @@ pub struct RunInfo {
     //  - should actually apply noise
     //    in generation of star data
     //    no need to add here
+    pub detector_opts: DetectorOpts,
+}
+
+pub struct DetectorOpts {
     pub _rho: f32,
     pub noise_stddev: f32,
     pub window_length: (usize, usize),
@@ -204,26 +208,28 @@ pub fn parse_args() -> RunInfo {
         templates,
         stars,
         // [ ] TODO see earlier fixme
-        _rho: f32::from_str(matches.value_of("rho").unwrap()).unwrap(),
-        noise_stddev: f32::from_str(matches.value_of("noise").unwrap())
-            .unwrap(),
-        window_length,
-        skip_delta: matches
-            .value_of("skip_delta")
-            .unwrap()
-            .parse::<u32>()
-            .expect("Problem parsing skip_delta"),
-        alert_threshold: f32::from_str(
-            matches.value_of("alert_threshold").unwrap(),
-        )
-        .unwrap(),
-        // TODO
-        // - make plural
-        // - add check for greater than 0
-        fragment: matches
-            .value_of("fragment")
-            .unwrap()
-            .parse::<u32>()
-            .expect("Problem parsing fragment"),
+        detector_opts: DetectorOpts {
+            _rho: f32::from_str(matches.value_of("rho").unwrap()).unwrap(),
+            noise_stddev: f32::from_str(matches.value_of("noise").unwrap())
+                .unwrap(),
+            window_length,
+            skip_delta: matches
+                .value_of("skip_delta")
+                .unwrap()
+                .parse::<u32>()
+                .expect("Problem parsing skip_delta"),
+            alert_threshold: f32::from_str(
+                matches.value_of("alert_threshold").unwrap(),
+            )
+                .unwrap(),
+            // TODO
+            // - make plural
+            // - add check for greater than 0
+            fragment: matches
+                .value_of("fragment")
+                .unwrap()
+                .parse::<u32>()
+                .expect("Problem parsing fragment"),
+        }
     }
 }
