@@ -17,6 +17,7 @@ pub struct RunInfo {
     pub detector_opts: DetectorOpts,
 }
 
+#[derive(Clone)]
 pub struct DetectorOpts {
     pub _rho: f32,
     pub noise_stddev: f32,

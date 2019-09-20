@@ -14,7 +14,7 @@ use arrayfire::Array as AF_Array;
 use num::Complex;
 use colored::*;
 
-struct Detector {
+pub struct Detector {
     tick_barrier: TwinBarrier,
     computation_barrier: TwinBarrier,
     info_handler: Arc<InformationHandler>,
@@ -24,7 +24,11 @@ struct Detector {
 }
 
 impl Detector {
-    async fn run(&mut self) {
+    pub async fn run(&mut self) -> (
+        HashMap<String, Vec<f32>>,
+        HashMap<String, Vec<f32>>,
+        Vec<f32>,
+    ) {
         let sd_rx = self.info_handler.get_shutdown_receiver();
         let mut ic_tx = self.info_handler.get_iterations_sender();
         let log = log::get_root_logger();
@@ -47,12 +51,14 @@ impl Detector {
             });
         }
 
+        self.computation_barrier.wait().await;
         loop {
             self.tick_barrier.wait().await;
             match *sd_rx.get_ref(){
                 true => {
                     info!(log, "Received finished signal...");
-                    break;
+                    return (data, data2, adps);
+                    //break;
                 }
                 _ => (),
             }
@@ -146,6 +152,19 @@ impl Detector {
 
                 stars.retain(|sw| !detected_stars.contains(&sw.star.uid));
             }
+        }
+    }
+
+    pub fn new(tick_barrier: TwinBarrier, computation_barrier: TwinBarrier,
+               info_handler: Arc<InformationHandler>, stars: Lock<Vec<SWStar>>,
+               templates: Templates, detector_opts: DetectorOpts) -> Detector {
+        Detector {
+            tick_barrier,
+            computation_barrier,
+            info_handler,
+            stars,
+            templates,
+            detector_opts,
         }
     }
 }

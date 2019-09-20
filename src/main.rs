@@ -46,6 +46,7 @@ use utils::*;
 use async_utils::{TwinBarrier, twin_barrier};
 use info_handler::InformationHandler;
 use ticker::Ticker;
+use detector::Detector;
 
 use arrayfire as AF;
 
@@ -127,24 +128,16 @@ async fn main() {
         detector_opts,
     } = run_info;
 
-    let DetectorOpts {
-        _rho,
-        noise_stddev,
-        window_length,
-        skip_delta,
-        fragment,
-        alert_threshold,
-    } = detector_opts;
-
     let stars = stars
         .into_iter()
-        .zip((0..fragment).cycle())
+        .zip((0..detector_opts.fragment).cycle())
         .map(|(star, fragment)| {
             SWStar::new()
                 .set_star(star)
-                .set_availables(fragment, skip_delta)
+                .set_availables(fragment, detector_opts.skip_delta)
                 .set_max_buffer_len(100)
-                .set_window_lens(window_length.0 as u32, window_length.1 as u32)
+                .set_window_lens(detector_opts.window_length.0 as u32,
+                                 detector_opts.window_length.1 as u32)
                 .build()
         })
         .collect::<Vec<SWStar>>();
@@ -165,35 +158,21 @@ async fn main() {
         .filter_map(|sw| sw.star.samples.as_ref())
         .map(|samps| samps.len())
         .sum::<usize>();
+    drop(stars_t);
 
     info!(
         log, "";
-        "window_length"=>format!("{:?}", window_length),
+        "window_length"=>format!("{:?}", detector_opts.window_length),
         "total_iters_needed"=>tot_iter,
     );
 
     let is_offline = true;
-    let mut sample_time = 0;
-    let mut true_events = 0;
-    let mut false_events = 0;
-    let mut data: HashMap<String, Vec<f32>> = HashMap::new();
-    let mut data2: HashMap<String, Vec<f32>> = HashMap::new();
-    let mut adps: Vec<f32> = Vec::new();
-    stars_t.iter().for_each(|sw| {
-        data.insert(sw.star.uid.clone(), Vec::new());
-        sw.star.samples.as_ref().map(|samps| {
-            data2.insert(sw.star.uid.clone(), samps.clone());
-        });
-    });
-    drop(stars_t);
-
-    let (comp_barrier_main, comp_barrier_tick) = twin_barrier();
-    let (tick_barrier_main, tick_barrier_tick) = twin_barrier();
     let info_handler = Arc::new(InformationHandler::new(tot_iter));
-    let mut ic_tx = info_handler.get_iterations_sender();
-    let sd_rx = info_handler.get_shutdown_receiver();
+    let (tick_barrier_main, tick_barrier_tick) = twin_barrier();
+    let (comp_barrier_main, comp_barrier_tick) = twin_barrier();
     {
         let stars = stars.clone();
+        let info_handler = info_handler.clone();
         std::thread::spawn(move || {
             let run_state = RunState {
                 stars: stars,
@@ -207,119 +186,30 @@ async fn main() {
         });
     }
 
-    let mut log_timer = std::time::Instant::now();
-    let now = std::time::Instant::now();
-    let mut iterations = 0;
-    comp_barrier_main.wait().await;
-    loop {
-        tick_barrier_main.wait().await;
-        match *sd_rx.get_ref(){
-            true => {
-                info!(log, "Received finished signal...");
-                break;
-            }
-            _ => (),
-        }
+    let mut detector = {
+        let stars = stars.clone();
+        let into_handler = info_handler.clone();
+        let detector_opts = detector_opts.clone();
 
-        let (windows, window_names) = {
-            let stars = stars.lock().await;
+        Detector::new(tick_barrier_main,
+                      comp_barrier_main,
+                      info_handler, stars,
+                      templates,
+                      detector_opts)
+    };
 
-            let window_names = stars
-                .iter()
-                .filter_map(|sw| {
-                    if sw.is_ready() {
-                        Some(sw.star.uid.clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<String>>();
-
-            let windows = stars
-                .iter()
-                .filter_map(|sw| sw.window())
-                .collect::<Vec<Vec<f32>>>();
-
-            (windows, window_names)
-        };
-        // NOTE signals can modify stars because now only
-        //      working with copied data and not refs
-        comp_barrier_main.wait().await;
-
-        sample_time += 1;
-        iterations += 1;
-
-        let ip = inner_product(
-            &templates.templates[..],
-            &windows,
-            noise_stddev,
-            true,
-            200,
-            200,
-        );
-
-        let mut detected_stars = std::collections::HashSet::new();
-        ip.iter().zip(window_names).for_each(|(val, star)| {
-            if *val > alert_threshold {
-                // TODO this should be a command line option
-                if sample_time >= 40320 && sample_time <= 46080 {
-                    // Compute ADP if we have the information to in NFD files
-                    // NOTE uses formula from NFD paper
-                    uid_to_t0_tp(&star).map(|(t0, t_prime)| {
-                        let adp = ((sample_time as f32 - t0) / t_prime) * 100.0;
-                        adps.push(adp);
-                    });
-                    crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
-                          "time"=>sample_time.to_string(),
-                          "star"=>star.to_string(),
-                          "val"=>val.to_string(),
-                    );
-                    true_events += 1;
-                } else {
-                    crit!(log, "{}", "FALSE EVENT DETECTED".on_red();
-                          "time"=>sample_time.to_string(),
-                          "star"=>star.to_string(),
-                          "val"=>val.to_string(),
-                    );
-                    false_events += 1;
-                }
-
-                detected_stars.insert(star.clone());
-            }
-
-            data.get_mut(&star).unwrap().push(*val);
-        });
-
-        // taint detected stars
-        // for now just remove
-        {
-            let mut stars = stars.lock().await;
-
-            let mut iters = 0;
-            stars
-                .iter()
-                .filter(|sw| detected_stars.contains(&sw.star.uid))
-                .for_each(|sw| {
-                    sw.star.samples.as_ref().map(|samps| {
-                        iters +=
-                            samps.len() - *sw.star.samples_tick_index.borrow();
-                    });
-                });
-
-            ic_tx.send(iters).await;
-
-            stars.retain(|sw| !detected_stars.contains(&sw.star.uid));
-        }
-    }
+    let (data, data2, adps) = detector.run().await;
 
     compute_and_disp_stats(&data, &adps);
 
+    /*
     info!(log, "{}", "Run Stats".on_green();
           "num_events_detected"=>true_events+false_events,
           "num_true_events"=>true_events,
           "num_false_events"=>false_events,
           "num_stars"=>tot_stars,
           "max_star_len"=>max_len);
+    */
 
     let mut data = data.iter().collect::<Vec<(&String, &Vec<f32>)>>();
     data.sort_unstable_by(|a, b| {
@@ -354,7 +244,7 @@ async fn main() {
             &star_data,
             data2.get(star_title).unwrap(),
             star_title,
-            skip_delta,
+            detector_opts.skip_delta,
         );
     }
 
