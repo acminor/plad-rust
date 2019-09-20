@@ -1,6 +1,6 @@
 [package]
 name = "match_filter"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["austin <austin.chase.m@gmail.com>"]
 edition = "2018"
 build = "build.rs"
