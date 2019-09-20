@@ -24,7 +24,7 @@ function safe_call {
                   --window-length $2 \
                   --skip-delta 30 \
                   --fragment 1 \
-                  --alert-threshold 1.1
+                  --alert-threshold 1.1 #8.1
 }
 
 case $1 in

@@ -121,8 +121,8 @@ async fn main() {
     let mut stars = Lock::new(stars);
 
     let stars_t = stars.lock().await;
-    let _tot_stars = stars_t.len();
-    let _max_len: usize = stars_t
+    let tot_stars = stars_t.len();
+    let max_len: usize = stars_t
         .iter()
         .filter_map(|sw| sw.star.samples.as_ref())
         .map(|samps| samps.len())
@@ -172,18 +172,16 @@ async fn main() {
                       detector_opts)
     };
 
-    let (data, data2, adps) = detector.run().await;
+    let (data, data2, adps, true_events, false_events) = detector.run().await;
 
     compute_and_disp_stats(&data, &adps[..]);
 
-    /*
     info!(log, "{}", "Run Stats".on_green();
           "num_events_detected"=>true_events+false_events,
           "num_true_events"=>true_events,
           "num_false_events"=>false_events,
           "num_stars"=>tot_stars,
           "max_star_len"=>max_len);
-    */
 
     let mut data = data.iter().collect::<Vec<(&String, &Vec<f32>)>>();
     data.sort_unstable_by(|a, b| {

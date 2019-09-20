@@ -26,6 +26,8 @@ impl Detector {
         HashMap<String, Vec<f32>>,
         HashMap<String, Vec<f32>>,
         Vec<f32>,
+        usize,
+        usize,
     ) {
         let sd_rx = self.info_handler.get_shutdown_receiver();
         let mut ic_tx = self.info_handler.get_iterations_sender();
@@ -53,7 +55,7 @@ impl Detector {
             self.tick_barrier.wait().await;
             if *sd_rx.get_ref(){
                 info!(log, "Received finished signal...");
-                return (data, data2, adps);
+                return (data, data2, adps, true_events, false_events);
             }
 
             let (windows, window_names) = {
