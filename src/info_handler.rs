@@ -11,12 +11,12 @@ pub struct InformationHandler {
     _ip_data_chan: (ts::mpsc::Sender<Data>, ts::mpsc::Receiver<Data>),
     _org_data_chan: (ts::mpsc::Sender<Data>, ts::mpsc::Receiver<Data>),
     iterations_chan: (ts::mpsc::Sender<usize>, Mutex<ts::mpsc::Receiver<usize>>),
-    total_iterations: usize,
+    total_iterations: Option<usize>,
     pub is_offline: bool,
 }
 
 impl InformationHandler {
-    pub fn new(is_offline: bool, tot_iters: usize) -> InformationHandler {
+    pub fn new(is_offline: bool, tot_iters: Option<usize>) -> InformationHandler {
         let _event_chan = ts::mpsc::channel(16);
         let _ip_data_chan = ts::mpsc::channel(16);
         let _org_data_chan = ts::mpsc::channel(16);
@@ -41,13 +41,20 @@ impl InformationHandler {
         self.shutdown_chan.1.clone()
     }
 
+    pub fn trigger_shutdown(&self) {
+        match self.shutdown_chan.0.broadcast(true) {
+            Ok(_) => (),
+            // TODO look into way to kill entire program from here???
+            _ => panic!("Problem shutting down program..."),
+        };
+    }
+
     pub fn get_iterations_sender(&self) -> ts::mpsc::Sender<usize> {
         self.iterations_chan.0.clone()
     }
 
     pub async fn progress_log(&self) {
         let mut iterations_chan_rx = self.iterations_chan.1.lock().await;
-        let total_iterations = self.total_iterations;
         let log = log::get_root_logger();
         let mut iterations = 0;
         let mut log_timer = std::time::Instant::now();
@@ -58,31 +65,39 @@ impl InformationHandler {
                 iterations += val;
             }
 
-            if iterations == total_iterations && self.is_offline {
+            if self.total_iterations.is_some() && iterations == self.total_iterations.unwrap() {
                 info!(log, "Sending shutdown signal...");
-                match self.shutdown_chan.0.broadcast(true) {
-                    Ok(_) => (),
-                    // TODO look into way to kill entire program from here???
-                    _ => panic!("Problem shutting down program..."),
-                };
+                self.trigger_shutdown();
                 return;
             }
 
             if log_timer.elapsed() > std::time::Duration::from_secs(2) {
                 let sps = iterations as f32 / now.elapsed().as_secs() as f32;
-                let pp =
-                    (iterations as f32) / (total_iterations as f32) * 100.0;
-                info!(log, "";
-                      "TotTime"=>format!("{}s", now.elapsed().as_secs()),
-                      "IterationsLeft"=>format!("{}",
-                                                total_iterations -
-                                                iterations as usize),
-                      "EstTimeLeft"=>format!("{}s", (total_iterations -
-                                                     iterations as usize)
-                                             as f32/sps as f32),
-                      "StarsPerSec"=>format!("{}", sps),
-                      "StarsPerTenSec"=>format!("{}", sps*10.0),
-                      "%Progress"=>format!("{}%", pp));
+
+                if let Some(tot_iters) = self.total_iterations.as_ref() {
+                    let tot_iters = tot_iters.clone();
+                    let pp =
+                        (iterations as f32) / (tot_iters as f32) * 100.0;
+                    info!(log, "";
+                        "TotTime"=>format!("{}s", now.elapsed().as_secs()),
+                        "IterationsLeft"=>format!("{}",
+                                                    tot_iters -
+                                                    iterations as usize),
+                        "EstTimeLeft"=>format!("{}s", (tot_iters -
+                                                        iterations as usize)
+                                                as f32/sps as f32),
+                        "StarsPerSec"=>format!("{}", sps),
+                        "StarsPerTenSec"=>format!("{}", sps*10.0),
+                        "%Progress"=>format!("{}%", pp));
+                } else {
+                    info!(log, "";
+                          "TotTime"=>format!("{}s", now.elapsed().as_secs()),
+                          "IterationsLeft"=>format!("UNKNOWN"),
+                          "EstTimeLeft"=>format!("UNKNOWN"),
+                          "StarsPerSec"=>format!("{}", sps),
+                          "StarsPerTenSec"=>format!("{}", sps*10.0),
+                          "%Progress"=>format!("UNKNOWN"));
+                }
 
                 log_timer = std::time::Instant::now();
             }

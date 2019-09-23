@@ -40,15 +40,16 @@ impl Detector {
         let mut data2: HashMap<String, Vec<f32>> = HashMap::new();
         let mut adps: Vec<f32> = Vec::new();
 
+        /*
         {
             let stars = self.stars.lock().await;
             stars.iter().for_each(|sw| {
-                data.insert(sw.star.uid.clone(), Vec::new());
                 if let Some(samps) = sw.star.samples.as_ref() {
                     data2.insert(sw.star.uid.clone(), samps.clone());
                 };
             });
         }
+        */
 
         self.computation_barrier.wait().await;
         loop {
@@ -79,6 +80,15 @@ impl Detector {
 
                 (windows, window_names)
             };
+
+            /*
+            if windows.is_empty() {
+                println!("empty");
+            } else {
+                println!("has data");
+            }
+            */
+
             // NOTE signals can modify stars because now only
             //      working with copied data and not refs
             self.computation_barrier.wait().await;
@@ -121,6 +131,10 @@ impl Detector {
                     }
 
                     detected_stars.insert(star.clone());
+                }
+
+                if !data.contains_key(&star) {
+                    data.insert(star.clone(), Vec::new());
                 }
 
                 data.get_mut(&star).unwrap().push(*val);

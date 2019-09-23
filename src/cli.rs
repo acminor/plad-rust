@@ -180,7 +180,6 @@ pub fn parse_args() -> RunInfo {
         )
         .arg(
             Arg::with_name("fragment")
-                .short("a")
                 .long("fragment")
                 .help("number of fragments to split stars into")
                 .default_value("1")
@@ -189,7 +188,7 @@ pub fn parse_args() -> RunInfo {
         )
         .arg(
             Arg::with_name("gwac_file")
-                .long("gwacfile")
+                .long("gwac-file")
                 .help("TODO")
                 .takes_value(true)
                 .required_unless("input_dir")

@@ -145,7 +145,7 @@ pub fn uid_to_t0_tp(uid: &str) -> Option<(f32, f32)> {
 pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
     let c = inline_python::Context::new();
 
-    let (t0, _) = uid_to_t0_tp(title).unwrap();
+    //let (t0, _) = uid_to_t0_tp(title).unwrap();
     python! {
         #![context = &c]
         import matplotlib.pyplot as plt
@@ -154,13 +154,14 @@ pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
         sys.argv.append("test")
 
         plt.title('title)
-        plt.xticks([i for i in range(0, len('data), 2000)])
+        //plt.xticks([i for i in range(0, len('data), 2000)])
         plt.plot('data, marker="o", ls="")
-        plt.plot('t0, -1, marker="x", ls="")
+        //plt.plot('t0, -1, marker="x", ls="")
         plt.show()
     }
 }
 
+#[allow(dead_code)]
 pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
     let c = inline_python::Context::new();
     python! {

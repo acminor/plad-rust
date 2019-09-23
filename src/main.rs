@@ -76,7 +76,12 @@ struct RunState {
 //   has been copied and thus stars can be safely updated without producing unintended results
 // tick_end signifies that main can start the next computation
 fn tick_driver(state: RunState) {
-    let rt = tokio::runtime::Runtime::new().unwrap();
+    //let rt = tokio::runtime::Runtime::new().unwrap();
+    let rt = tokio::runtime::Builder::new()
+        .blocking_threads(4)
+        .core_threads(4)
+        .build()
+        .unwrap();
     let RunState {
         stars,
         computation_end,
@@ -148,17 +153,23 @@ async fn main() {
 
     let stars_t = stars.lock().await;
     let tot_stars = stars_t.len();
-    let max_len: usize = stars_t
+
+    let max_len: Option<usize> = stars_t
         .iter()
         .filter_map(|sw| sw.star.samples.as_ref())
         .map(|samps| samps.len())
-        .max()
-        .unwrap();
-    let tot_iter: usize = stars_t
-        .iter()
-        .filter_map(|sw| sw.star.samples.as_ref())
-        .map(|samps| samps.len())
-        .sum::<usize>();
+        .max();
+
+    let tot_iter: Option<usize> = if !gwac_reader.is_some() {
+        Some(stars_t
+             .iter()
+             .filter_map(|sw| sw.star.samples.as_ref())
+             .map(|samps| samps.len())
+             .sum::<usize>())
+    } else {
+        None
+    };
+
     drop(stars_t);
 
     info!(
@@ -167,7 +178,7 @@ async fn main() {
         "total_iters_needed"=>tot_iter,
     );
 
-    let is_offline = true;
+    let is_offline = !gwac_reader.is_some();
     let info_handler = Arc::new(InformationHandler::new(is_offline, tot_iter));
     let (tick_barrier_main, tick_barrier_tick) = twin_barrier();
     let (comp_barrier_main, comp_barrier_tick) = twin_barrier();
@@ -186,6 +197,18 @@ async fn main() {
             };
 
             tick_driver(run_state);
+        });
+    }
+
+    {
+        let info_handler = info_handler.clone();
+        // TODO double cc should cause quit
+        ctrlc::set_handler(move || {
+            if PROF {
+                PROFILER.lock().unwrap().stop().expect("Couldn't start");
+            }
+            info_handler.trigger_shutdown();
+            //std::process::exit(-1);
         });
     }
 
@@ -241,12 +264,20 @@ async fn main() {
     data.reverse();
     for (star_title, star_data) in data.into_iter() {
         //crate::utils::debug_plt(&star_data, star_title, None);
-        crate::utils::debug_plt_2(
-            &star_data,
-            data2.get(star_title).unwrap(),
-            star_title,
-            detector_opts.skip_delta,
-        );
+        if is_offline {
+            crate::utils::debug_plt_2(
+                &star_data,
+                data2.get(star_title).unwrap(),
+                star_title,
+                detector_opts.skip_delta,
+            );
+        } else {
+            crate::utils::debug_plt(
+                &star_data,
+                star_title,
+                None,
+            );
+        }
     }
 
     if PROF {
