@@ -12,7 +12,7 @@ pub struct InformationHandler {
     _org_data_chan: (ts::mpsc::Sender<Data>, ts::mpsc::Receiver<Data>),
     iterations_chan: (ts::mpsc::Sender<usize>, Mutex<ts::mpsc::Receiver<usize>>),
     total_iterations: usize,
-    is_offline: bool,
+    pub is_offline: bool,
 }
 
 impl InformationHandler {

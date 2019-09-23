@@ -4,6 +4,7 @@ use crate::star::*;
 use crate::sw_star::SWStar;
 use crate::template::*;
 use crate::toml_star;
+use crate::gwac_reader::GWACReader;
 use clap::{App, Arg};
 use std::fs;
 use std::str::FromStr;
@@ -11,6 +12,7 @@ use std::str::FromStr;
 pub struct RunInfo {
     pub templates: Templates,
     pub stars: Vec<SWStar>,
+    pub gwac_reader: Option<GWACReader>,
     // [ ] TODO used for noise
     //  - should actually apply noise
     //    in generation of star data
@@ -63,6 +65,39 @@ fn unwrap_parse_star_files(
     }
 }
 
+fn parse_star_files(input_dirs: &[&str], detector_opts: &DetectorOpts) -> Vec<SWStar> {
+    let input_dirs: Vec<String> = input_dirs
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    // FIXME only doing one directory for now
+    let input_dir = &input_dirs[0];
+
+    let stars: Vec<Star> = {
+        match fs::metadata(&input_dir) {
+            Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
+                .unwrap()
+                .filter_map(unwrap_parse_star_files)
+                .collect(),
+            _ => panic!("Error in reading input_dir"),
+        }
+    };
+
+    stars
+        .into_iter()
+        .zip((0..detector_opts.fragment).cycle())
+        .map(|(star, fragment)| {
+            SWStar::new()
+                .set_star(star)
+                .set_availables(fragment, detector_opts.skip_delta)
+                .set_max_buffer_len(100)
+                .set_window_lens(detector_opts.window_length.0 as u32,
+                                 detector_opts.window_length.1 as u32)
+                .build()
+        })
+        .collect::<Vec<SWStar>>()
+}
+
 pub fn parse_args() -> RunInfo {
     let matches = App::new("Matched Filter")
         .version(crate_version!())
@@ -76,7 +111,8 @@ pub fn parse_args() -> RunInfo {
                 .number_of_values(1)
                 .multiple(true)
                 .takes_value(true)
-                .required(true),
+                .required_unless("gwac_file")
+                .conflicts_with("gwac_file")
         )
         .arg(
             Arg::with_name("templates_file")
@@ -108,10 +144,8 @@ pub fn parse_args() -> RunInfo {
                 .long("window-length")
                 .help("TODO")
                 .takes_value(true)
-                .conflicts_with("min_window_length")
-                .conflicts_with("max_window_length")
-                .required_unless("min_window_length")
-                .required_unless("max_window_length"),
+                .conflicts_with_all(&["min_window_length", "max_window_length"])
+                .required_unless_one(&["min_window_length", "max_window_length"]),
         )
         .arg(
             Arg::with_name("min_window_length")
@@ -152,6 +186,14 @@ pub fn parse_args() -> RunInfo {
                 .default_value("1")
                 .takes_value(true)
                 .required(false),
+        )
+        .arg(
+            Arg::with_name("gwac_file")
+                .long("gwacfile")
+                .help("TODO")
+                .takes_value(true)
+                .required_unless("input_dir")
+                .conflicts_with("input_dir")
         )
         .get_matches();
 
@@ -213,41 +255,31 @@ pub fn parse_args() -> RunInfo {
         matches.value_of("templates_file").unwrap().to_string(),
     );
 
-    let input_dirs: Vec<String> = matches
-        .values_of("input_dir")
-        .unwrap()
-        .map(|s| s.to_string())
-        .collect();
-    let input_dir = &input_dirs[0];
+    // NOTE for simplicity do not allow offline and gwac_files
+    //      to be on at same time
+    if let Some(input_dirs) = matches.values_of("input_dir") {
+        let stars = parse_star_files(&input_dirs.collect::<Vec<&str>>(), &detector_opts);
 
-    let stars: Vec<Star> = {
-        match fs::metadata(&input_dir) {
-            Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
-                .unwrap()
-                .filter_map(unwrap_parse_star_files)
-                .collect(),
-            _ => panic!("Error in reading input_dir"),
-        }
-    };
-
-    let stars = stars
-        .into_iter()
-        .zip((0..detector_opts.fragment).cycle())
-        .map(|(star, fragment)| {
-            SWStar::new()
-                .set_star(star)
-                .set_availables(fragment, detector_opts.skip_delta)
-                .set_max_buffer_len(100)
-                .set_window_lens(detector_opts.window_length.0 as u32,
-                                 detector_opts.window_length.1 as u32)
-                .build()
-        })
-        .collect::<Vec<SWStar>>();
-
-    RunInfo {
-        templates,
-        stars,
-        // [ ] TODO see earlier fixme
-        detector_opts,
+        return RunInfo {
+            templates,
+            stars,
+            gwac_reader: None,
+            // [ ] TODO see earlier fixme
+            detector_opts,
+        };
     }
+
+    // NOTE for simplicity do not allow offline and gwac_files
+    //      to be on at same time
+    if let Some(gwac_file) = matches.value_of("gwac_file") {
+        return RunInfo {
+            templates,
+            stars: Vec::new(),
+            gwac_reader: Some(GWACReader::new(gwac_file)),
+            // [ ] TODO see earlier fixme
+            detector_opts,
+        };
+    }
+
+    panic!("Should never make it here");
 }

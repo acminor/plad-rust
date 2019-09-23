@@ -37,7 +37,7 @@ mod async_utils;
 mod info_handler;
 mod ticker;
 mod detector;
-//mod gwac_reader;
+mod gwac_reader;
 
 use cli::*;
 use log::*;
@@ -46,6 +46,7 @@ use async_utils::{TwinBarrier, twin_barrier};
 use info_handler::InformationHandler;
 use ticker::Ticker;
 use detector::Detector;
+use gwac_reader::GWACReader;
 
 use arrayfire as AF;
 
@@ -65,6 +66,8 @@ struct RunState {
     computation_end: TwinBarrier,
     tick_end: TwinBarrier,
     info_handler: Arc<InformationHandler>,
+    detector_opts: DetectorOpts,
+    gwac_reader: Option<GWACReader>,
     // FIXME average stars per fragment
     // FIXME average stars per iteration???
 }
@@ -79,17 +82,38 @@ fn tick_driver(state: RunState) {
         computation_end,
         tick_end,
         info_handler,
+        mut gwac_reader,
+        detector_opts,
     } = state;
 
     rt.block_on(async move {
         {
             let info_handler = info_handler.clone();
-                tokio::spawn(async move {
-                    info_handler.progress_log().await;
-                });
+            tokio::spawn(async move {
+                info_handler.progress_log().await;
+            });
+
         }
 
-        Ticker::new(computation_end, tick_end, stars, info_handler).tick().await;
+        let gwac_rx_chan = if gwac_reader.is_some() {
+            Some(gwac_reader.as_mut().unwrap().get_data_channel())
+        } else {
+            None
+        };
+
+        if let Some(mut gwac_reader) = gwac_reader {
+            tokio::spawn(async move {
+                gwac_reader.start().await;
+            });
+        }
+
+        Ticker::new(
+            computation_end,
+            tick_end,
+            stars,
+            gwac_rx_chan,
+            detector_opts.clone(),
+            info_handler,).tick().await;
     });
 }
 
@@ -115,6 +139,7 @@ async fn main() {
     let RunInfo {
         stars,
         templates,
+        gwac_reader,
         // [ ] TODO see earlier fixme
         detector_opts,
     } = run_info;
@@ -149,12 +174,15 @@ async fn main() {
     {
         let stars = stars.clone();
         let info_handler = info_handler.clone();
+        let detector_opts = detector_opts.clone();
         std::thread::spawn(move || {
             let run_state = RunState {
                 stars,
                 tick_end: tick_barrier_tick,
                 computation_end: comp_barrier_tick,
                 info_handler,
+                gwac_reader,
+                detector_opts,
             };
 
             tick_driver(run_state);

@@ -1,4 +1,6 @@
-use tokio::sync::mpsc::{Sender, Receiver};
+use tokio::sync::mpsc::{Sender, Receiver, channel};
+use tokio::io::BufReader;
+use tokio::fs::File;
 use tokio::io::AsyncBufReadExt;
 use std::sync::Arc;
 
@@ -11,7 +13,7 @@ macro_rules! unwrap_or_continue {
     };
 }
 
-struct GWACData {
+pub struct GWACData {
     xpix: f32,
     ypix: f32,
     ra: f32,
@@ -24,31 +26,49 @@ struct GWACData {
     ccd_num: String,
 }
 
-enum GWACFrame {
+pub enum GWACFrame {
     Start,
+    Filename(String),
     End,
-    Star(GWACData)
+    Star(GWACData),
 }
 
-struct GWACReader {
-    data_file: tokio::io::BufReader<tokio::fs::File>,
-    data_chan: (Sender<GWACFrame>, Arc<Receiver<GWACFrame>>),
+pub struct GWACReader {
+    // NOTE lazily initialize so that new function is non-async
+    data_file_path: String,
+    // NOTE use option so later can move out of it
+    data_chan: (Sender<GWACFrame>, Option<Receiver<GWACFrame>>),
 }
 
 impl GWACReader {
-    pub fn new() -> GWACReader {
+    pub fn new(data_file: &str) -> GWACReader {
+
+        let (tx, rx) = channel(64);
+        let data_chan = (tx, Some(rx));
+
         GWACReader {
+            data_file_path: data_file.to_string(),
+            data_chan,
         }
     }
 
-    pub fn get_data_channel(&self) -> Arc<Receiver<GWACFrame>> {
-        self.data_chan.1.clone()
+    pub fn get_data_channel(&mut self) -> Receiver<GWACFrame> {
+        if self.data_chan.1.is_some() {
+            self.data_chan.1.take().unwrap()
+        } else {
+            panic!("Only one GWAC data receiver is allowed.")
+        }
     }
 
-    pub async fn start(&self) {
+    // NOTE should only be called once
+    pub async fn start(&mut self) {
+        let mut data_file = File::open(&self.data_file_path).await.expect("Could not open GWAC file.");
+        let mut data_file = BufReader::new(data_file);
+
         let mut buf = String::new();
+        let mut recently_started = false;
         loop {
-            match self.data_file.read_line(&mut buf).await {
+            match data_file.read_line(&mut buf).await {
                 Ok(val) if val == 0 => break, // TODO graceful shutdown
                 Ok(_) => (),
                 _ => break, // TODO graceful shutdown
@@ -56,9 +76,18 @@ impl GWACReader {
 
             let data = buf.trim();
 
+            // NOTE: Right after start signal a file name is sent
+            //       this logic handles parsing and sending that
+            if recently_started {
+                self.data_chan.0.send(GWACFrame::Filename(data.to_string())).await;
+                recently_started = false;
+                continue;
+            }
+
             match data {
                 "start" => {
                     self.data_chan.0.send(GWACFrame::Start).await;
+                    recently_started = true;
                 },
                 "end" => {
                     self.data_chan.0.send(GWACFrame::Start).await;
@@ -80,7 +109,7 @@ impl GWACReader {
                     self.data_chan.0.send(GWACFrame::Star(
                         GWACData {
                             xpix, ypix, ra, dec, zone, star_id, mag, timestamp, ellipiticity, ccd_num,
-                        }));
+                        })).await;
                 }
             }
         }
