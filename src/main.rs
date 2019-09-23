@@ -37,6 +37,7 @@ mod async_utils;
 mod info_handler;
 mod ticker;
 mod detector;
+//mod gwac_reader;
 
 use cli::*;
 use log::*;
