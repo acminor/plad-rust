@@ -1,5 +1,5 @@
 These are the necessary attributions. I try to only attribute directly included packages (see Cargo.toml).
-If this is an issue with package owners, please feel free to contact me on Gitlab (acm0055).
+If this is an issue with package owners, please feel free to contact me on Gitlab (acminor).
 For further copyright and attributions, see the included packages includes or install and
 run Cargo license and check software from there. Also most licenses are taken from each
 individuals project source if they include copyrights. Thus, hopefully these attribute the
