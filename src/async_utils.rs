@@ -1,6 +1,4 @@
-use tokio::sync::{
-    mpsc::{Receiver, Sender, channel},
-};
+use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 use std::cell::RefCell;
 
@@ -19,14 +17,14 @@ impl TwinBarrier {
     async fn tx_go(&self) {
         match self.tx_go.borrow_mut().send(true).await {
             Ok(_) => (),
-            _ => panic!("Twin barrier locking down. Panicking...")
+            _ => panic!("Twin barrier locking down. Panicking..."),
         }
     }
 
     async fn rx_go(&self) {
         match self.rx_go.borrow_mut().recv().await {
             Some(_) => (),
-            None => panic!("Twin barrier locking down. Panicking...")
+            None => panic!("Twin barrier locking down. Panicking..."),
         }
     }
     // NOTE this will serve as explanation of other barriers
@@ -45,7 +43,7 @@ impl TwinBarrier {
             Side::SideA => {
                 self.tx_go().await;
                 self.rx_go().await;
-            },
+            }
             Side::SideB => {
                 self.rx_go().await;
                 self.tx_go().await;
@@ -56,7 +54,7 @@ impl TwinBarrier {
 
 pub fn twin_barrier() -> (TwinBarrier, TwinBarrier) {
     let (tx_a, rx_b) = channel(1);
-    let (tx_b, rx_a)= channel(1);
+    let (tx_b, rx_a) = channel(1);
 
     let side_a = TwinBarrier {
         tx_go: RefCell::new(tx_a),

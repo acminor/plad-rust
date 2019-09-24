@@ -103,18 +103,30 @@ impl SWStarBuilder {
     pub fn build(self) -> SWStar {
         SWStar {
             star: self.star.expect("Tried to build a partial SWStar."),
-            max_window_len: self.max_window_len.expect("Tried to build a partial SWStar."),
-            min_window_len: self.min_window_len.expect("Tried to build a partial SWStar."),
+            max_window_len: self
+                .max_window_len
+                .expect("Tried to build a partial SWStar."),
+            min_window_len: self
+                .min_window_len
+                .expect("Tried to build a partial SWStar."),
             cur_window_len: RefCell::new(0),
             buffer: RefCell::new(Vec::new()),
-            _max_buffer_len: self.max_buffer_len.expect("Tried to build a partial SWStar."),
+            _max_buffer_len: self
+                .max_buffer_len
+                .expect("Tried to build a partial SWStar."),
             //available_pos: self.available_pos.unwrap(),
-            available_delta: self.available_delta.expect("Tried to build a partial SWStar."),
+            available_delta: self
+                .available_delta
+                .expect("Tried to build a partial SWStar."),
             // ex. let 'o' be the start pos and 'x' not do anything
             //     8 be delta and 8 be min and max window
             // 1) xxxxxxxoxxxxxxxo -- available_pos = 0
             // 2) xxxxxxxxoxxxxxxxo -- available_pos = 1
-            available_count: RefCell::new(self.available_pos.expect("Tried to build a partial SWStar.") + 1),
+            available_count: RefCell::new(
+                self.available_pos
+                    .expect("Tried to build a partial SWStar.")
+                    + 1,
+            ),
         }
     }
 }

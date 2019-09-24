@@ -1,7 +1,7 @@
-use tokio::sync::mpsc::{Sender, Receiver, channel};
-use tokio::io::BufReader;
 use tokio::fs::File;
 use tokio::io::AsyncBufReadExt;
+use tokio::io::BufReader;
+use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 macro_rules! unwrap_or_continue {
     ($e:expr) => {
@@ -61,7 +61,9 @@ impl GWACReader {
 
     // NOTE should only be called once
     pub async fn start(&mut self) {
-        let data_file = File::open(&self.data_file_path).await.expect("Could not open GWAC file.");
+        let data_file = File::open(&self.data_file_path)
+            .await
+            .expect("Could not open GWAC file.");
         let mut data_file = BufReader::new(data_file);
 
         let mut recently_started = false;
@@ -80,7 +82,12 @@ impl GWACReader {
             // NOTE: Right after start signal a file name is sent
             //       this logic handles parsing and sending that
             if recently_started {
-                match self.data_chan.0.send(GWACFrame::Filename(data.to_string())).await {
+                match self
+                    .data_chan
+                    .0
+                    .send(GWACFrame::Filename(data.to_string()))
+                    .await
+                {
                     Ok(_) => (),
                     _ => break,
                 };
@@ -113,14 +120,27 @@ impl GWACReader {
                 let star_id = fields[5].trim().to_string();
                 let mag = unwrap_or_continue!(fields[6].parse::<f32>());
                 let timestamp = unwrap_or_continue!(fields[7].parse::<f32>());
-                let ellipiticity = unwrap_or_continue!(fields[8].parse::<f32>());
+                let ellipiticity =
+                    unwrap_or_continue!(fields[8].parse::<f32>());
                 let ccd_num = fields[9].trim().to_string();
 
-                match self.data_chan.0.send(GWACFrame::Star(
-                    GWACData {
-                        xpix, ypix, ra, dec, zone, star_id, mag, timestamp, ellipiticity, ccd_num,
-                    })).await {
-
+                match self
+                    .data_chan
+                    .0
+                    .send(GWACFrame::Star(GWACData {
+                        xpix,
+                        ypix,
+                        ra,
+                        dec,
+                        zone,
+                        star_id,
+                        mag,
+                        timestamp,
+                        ellipiticity,
+                        ccd_num,
+                    }))
+                    .await
+                {
                     Ok(_) => (),
                     _ => break,
                 };

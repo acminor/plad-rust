@@ -1,16 +1,16 @@
-use crate::cli::DetectorOpts;
-use crate::sw_star::SWStar;
 use crate::async_utils::TwinBarrier;
+use crate::cli::DetectorOpts;
 use crate::info_handler::InformationHandler;
-use crate::utils::uid_to_t0_tp;
-use crate::utils::inner_product;
-use crate::template::Templates;
 use crate::log;
+use crate::sw_star::SWStar;
+use crate::template::Templates;
+use crate::utils::inner_product;
+use crate::utils::uid_to_t0_tp;
 
-use std::sync::Arc;
-use std::collections::HashMap;
-use tokio::sync::Lock;
 use colored::*;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::Lock;
 
 pub struct Detector {
     tick_barrier: TwinBarrier,
@@ -22,7 +22,9 @@ pub struct Detector {
 }
 
 impl Detector {
-    pub async fn run(&mut self) -> (
+    pub async fn run(
+        &mut self,
+    ) -> (
         HashMap<String, Vec<f32>>,
         HashMap<String, Vec<f32>>,
         Vec<f32>,
@@ -52,7 +54,7 @@ impl Detector {
         self.computation_barrier.wait().await;
         loop {
             // NOTE check for shutdown before locking
-            if *sd_rx.get_ref(){
+            if *sd_rx.get_ref() {
                 info!(log, "Received finished signal...");
                 return (data, data2, adps, true_events, false_events);
             }
@@ -89,7 +91,7 @@ impl Detector {
             */
 
             // NOTE check for shutdown before locking
-            if *sd_rx.get_ref(){
+            if *sd_rx.get_ref() {
                 info!(log, "Received finished signal...");
                 return (data, data2, adps, true_events, false_events);
             }
@@ -116,7 +118,8 @@ impl Detector {
                         // Compute ADP if we have the information to in NFD files
                         // NOTE uses formula from NFD paper
                         if let Some((t0, t_prime)) = uid_to_t0_tp(&star) {
-                            let adp = ((sample_time as f32 - t0) / t_prime) * 100.0;
+                            let adp =
+                                ((sample_time as f32 - t0) / t_prime) * 100.0;
                             adps.push(adp);
                         };
                         crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
@@ -141,7 +144,9 @@ impl Detector {
                     data.insert(star.clone(), Vec::new());
                 }
 
-                data.get_mut(&star).expect("Star should be in inner_product data map.").push(*val);
+                data.get_mut(&star)
+                    .expect("Star should be in inner_product data map.")
+                    .push(*val);
             });
 
             // taint detected stars
@@ -155,13 +160,13 @@ impl Detector {
                     .filter(|sw| detected_stars.contains(&sw.star.uid))
                     .for_each(|sw| {
                         if let Some(samps) = sw.star.samples.as_ref() {
-                            iters +=
-                                samps.len() - *sw.star.samples_tick_index.borrow();
+                            iters += samps.len()
+                                - *sw.star.samples_tick_index.borrow();
                         };
                     });
 
                 match ic_tx.send(iters).await {
-                    _ => () // NOTE for now ignore error b/c non-essential
+                    _ => (), // NOTE for now ignore error b/c non-essential
                 };
 
                 stars.retain(|sw| !detected_stars.contains(&sw.star.uid));
@@ -169,9 +174,14 @@ impl Detector {
         }
     }
 
-    pub fn new(tick_barrier: TwinBarrier, computation_barrier: TwinBarrier,
-               info_handler: Arc<InformationHandler>, stars: Lock<Vec<SWStar>>,
-               templates: Templates, detector_opts: DetectorOpts) -> Detector {
+    pub fn new(
+        tick_barrier: TwinBarrier,
+        computation_barrier: TwinBarrier,
+        info_handler: Arc<InformationHandler>,
+        stars: Lock<Vec<SWStar>>,
+        templates: Templates,
+        detector_opts: DetectorOpts,
+    ) -> Detector {
         Detector {
             tick_barrier,
             computation_barrier,

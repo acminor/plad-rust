@@ -1,6 +1,6 @@
+use crate::log;
 use async_std::sync::Mutex;
 use tokio::sync as ts;
-use crate::log;
 
 struct Event;
 struct Data;
@@ -10,13 +10,17 @@ pub struct InformationHandler {
     shutdown_chan: (ts::watch::Sender<bool>, ts::watch::Receiver<bool>),
     _ip_data_chan: (ts::mpsc::Sender<Data>, ts::mpsc::Receiver<Data>),
     _org_data_chan: (ts::mpsc::Sender<Data>, ts::mpsc::Receiver<Data>),
-    iterations_chan: (ts::mpsc::Sender<usize>, Mutex<ts::mpsc::Receiver<usize>>),
+    iterations_chan:
+        (ts::mpsc::Sender<usize>, Mutex<ts::mpsc::Receiver<usize>>),
     total_iterations: Option<usize>,
     pub is_offline: bool,
 }
 
 impl InformationHandler {
-    pub fn new(is_offline: bool, tot_iters: Option<usize>) -> InformationHandler {
+    pub fn new(
+        is_offline: bool,
+        tot_iters: Option<usize>,
+    ) -> InformationHandler {
         let _event_chan = ts::mpsc::channel(16);
         let _ip_data_chan = ts::mpsc::channel(16);
         let _org_data_chan = ts::mpsc::channel(16);
@@ -24,7 +28,8 @@ impl InformationHandler {
         let shutdown_chan = ts::watch::channel(false);
         let total_iterations = tot_iters;
 
-        let iterations_chan = (iterations_chan.0, Mutex::new(iterations_chan.1));
+        let iterations_chan =
+            (iterations_chan.0, Mutex::new(iterations_chan.1));
 
         InformationHandler {
             _event_chan,
@@ -65,7 +70,10 @@ impl InformationHandler {
                 iterations += val;
             }
 
-            if self.total_iterations.is_some() && iterations == self.total_iterations.expect("Should never happen.") {
+            if self.total_iterations.is_some()
+                && iterations
+                    == self.total_iterations.expect("Should never happen.")
+            {
                 info!(log, "Sending shutdown signal...");
                 self.trigger_shutdown();
                 return;
@@ -76,8 +84,7 @@ impl InformationHandler {
 
                 if let Some(tot_iters) = self.total_iterations.as_ref() {
                     let tot_iters = *tot_iters;
-                    let pp =
-                        (iterations as f32) / (tot_iters as f32) * 100.0;
+                    let pp = (iterations as f32) / (tot_iters as f32) * 100.0;
                     info!(log, "";
                         "TotTime"=>format!("{}s", now.elapsed().as_secs()),
                         "IterationsLeft"=>format!("{}",

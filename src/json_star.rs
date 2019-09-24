@@ -55,7 +55,7 @@ pub fn parse_star_file(star_file: &str) -> Option<Star> {
 
     let mut stars = data
         .as_array()
-        .unwrap_or_else(|| {panic!("Malformed JSON file: {}", star_file)})
+        .unwrap_or_else(|| panic!("Malformed JSON file: {}", star_file))
         .iter()
         .map(|star_dp| {
             (

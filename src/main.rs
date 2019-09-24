@@ -23,42 +23,40 @@ extern crate jemallocator;
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
+mod async_utils;
 mod cli;
 mod dat_star;
+mod detector;
+mod gwac_reader;
+mod info_handler;
 mod json_star;
 mod log;
 mod python;
 mod star;
 mod sw_star;
 mod template;
+mod ticker;
 mod toml_star;
 mod utils;
-mod async_utils;
-mod info_handler;
-mod ticker;
-mod detector;
-mod gwac_reader;
 
+use async_utils::{twin_barrier, TwinBarrier};
 use cli::*;
-use log::*;
-use sw_star::*;
-use async_utils::{TwinBarrier, twin_barrier};
-use info_handler::InformationHandler;
-use ticker::Ticker;
 use detector::Detector;
 use gwac_reader::GWACReader;
+use info_handler::InformationHandler;
+use log::*;
+use sw_star::*;
+use ticker::Ticker;
 
 use arrayfire as AF;
 
 use colored::*;
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU8, AtomicBool, Ordering};
 
-use tokio::sync::{
-    Lock,
-};
+use tokio::sync::Lock;
 
 use cpuprofiler::PROFILER;
 
@@ -97,11 +95,15 @@ fn tick_driver(state: RunState) {
             tokio::spawn(async move {
                 info_handler.progress_log().await;
             });
-
         }
 
         let gwac_rx_chan = if gwac_reader.is_some() {
-            Some(gwac_reader.as_mut().expect("Should never happen.").get_data_channel())
+            Some(
+                gwac_reader
+                    .as_mut()
+                    .expect("Should never happen.")
+                    .get_data_channel(),
+            )
         } else {
             None
         };
@@ -118,7 +120,10 @@ fn tick_driver(state: RunState) {
             stars,
             gwac_rx_chan,
             detector_opts.clone(),
-            info_handler,).tick().await;
+            info_handler,
+        )
+        .tick()
+        .await;
     });
 }
 
@@ -163,11 +168,13 @@ async fn main() {
         .max();
 
     let tot_iter: Option<usize> = if !gwac_reader.is_some() {
-        Some(stars_t
-             .iter()
-             .filter_map(|sw| sw.star.samples.as_ref())
-             .map(|samps| samps.len())
-             .sum::<usize>())
+        Some(
+            stars_t
+                .iter()
+                .filter_map(|sw| sw.star.samples.as_ref())
+                .map(|samps| samps.len())
+                .sum::<usize>(),
+        )
     } else {
         None
     };
@@ -208,7 +215,11 @@ async fn main() {
         ctrlc::set_handler(move || {
             if CC_COUNT.load(Ordering::Relaxed) == 0 {
                 if PROF {
-                    PROFILER.lock().expect("Couldn't lock profiler.").stop().expect("Couldn't start");
+                    PROFILER
+                        .lock()
+                        .expect("Couldn't lock profiler.")
+                        .stop()
+                        .expect("Couldn't start");
                 }
 
                 if MAIN_SHUTDOWN.load(Ordering::Relaxed) {
@@ -220,7 +231,8 @@ async fn main() {
             } else {
                 std::process::exit(-1);
             }
-        }).expect("Issue setting Ctrl-C handler.");
+        })
+        .expect("Issue setting Ctrl-C handler.");
     }
 
     let mut detector = {
@@ -228,11 +240,14 @@ async fn main() {
         //let into_handler = info_handler.clone();
         let detector_opts = detector_opts.clone();
 
-        Detector::new(tick_barrier_main,
-                      comp_barrier_main,
-                      info_handler, stars,
-                      templates,
-                      detector_opts)
+        Detector::new(
+            tick_barrier_main,
+            comp_barrier_main,
+            info_handler,
+            stars,
+            templates,
+            detector_opts,
+        )
     };
 
     let (data, data2, adps, true_events, false_events) = detector.run().await;
@@ -273,7 +288,9 @@ async fn main() {
             temp_max
         };
 
-        max_a.partial_cmp(&max_b).expect("Invalid value in data sort.")
+        max_a
+            .partial_cmp(&max_b)
+            .expect("Invalid value in data sort.")
     });
     data.reverse();
     for (star_title, star_data) in data.into_iter() {
@@ -286,16 +303,16 @@ async fn main() {
                 detector_opts.skip_delta,
             );
         } else {
-            crate::utils::debug_plt(
-                &star_data,
-                star_title,
-                None,
-            );
+            crate::utils::debug_plt(&star_data, star_title, None);
         }
     }
 
     if PROF {
-        PROFILER.lock().expect("Couldn't lock PROFILER.").stop().expect("Couldn't start");
+        PROFILER
+            .lock()
+            .expect("Couldn't lock PROFILER.")
+            .stop()
+            .expect("Couldn't start");
     }
 }
 
@@ -333,11 +350,12 @@ fn compute_and_disp_stats(data: &HashMap<String, Vec<f32>>, adps: &[f32]) {
 
     {
         // over all values
-        let (min, max, avg, std_dev) =
-            stats(&data
-                  .iter()
-                  .flat_map(|(_key, val)| val.clone())
-                  .collect::<Vec<f32>>()[..]);
+        let (min, max, avg, std_dev) = stats(
+            &data
+                .iter()
+                .flat_map(|(_key, val)| val.clone())
+                .collect::<Vec<f32>>()[..],
+        );
         info!(log, "{}", "All values stats:".on_blue();
               "min"=>min.to_string(),
               "max"=>max.to_string(),

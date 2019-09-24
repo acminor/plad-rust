@@ -1,10 +1,10 @@
 use crate::dat_star;
+use crate::gwac_reader::GWACReader;
 use crate::json_star;
 use crate::star::*;
 use crate::sw_star::SWStar;
 use crate::template::*;
 use crate::toml_star;
-use crate::gwac_reader::GWACReader;
 use clap::{App, Arg};
 use std::fs;
 use std::str::FromStr;
@@ -65,11 +65,12 @@ fn unwrap_parse_star_files(
     }
 }
 
-fn parse_star_files(input_dirs: &[&str], detector_opts: &DetectorOpts) -> Vec<SWStar> {
-    let input_dirs: Vec<String> = input_dirs
-        .iter()
-        .map(|s| s.to_string())
-        .collect();
+fn parse_star_files(
+    input_dirs: &[&str],
+    detector_opts: &DetectorOpts,
+) -> Vec<SWStar> {
+    let input_dirs: Vec<String> =
+        input_dirs.iter().map(|s| s.to_string()).collect();
     // FIXME only doing one directory for now
     let input_dir = &input_dirs[0];
 
@@ -91,8 +92,10 @@ fn parse_star_files(input_dirs: &[&str], detector_opts: &DetectorOpts) -> Vec<SW
                 .set_star(star)
                 .set_availables(fragment, detector_opts.skip_delta)
                 .set_max_buffer_len(100)
-                .set_window_lens(detector_opts.window_length.0 as u32,
-                                 detector_opts.window_length.1 as u32)
+                .set_window_lens(
+                    detector_opts.window_length.0 as u32,
+                    detector_opts.window_length.1 as u32,
+                )
                 .build()
         })
         .collect::<Vec<SWStar>>()
@@ -112,7 +115,7 @@ pub fn parse_args() -> RunInfo {
                 .multiple(true)
                 .takes_value(true)
                 .required_unless_one(&["gwac_file", "license"])
-                .conflicts_with_all(&["gwac_file", "license"])
+                .conflicts_with_all(&["gwac_file", "license"]),
         )
         .arg(
             Arg::with_name("templates_file")
@@ -150,8 +153,16 @@ pub fn parse_args() -> RunInfo {
                 .long("window-length")
                 .help("TODO")
                 .takes_value(true)
-                .conflicts_with_all(&["min_window_length", "max_window_length", "license"])
-                .required_unless_one(&["min_window_length", "max_window_length", "license"]),
+                .conflicts_with_all(&[
+                    "min_window_length",
+                    "max_window_length",
+                    "license",
+                ])
+                .required_unless_one(&[
+                    "min_window_length",
+                    "max_window_length",
+                    "license",
+                ]),
         )
         .arg(
             Arg::with_name("min_window_length")
@@ -205,19 +216,23 @@ pub fn parse_args() -> RunInfo {
                 .help("TODO")
                 .takes_value(true)
                 .required_unless_one(&["input_dir", "license"])
-                .conflicts_with_all(&["input_dir", "license"])
+                .conflicts_with_all(&["input_dir", "license"]),
         )
         .arg(
             Arg::with_name("license")
                 .long("license")
-                .help("Display license and attribution information.")
+                .help("Display license and attribution information."),
         )
         .get_matches();
 
     println!("{}\n\n", include_str!("../COPYRIGHT"));
 
     if matches.is_present("license") {
-        println!("{}\n\n{}", include_str!("../LICENSE"), include_str!("../CREDITS"));
+        println!(
+            "{}\n\n{}",
+            include_str!("../LICENSE"),
+            include_str!("../CREDITS")
+        );
         std::process::exit(0);
     }
 
@@ -252,9 +267,14 @@ pub fn parse_args() -> RunInfo {
     };
 
     let detector_opts = DetectorOpts {
-        _rho: f32::from_str(matches.value_of("rho").expect("Problem reading rho.")).expect("Problem parsing rho."),
-        noise_stddev: f32::from_str(matches.value_of("noise").expect("Problem reading noise"))
-            .expect("Problem parsing noise"),
+        _rho: f32::from_str(
+            matches.value_of("rho").expect("Problem reading rho."),
+        )
+        .expect("Problem parsing rho."),
+        noise_stddev: f32::from_str(
+            matches.value_of("noise").expect("Problem reading noise"),
+        )
+        .expect("Problem parsing noise"),
         window_length,
         skip_delta: matches
             .value_of("skip_delta")
@@ -262,9 +282,11 @@ pub fn parse_args() -> RunInfo {
             .parse::<u32>()
             .expect("Problem parsing skip_delta"),
         alert_threshold: f32::from_str(
-            matches.value_of("alert_threshold").expect("Problem reading alert_threshold"),
+            matches
+                .value_of("alert_threshold")
+                .expect("Problem reading alert_threshold"),
         )
-            .expect("Problem parsing alert_threshold"),
+        .expect("Problem parsing alert_threshold"),
         // TODO
         // - make plural
         // - add check for greater than 0
@@ -276,13 +298,19 @@ pub fn parse_args() -> RunInfo {
     };
 
     let templates = parse_template_file(
-        matches.value_of("templates_file").expect("Problem reading templates_file").to_string(),
+        matches
+            .value_of("templates_file")
+            .expect("Problem reading templates_file")
+            .to_string(),
     );
 
     // NOTE for simplicity do not allow offline and gwac_files
     //      to be on at same time
     if let Some(input_dirs) = matches.values_of("input_dir") {
-        let stars = parse_star_files(&input_dirs.collect::<Vec<&str>>(), &detector_opts);
+        let stars = parse_star_files(
+            &input_dirs.collect::<Vec<&str>>(),
+            &detector_opts,
+        );
 
         return RunInfo {
             templates,
