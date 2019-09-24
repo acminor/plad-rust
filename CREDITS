@@ -1,0 +1,68 @@
+These are the necessary attributions. I try to only attribute directly included packages (see Cargo.toml).
+If this is an issue with package owners, please feel free to contact me on Gitlab (acm0055).
+For further copyright and attributions, see the included packages includes or install and
+run Cargo license and check software from there. Also most licenses are taken from each
+individuals project source if they include copyrights. Thus, hopefully these attribute the
+right person. Otherwise, an appropriate copyright was attempted.
+
+Earlier versions of this software used the Freetype library. (This is an execption to the above rule.)
+- For that earlier software here is the credit.
+    Portions of this software are copyright © 2019 The FreeType
+    Project (www.freetype.org).  All rights reserved.
+
+clap
+- Copyright (c) 2015-2016 Kevin B. Knapp
+
+toml
+- Copyright (c) 2014 Alex Crichton
+
+serde, serde_derive, serde-json
+- Copyright (c) 2019 Serde Project. https://github.com/serde-rs
+
+rmp-serde (Rust MessagePack)
+- Copyright (c) 2017 Evgeny Safronov
+
+cpuprofiler
+- Copyright (C) James Lucas. https://github.com/AtheMathmo
+
+num
+- Copyright (c) 2014 The Rust Project Developers
+
+arrayfire
+- Copyright (c) 2015, ArrayFire. All rights reserved.
+
+tempfile
+- Copyright (c) 2015 Steven Allen
+
+capnp, capnpc (Cap'n Proto)
+- Copyright (c) 2013-2018 Sandstorm Development Group, Inc. and contributors
+
+slog, slog-term, slog-async
+- Copyright (c) 2014 The Rust Project Developers
+
+jemallocator
+- Copyright (c) 2014 Alex Crichton
+
+lazystatic
+- Copyright (c) 2010 The Rust Project Developers
+
+colored
+- Copyright (c) 2019 Thomas Wickham. https://github.com/mackwic
+
+inline-python
+- Copyright (c) 2019 Drones for Work B.V. All rights reserved.
+
+regex
+- Copyright (c) 2014 The Rust Project Developers
+
+tokio
+- Copyright (c) 2019 Tokio Contributors
+
+async-std
+- Copyright (c) 2019 async-rs Project. https://github.com/async-rs
+
+ctrlc
+- Copyright (c) 2019 Antti Keränen. https://github.com/Detegr
+
+Built/programmed using Rust
+- The Rust Project is dual-licensed under Apache 2.0 and MIT terms.

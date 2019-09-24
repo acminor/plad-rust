@@ -111,8 +111,8 @@ pub fn parse_args() -> RunInfo {
                 .number_of_values(1)
                 .multiple(true)
                 .takes_value(true)
-                .required_unless("gwac_file")
-                .conflicts_with("gwac_file")
+                .required_unless_one(&["gwac_file", "license"])
+                .conflicts_with_all(&["gwac_file", "license"])
         )
         .arg(
             Arg::with_name("templates_file")
@@ -120,6 +120,8 @@ pub fn parse_args() -> RunInfo {
                 .long("templates-file")
                 .help("TODO")
                 .takes_value(true)
+                .conflicts_with("license")
+                .required_unless("license")
                 .required(true),
         )
         .arg(
@@ -128,6 +130,8 @@ pub fn parse_args() -> RunInfo {
                 .long("rho")
                 .help("TODO")
                 .takes_value(true)
+                .conflicts_with("license")
+                .required_unless("license")
                 .required(true),
         )
         .arg(
@@ -136,6 +140,8 @@ pub fn parse_args() -> RunInfo {
                 .long("noise")
                 .help("TODO")
                 .takes_value(true)
+                .conflicts_with("license")
+                .required_unless("license")
                 .required(true),
         )
         .arg(
@@ -144,15 +150,16 @@ pub fn parse_args() -> RunInfo {
                 .long("window-length")
                 .help("TODO")
                 .takes_value(true)
-                .conflicts_with_all(&["min_window_length", "max_window_length"])
-                .required_unless_one(&["min_window_length", "max_window_length"]),
+                .conflicts_with_all(&["min_window_length", "max_window_length", "license"])
+                .required_unless_one(&["min_window_length", "max_window_length", "license"]),
         )
         .arg(
             Arg::with_name("min_window_length")
                 .long("min-window-length")
                 .help("TODO")
                 .requires("max_window_length")
-                .required_unless("window_length")
+                .required_unless_one(&["window_length", "license"])
+                .conflicts_with("license")
                 .takes_value(true),
         )
         .arg(
@@ -160,7 +167,8 @@ pub fn parse_args() -> RunInfo {
                 .long("max-window-length")
                 .help("TODO")
                 .requires("min_window_length")
-                .required_unless("window_length")
+                .required_unless_one(&["window_length", "license"])
+                .conflicts_with("license")
                 .takes_value(true),
         )
         .arg(
@@ -168,6 +176,8 @@ pub fn parse_args() -> RunInfo {
                 .long("skip-delta")
                 .help("TODO")
                 .takes_value(true)
+                .conflicts_with("license")
+                .required_unless("license")
                 .required(true),
         )
         .arg(
@@ -176,25 +186,40 @@ pub fn parse_args() -> RunInfo {
                 .long("alert-threshold")
                 .help("TODO")
                 .takes_value(true)
+                .conflicts_with("license")
+                .required_unless("license")
                 .required(true),
         )
         .arg(
             Arg::with_name("fragment")
                 .long("fragment")
                 .help("number of fragments to split stars into")
-                .default_value("1")
                 .takes_value(true)
-                .required(false),
+                .conflicts_with("license")
+                .required_unless("license")
+                .required(true),
         )
         .arg(
             Arg::with_name("gwac_file")
                 .long("gwac-file")
                 .help("TODO")
                 .takes_value(true)
-                .required_unless("input_dir")
-                .conflicts_with("input_dir")
+                .required_unless_one(&["input_dir", "license"])
+                .conflicts_with_all(&["input_dir", "license"])
+        )
+        .arg(
+            Arg::with_name("license")
+                .long("license")
+                .help("Display license and attribution information.")
         )
         .get_matches();
+
+    println!("{}\n\n", include_str!("../COPYRIGHT"));
+
+    if matches.is_present("license") {
+        println!("{}\n\n{}", include_str!("../LICENSE"), include_str!("../CREDITS"));
+        std::process::exit(0);
+    }
 
     let window_length = {
         match matches.value_of("window_length") {
