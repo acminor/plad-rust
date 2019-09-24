@@ -2,7 +2,6 @@ use tokio::sync::mpsc::{Sender, Receiver, channel};
 use tokio::io::BufReader;
 use tokio::fs::File;
 use tokio::io::AsyncBufReadExt;
-use std::sync::Arc;
 
 macro_rules! unwrap_or_continue {
     ($e:expr) => {
@@ -42,8 +41,8 @@ pub struct GWACReader {
 
 impl GWACReader {
     pub fn new(data_file: &str) -> GWACReader {
-
-        let (tx, rx) = channel(100000);
+        // NOTE for now a large number (can tweak this later)
+        let (tx, rx) = channel(100_000);
         let data_chan = (tx, Some(rx));
 
         GWACReader {
@@ -54,7 +53,7 @@ impl GWACReader {
 
     pub fn get_data_channel(&mut self) -> Receiver<GWACFrame> {
         if self.data_chan.1.is_some() {
-            self.data_chan.1.take().unwrap()
+            self.data_chan.1.take().expect("Will never panic here.")
         } else {
             panic!("Only one GWAC data receiver is allowed.")
         }
@@ -62,7 +61,7 @@ impl GWACReader {
 
     // NOTE should only be called once
     pub async fn start(&mut self) {
-        let mut data_file = File::open(&self.data_file_path).await.expect("Could not open GWAC file.");
+        let data_file = File::open(&self.data_file_path).await.expect("Could not open GWAC file.");
         let mut data_file = BufReader::new(data_file);
 
         let mut recently_started = false;
@@ -81,16 +80,28 @@ impl GWACReader {
             // NOTE: Right after start signal a file name is sent
             //       this logic handles parsing and sending that
             if recently_started {
-                self.data_chan.0.send(GWACFrame::Filename(data.to_string())).await;
+                match self.data_chan.0.send(GWACFrame::Filename(data.to_string())).await {
+                    Ok(_) => (),
+                    _ => break,
+                };
                 recently_started = false;
                 continue;
             }
 
             if data == "start" {
-                self.data_chan.0.send(GWACFrame::Start).await;
+                // send error denotes other ends pipe is closed
+                // - exit and assume that other processes have sent
+                //   shutdown signal
+                match self.data_chan.0.send(GWACFrame::Start).await {
+                    Ok(_) => (),
+                    _ => break,
+                };
                 recently_started = true;
             } else if data == "end" {
-                self.data_chan.0.send(GWACFrame::End).await;
+                match self.data_chan.0.send(GWACFrame::End).await {
+                    Ok(_) => (),
+                    _ => break,
+                };
             } else {
                 let fields = data.split_whitespace().collect::<Vec<&str>>();
 
@@ -105,10 +116,14 @@ impl GWACReader {
                 let ellipiticity = unwrap_or_continue!(fields[8].parse::<f32>());
                 let ccd_num = fields[9].trim().to_string();
 
-                self.data_chan.0.send(GWACFrame::Star(
+                match self.data_chan.0.send(GWACFrame::Star(
                     GWACData {
                         xpix, ypix, ra, dec, zone, star_id, mag, timestamp, ellipiticity, ccd_num,
-                    })).await;
+                    })).await {
+
+                    Ok(_) => (),
+                    _ => break,
+                };
             }
         }
     }

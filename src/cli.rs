@@ -40,17 +40,17 @@ fn unwrap_parse_star_files(
                     match file.path().extension() {
                         Some(ext) if ext == "toml" => {
                             Some(toml_star::parse_star_file(
-                                file.path().as_path().to_str().unwrap(),
+                                file.path().as_path().to_str().expect("Problem converting toml file name to string"),
                             ))
                         }
                         Some(ext) if ext == "dat" => {
                             Some(dat_star::parse_star_file(
-                                file.path().as_path().to_str().unwrap(),
+                                file.path().as_path().to_str().expect("Problem converting dat file name to string"),
                             ))
                         }
                         Some(ext) if ext == "json" => {
                             json_star::parse_star_file(
-                                file.path().as_path().to_str().unwrap(),
+                                file.path().as_path().to_str().expect("Problem converting json file name to string"),
                             )
                         }
                         _ => None,
@@ -76,7 +76,7 @@ fn parse_star_files(input_dirs: &[&str], detector_opts: &DetectorOpts) -> Vec<SW
     let stars: Vec<Star> = {
         match fs::metadata(&input_dir) {
             Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
-                .unwrap()
+                .expect("Problem reading star input directory.")
                 .filter_map(unwrap_parse_star_files)
                 .collect(),
             _ => panic!("Error in reading input_dir"),
@@ -227,31 +227,31 @@ pub fn parse_args() -> RunInfo {
     };
 
     let detector_opts = DetectorOpts {
-        _rho: f32::from_str(matches.value_of("rho").unwrap()).unwrap(),
-        noise_stddev: f32::from_str(matches.value_of("noise").unwrap())
-            .unwrap(),
+        _rho: f32::from_str(matches.value_of("rho").expect("Problem reading rho.")).expect("Problem parsing rho."),
+        noise_stddev: f32::from_str(matches.value_of("noise").expect("Problem reading noise"))
+            .expect("Problem parsing noise"),
         window_length,
         skip_delta: matches
             .value_of("skip_delta")
-            .unwrap()
+            .expect("Problem reading skip_delta")
             .parse::<u32>()
             .expect("Problem parsing skip_delta"),
         alert_threshold: f32::from_str(
-            matches.value_of("alert_threshold").unwrap(),
+            matches.value_of("alert_threshold").expect("Problem reading alert_threshold"),
         )
-            .unwrap(),
+            .expect("Problem parsing alert_threshold"),
         // TODO
         // - make plural
         // - add check for greater than 0
         fragment: matches
             .value_of("fragment")
-            .unwrap()
+            .expect("Problem reading fragment")
             .parse::<u32>()
             .expect("Problem parsing fragment"),
     };
 
     let templates = parse_template_file(
-        matches.value_of("templates_file").unwrap().to_string(),
+        matches.value_of("templates_file").expect("Problem reading templates_file").to_string(),
     );
 
     // NOTE for simplicity do not allow offline and gwac_files

@@ -40,7 +40,6 @@ impl Detector {
         let mut data2: HashMap<String, Vec<f32>> = HashMap::new();
         let mut adps: Vec<f32> = Vec::new();
 
-        /*
         {
             let stars = self.stars.lock().await;
             stars.iter().for_each(|sw| {
@@ -49,15 +48,15 @@ impl Detector {
                 };
             });
         }
-        */
 
         self.computation_barrier.wait().await;
         loop {
-            self.tick_barrier.wait().await;
+            // NOTE check for shutdown before locking
             if *sd_rx.get_ref(){
                 info!(log, "Received finished signal...");
                 return (data, data2, adps, true_events, false_events);
             }
+            self.tick_barrier.wait().await;
 
             let (windows, window_names) = {
                 let stars = self.stars.lock().await;
@@ -89,6 +88,11 @@ impl Detector {
             }
             */
 
+            // NOTE check for shutdown before locking
+            if *sd_rx.get_ref(){
+                info!(log, "Received finished signal...");
+                return (data, data2, adps, true_events, false_events);
+            }
             // NOTE signals can modify stars because now only
             //      working with copied data and not refs
             self.computation_barrier.wait().await;
@@ -137,7 +141,7 @@ impl Detector {
                     data.insert(star.clone(), Vec::new());
                 }
 
-                data.get_mut(&star).unwrap().push(*val);
+                data.get_mut(&star).expect("Star should be in inner_product data map.").push(*val);
             });
 
             // taint detected stars

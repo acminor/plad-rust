@@ -17,7 +17,9 @@ pub struct Ticker {
     iterations_chan_tx: Sender<usize>,
     gwac_rx_chan: Option<Receiver<GWACFrame>>,
     detector_opts: DetectorOpts,
+    #[allow(unused)]
     is_offline: bool,
+    info_handler: Arc<InformationHandler>,
 }
 
 impl Ticker {
@@ -27,19 +29,22 @@ impl Ticker {
                gwac_rx_chan: Option<Receiver<GWACFrame>>,
                detector_opts: DetectorOpts,
                info_handler: Arc<InformationHandler>) -> Ticker {
+        let iterations_chan_tx = info_handler.get_iterations_sender();
+        let is_offline = info_handler.is_offline;
         Ticker {
             computation_end,
             tick_end,
             stars,
             detector_opts,
             gwac_rx_chan,
-            iterations_chan_tx: info_handler.get_iterations_sender(),
-            is_offline: info_handler.is_offline,
+            info_handler,
+            iterations_chan_tx,
+            is_offline,
         }
     }
 
     pub async fn tick(&mut self) {
-        let _log = log::get_root_logger();
+        let log = log::get_root_logger();
         let mut name_to_pos: HashMap<String, usize> = HashMap::new();
         loop {
             self.computation_end.wait().await;
@@ -51,8 +56,15 @@ impl Ticker {
                     let mut in_frame = false;
                     let mut tot_stars = 0;
                     loop {
-                        // TODO handle error logic correctly
-                        let data = gwac_rx_chan.recv().await.unwrap();
+                        // If sender end closes, then file is done for the night
+                        // thus, we should shutdown the program gracefully
+                        let data = match gwac_rx_chan.recv().await {
+                            Some(val) => val,
+                            None => {
+                                self.info_handler.trigger_shutdown();
+                                return;
+                            },
+                        };
 
                         match data {
                             GWACFrame::Start => {
@@ -62,7 +74,7 @@ impl Ticker {
                                 break
                             },
                             // NOTE for now do nothing with file name
-                            GWACFrame::Filename(filename) => continue,
+                            GWACFrame::Filename(_filename) => continue,
                             GWACFrame::Star(star) => {
                                 if !in_frame {
                                     continue;
@@ -100,7 +112,7 @@ impl Ticker {
                         }
                     }
 
-                    //println!("total stars this read: {}", tot_stars);
+                    debug!(log, ""; "tot_stars_this_read"=>tot_stars.to_string());
                 } else { // NOTE offline data handling
                     stars_l.iter().for_each(|sw| {
                         if let Some(samps) = sw.star.samples.as_ref() {

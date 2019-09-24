@@ -65,7 +65,7 @@ impl InformationHandler {
                 iterations += val;
             }
 
-            if self.total_iterations.is_some() && iterations == self.total_iterations.unwrap() {
+            if self.total_iterations.is_some() && iterations == self.total_iterations.expect("Should never happen.") {
                 info!(log, "Sending shutdown signal...");
                 self.trigger_shutdown();
                 return;
@@ -75,7 +75,7 @@ impl InformationHandler {
                 let sps = iterations as f32 / now.elapsed().as_secs() as f32;
 
                 if let Some(tot_iters) = self.total_iterations.as_ref() {
-                    let tot_iters = tot_iters.clone();
+                    let tot_iters = *tot_iters;
                     let pp =
                         (iterations as f32) / (tot_iters as f32) * 100.0;
                     info!(log, "";
@@ -92,11 +92,11 @@ impl InformationHandler {
                 } else {
                     info!(log, "";
                           "TotTime"=>format!("{}s", now.elapsed().as_secs()),
-                          "IterationsLeft"=>format!("UNKNOWN"),
-                          "EstTimeLeft"=>format!("UNKNOWN"),
+                          "IterationsLeft"=>"UNKNOWN",
+                          "EstTimeLeft"=>"UNKNOWN",
                           "StarsPerSec"=>format!("{}", sps),
                           "StarsPerTenSec"=>format!("{}", sps*10.0),
-                          "%Progress"=>format!("UNKNOWN"));
+                          "%Progress"=>"UNKNOWN");
                 }
 
                 log_timer = std::time::Instant::now();

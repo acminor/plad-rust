@@ -54,7 +54,7 @@ use colored::*;
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::atomic::{AtomicU8, AtomicBool, Ordering};
 
 use tokio::sync::{
     Lock,
@@ -77,12 +77,11 @@ struct RunState {
 //   has been copied and thus stars can be safely updated without producing unintended results
 // tick_end signifies that main can start the next computation
 fn tick_driver(state: RunState) {
-    //let rt = tokio::runtime::Runtime::new().unwrap();
     let rt = tokio::runtime::Builder::new()
         .blocking_threads(4)
         .core_threads(4)
         .build()
-        .unwrap();
+        .expect("Problem building tokio runtime.");
     let RunState {
         stars,
         computation_end,
@@ -102,7 +101,7 @@ fn tick_driver(state: RunState) {
         }
 
         let gwac_rx_chan = if gwac_reader.is_some() {
-            Some(gwac_reader.as_mut().unwrap().get_data_channel())
+            Some(gwac_reader.as_mut().expect("Should never happen.").get_data_channel())
         } else {
             None
         };
@@ -125,13 +124,14 @@ fn tick_driver(state: RunState) {
 
 static PROF: bool = true;
 static CC_COUNT: AtomicU8 = AtomicU8::new(0);
+static MAIN_SHUTDOWN: AtomicBool = AtomicBool::new(false);
 
 #[tokio::main]
 async fn main() {
     if PROF {
         PROFILER
             .lock()
-            .unwrap()
+            .expect("Couldn't lock PROFILER")
             .start("./prof.profile")
             .expect("Couldn't start");
     }
@@ -208,14 +208,19 @@ async fn main() {
         ctrlc::set_handler(move || {
             if CC_COUNT.load(Ordering::Relaxed) == 0 {
                 if PROF {
-                    PROFILER.lock().unwrap().stop().expect("Couldn't start");
+                    PROFILER.lock().expect("Couldn't lock profiler.").stop().expect("Couldn't start");
                 }
+
+                if MAIN_SHUTDOWN.load(Ordering::Relaxed) {
+                    std::process::exit(-1);
+                }
+
                 info_handler.trigger_shutdown();
                 CC_COUNT.store(1, Ordering::Relaxed);
             } else {
                 std::process::exit(-1);
             }
-        });
+        }).expect("Issue setting Ctrl-C handler.");
     }
 
     let mut detector = {
@@ -231,6 +236,9 @@ async fn main() {
     };
 
     let (data, data2, adps, true_events, false_events) = detector.run().await;
+
+    // so ctrl-c handler knows to shutdown on first or second ctrl-c
+    MAIN_SHUTDOWN.store(true, Ordering::Relaxed);
 
     compute_and_disp_stats(&data, &adps[..]);
 
@@ -265,7 +273,7 @@ async fn main() {
             temp_max
         };
 
-        max_a.partial_cmp(&max_b).unwrap()
+        max_a.partial_cmp(&max_b).expect("Invalid value in data sort.")
     });
     data.reverse();
     for (star_title, star_data) in data.into_iter() {
@@ -273,7 +281,7 @@ async fn main() {
         if is_offline {
             crate::utils::debug_plt_2(
                 &star_data,
-                data2.get(star_title).unwrap(),
+                data2.get(star_title).expect("Star should be in data2."),
                 star_title,
                 detector_opts.skip_delta,
             );
@@ -287,7 +295,7 @@ async fn main() {
     }
 
     if PROF {
-        PROFILER.lock().unwrap().stop().expect("Couldn't start");
+        PROFILER.lock().expect("Couldn't lock PROFILER.").stop().expect("Couldn't start");
     }
 }
 

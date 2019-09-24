@@ -26,7 +26,7 @@ pub fn inner_product(
         //1) {//signal_group_len) {
         let num_stars = signals.len();
         let signal_max_len =
-            signals.iter().map(|signal| signal.len()).max().unwrap();
+            signals.iter().map(|signal| signal.len()).max().expect("Problem getting the max signal length.");
         // Zero pad the results to make sure all signals have
         // same length regardless of window size. This does not
         // have any effect on output (except binning which is
@@ -122,10 +122,10 @@ pub fn uid_to_t0_tp(uid: &str) -> Option<(f32, f32)> {
                                   _(\d+\.\d{3}) # relative
                                   _(\d+\.\d{3}).dat # phi",
     )
-    .unwrap();
+    .expect("Problem building adp_parser Regex.");
 
     adp_parser.captures(&uid).map(|caps| {
-        let t_prime = caps.get(2).unwrap().as_str().parse::<f32>().unwrap();
+        let t_prime = caps.get(2).expect("Problem getting t_prime match").as_str().parse::<f32>().expect("Problem parsing t_prime match as f32");
         //println!("T': {}", t_prime);
         let samples_per_hour = 60.0 // minutes in an hour
             * (60.0/15.0); // samples in a second (240)
@@ -204,11 +204,11 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
 //    previous checks
 pub fn normalize_local_data_paths(star_file: &str, data_file: &str) -> String {
     match Path::new(star_file).parent() {
-        Some(base_dir) => [base_dir.to_str().unwrap(), &data_file[..]]
+        Some(base_dir) => [base_dir.to_str().expect("Problem converting base_dir to string."), &data_file[..]]
             .iter()
             .collect::<PathBuf>()
             .to_str()
-            .unwrap()
+            .expect("Problem converting normalized path to string.")
             .to_string(),
         None => data_file.to_string(),
     }

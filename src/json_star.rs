@@ -40,7 +40,7 @@ pub fn parse_star_file(star_file: &str) -> Option<Star> {
             Some(_) => &data["currentStarId"],
             None => match data
                 .as_object()
-                .unwrap()
+                .expect("Problem could not convert JSON data to object.")
                 .values()
                 .collect::<Vec<&serde_json::Value>>()
                 .get(0)
@@ -96,7 +96,7 @@ pub fn parse_star_file(star_file: &str) -> Option<Star> {
 
     assert_ne!(stars.len(), 0);
     // NOTE for now assume each file only has one star, code can handle more though
-    let star = stars.pop().unwrap();
+    let star = stars.pop().expect("Problem JSON file contained no stars.");
     //crate::utils::debug_plt(&star.samples[..], &star.uid[..], None);
     Some(star)
 }
