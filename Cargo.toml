@@ -4,7 +4,7 @@ version = "0.2.0"
 authors = ["austin <austin.chase.m@gmail.com>"]
 edition = "2018"
 build = "build.rs"
-license = "MIT"
+license = "GPLv3"
 
 [build-dependencies]
 capnpc = "0.10.1"
