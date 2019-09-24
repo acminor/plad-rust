@@ -54,6 +54,7 @@ use colored::*;
 
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU8, Ordering};
 
 use tokio::sync::{
     Lock,
@@ -123,6 +124,7 @@ fn tick_driver(state: RunState) {
 }
 
 static PROF: bool = true;
+static CC_COUNT: AtomicU8 = AtomicU8::new(0);
 
 #[tokio::main]
 async fn main() {
@@ -204,11 +206,15 @@ async fn main() {
         let info_handler = info_handler.clone();
         // TODO double cc should cause quit
         ctrlc::set_handler(move || {
-            if PROF {
-                PROFILER.lock().unwrap().stop().expect("Couldn't start");
+            if CC_COUNT.load(Ordering::Relaxed) == 0 {
+                if PROF {
+                    PROFILER.lock().unwrap().stop().expect("Couldn't start");
+                }
+                info_handler.trigger_shutdown();
+                CC_COUNT.store(1, Ordering::Relaxed);
+            } else {
+                std::process::exit(-1);
             }
-            info_handler.trigger_shutdown();
-            //std::process::exit(-1);
         });
     }
 

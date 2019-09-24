@@ -13,7 +13,12 @@ class TX:
         os.mkfifo(filename)
         self.pipe = open(filename, 'w')
         self._filename = filename
-    def __del__(self):
+    # NOTE originally used __del__ method but was not guaranteed to be called
+    # following resource below to implement a context manager
+    # https://stackoverflow.com/questions/865115/how-do-i-correctly-clean-up-a-python-object
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
         os.unlink(self._filename)
     def start_frame(self):
         self.pipe.write("start\n")
@@ -44,7 +49,8 @@ class TX:
 def main(gwac_filename, data_dir):
     stars = list()
     for file in Path(data_dir).glob('*.dat'):
-        with open(file) as star_data:
+        # str(file) is for issues running with pypy3
+        with open(str(file)) as star_data:
             data = list()
             for line in star_data.readlines():
                 inner_data = line.split()
@@ -52,15 +58,15 @@ def main(gwac_filename, data_dir):
         stars.append(Star(str(file), data))
 
     max_len = len(max(stars, key=lambda s: len(s.samples)).samples)
-    tx = TX(gwac_filename)
-    for i in range(0, max_len):
-        print((tx, i))
-        tx.start_frame()
-        tx.file_name()
-        for star in stars:
-            if i < len(star.samples):
-                tx.star(star, i)
-        tx.end_frame()
+    with TX(gwac_filename) as tx:
+        for i in range(0, max_len):
+            print((tx, i))
+            tx.start_frame()
+            tx.file_name()
+            for star in stars:
+                if i < len(star.samples):
+                    tx.star(star, i)
+            tx.end_frame()
 
 if __name__ == '__main__':
     main()
