@@ -93,7 +93,7 @@ impl Detector {
 
             // NOTE check for shutdown before locking
             if *sd_rx.get_ref() {
-                info!(log, "Received finished signal...");
+                info!(log, "Detector received finished signal...");
                 return (data, data2, adps, true_events, false_events);
             }
             // NOTE signals can modify stars because now only

@@ -47,6 +47,7 @@ impl Ticker {
 
     pub async fn tick(&mut self) {
         let log = log::get_root_logger();
+        let sd_rx = self.info_handler.get_shutdown_receiver();
         let mut name_to_pos: HashMap<String, usize> = HashMap::new();
         loop {
             self.computation_end.wait().await;
@@ -152,6 +153,17 @@ impl Ticker {
                     };
                 }
             }
+
+            if *sd_rx.get_ref() {
+                info!(log, "Ticker received finished signal...");
+                return;
+            }
+
+            // FIXME Ending early with a Ctrl-C might cause
+            // a crash after going through all the produced plots
+            // b/c it is waiting here. We could fix this be temporary
+            // un-polling this wait and checking sd_rx. For now we will
+            // ignore this. It will work properly for a non-forced shutdown.
             self.tick_end.wait().await;
         }
     }
