@@ -10,6 +10,7 @@ use crate::utils::uid_to_t0_tp;
 use colored::*;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::panic;
 use tokio::sync::Lock;
 
 pub struct Detector {
@@ -101,14 +102,33 @@ impl Detector {
 
             sample_time += 1;
 
-            let ip = inner_product(
-                &self.templates.templates[..],
-                &windows,
-                self.detector_opts.noise_stddev,
-                true,
-                200,
-                200,
-            );
+            // NOTE gracefully handle bugs in CUDA and NVIDIA drivers
+            //      along with any other bugs in Arrayfire
+            // - in testing we had issues so this is here to ignoring
+            //   temporary transient bugs
+            // - to handle the error we just skip the current iteration
+            //   and move on.
+            // - NOTE we could also try to retry, but given time constraints
+            //   and the fact that the bug may represent it self as some
+            //   particular property of the data, we choose to skip this point
+            // - NOTE should be fine to AssertUnwindSafe, main compile issues
+            //   seem to come from being within an async context.
+            //   - The actual inner_product and arguments should be fine.
+            let ip = panic::catch_unwind(panic::AssertUnwindSafe(|| {
+                inner_product(
+                    &self.templates.templates[..],
+                    &windows,
+                    self.detector_opts.noise_stddev,
+                    true,
+                    200,
+                    200,
+                )
+            }));
+
+            let ip = match ip {
+                Ok(ip) => ip,
+                _ => continue,
+            };
 
             let mut detected_stars = std::collections::HashSet::new();
             ip.iter().zip(window_names).for_each(|(val, star)| {
