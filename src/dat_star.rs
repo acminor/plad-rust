@@ -16,7 +16,7 @@ pub fn parse_star_file(star_file: &str) -> Star {
     let star_data: Vec<f32> = contents
         .lines()
         .map(|line| {
-            line.split_ascii_whitespace().take(2).collect::<Vec<&str>>()[1]
+            -1.0 * line.split_ascii_whitespace().take(2).collect::<Vec<&str>>()[1]
                 .parse::<f32>()
                 .expect("Failed to parse f(t) data")
         })

@@ -34,7 +34,8 @@ class TX:
             str(61.4), # dec {float}
             'zone_defense', # zone {string}
             star.uid, # star id {string}
-            star.samples[sample_point], # mag {float}
+            # -1 is because NFD GWAC data is upside down
+            str(float(star.samples[sample_point]) * -1), # mag {float}
             str(sample_point*15.0), # timestamp {float} [15 second sampling]
             str(59.6), # elliptticity {float}
             'rnd_ccd', # ccd_num {string}
