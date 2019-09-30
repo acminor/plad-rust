@@ -296,12 +296,15 @@ async fn main() {
     for (star_title, star_data) in data.into_iter() {
         //crate::utils::debug_plt(&star_data, star_title, None);
         if is_offline {
+            crate::utils::debug_plt(&star_data, star_title, None);
+            /*
             crate::utils::debug_plt_2(
                 &star_data,
                 data2.get(star_title).expect("Star should be in data2."),
                 star_title,
                 detector_opts.skip_delta,
             );
+            */
         } else {
             crate::utils::debug_plt(&star_data, star_title, None);
         }

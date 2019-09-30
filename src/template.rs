@@ -74,6 +74,12 @@ pub fn parse_template_file(file_name: String) -> Templates {
                             AF_Dim4::new(&[template.len() as u64, 1, 1, 1]),
                         );
 
+                        // NOTE Remove DC constant of template to focus on signal
+                        //      - This is very important and will lead to false
+                        //        detection or searching for the wrong signal
+                        let template_mean = AF::mean(&template, 0);
+                        let template = AF::sub(&template, &template_mean, false);
+
                         let fft_bs = AF::fft(&template, 1.0, max_len as i64);
                         let temp = AF::rows(&fft_bs, 0, (real_len - 1) as u64);
                         AF::conjg(&temp)

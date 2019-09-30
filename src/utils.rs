@@ -59,6 +59,24 @@ pub fn inner_product(
             AF_Dim4::new(&[signal_max_len as u64, num_stars as u64, 1, 1]),
         );
 
+
+        // NOTE Remove DC constant of template to focus on signal
+        //      - This is very important and will lead to false
+        //        detection or searching for the wrong signal
+        let stars_means = AF::mean(
+            &stars,
+            1,
+        );
+
+        let stars_means = AF::tile(
+            &stars_means,
+            AF_Dim4::new(
+                &[1, num_stars as u64, 1, 1]
+            ),
+        );
+
+        let stars = AF::sub(&stars, &stars_means, false);
+
         let stars = {
             let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
             AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
