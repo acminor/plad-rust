@@ -65,17 +65,49 @@ pub fn inner_product(
         //        detection or searching for the wrong signal
         let stars_means = AF::mean(
             &stars,
-            1,
+            0,
         );
 
         let stars_means = AF::tile(
             &stars_means,
             AF_Dim4::new(
-                &[1, num_stars as u64, 1, 1]
+                &[signal_max_len as u64, 1, 1, 1]
             ),
         );
 
         let stars = AF::sub(&stars, &stars_means, false);
+
+        /*
+        let stars_max = AF::max(&stars, 0);
+        let stars_min = AF::min(&stars, 0);
+        let stars_min = AF::abs(&stars_min);
+
+        let stars_stats = AF::join(0, &stars_max, &stars_min);
+        let stars_max = AF::max(&stars_stats, 0);
+
+        let stars_scales = AF::div(&1.0f32, &stars_max, false);
+        let stars_scales = AF::tile(
+            &stars_scales,
+            AF_Dim4::new(
+                &[signal_max_len as u64, 1, 1, 1]
+            ),
+        );
+
+        let stars = AF::mul(&stars_scales, &stars, false);
+
+        {
+            let mut temp: Vec<f32> = Vec::new();
+
+            let temp_stars = AF::col(&stars, 0);
+            temp.resize(temp_stars.elements(), 0.0);
+
+            temp_stars.lock();
+            temp_stars.host(&mut temp);
+            temp_stars.unlock();
+
+            debug_plt(&temp[..], "blah", None);
+        }
+        */
 
         let stars = {
             let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);

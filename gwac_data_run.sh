@@ -12,8 +12,8 @@ source ./src_env.sh > /dev/null
 TEMPS="data/templates__nfd_def.toml"
 #TEMPS="data/templates_no_log_nfd_def.toml"
 
-DATA="/data/star_extra_data/star_dataset/data/gwac"
-#DATA="/home/austin/research/star_subset"
+#DATA="/data/star_extra_data/star_dataset/data/gwac"
+DATA="/home/austin/research/star_subset"
 
 function safe_call {
     if [[ $1 == "" ]]
