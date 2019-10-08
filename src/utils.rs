@@ -110,7 +110,7 @@ pub fn inner_product(
         */
 
         let stars = {
-            let fft_bs = AF::fft_r2c(&stars, 1.0, templates[0].fft_len as i64);
+            let fft_bs = AF::fft(&stars, 1.0, templates[0].fft_len as i64);
             AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
         };
 
