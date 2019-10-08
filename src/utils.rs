@@ -81,6 +81,25 @@ pub fn inner_product(
                     }
                 }
 
+                // NOTE implements windowing to cut down on "glitched" in the
+                // final fft output
+                //
+                // Uses the Nuttall window approximation as defined on
+                // the Wikipedia page for window functions.
+                let signal = signal.into_iter().enumerate().map(|(n, x)| {
+                    let n = n as f32;
+                    let len = len as f32;
+                    let a0 = 0.355768;
+                    let a1 = 0.487396;
+                    let a2 = 0.144232;
+                    let a3 = 0.012604;
+                    let res = a0 - a1*(2.0*std::f32::consts::PI*n/(len-1.0)).cos()
+                        + a2*(4.0*std::f32::consts::PI*n/(len-1.0)).cos()
+                        - a3*(6.0*std::f32::consts::PI*n/(len-1.0)).cos();
+
+                    x*res
+                }).collect::<Vec<f32>>();
+
                 signal.into_iter().chain(
                     std::iter::repeat(0.0f32)
                         .take(signal_max_len - len),
@@ -259,11 +278,15 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
     python! {
         #![context = &c]
         import matplotlib.pyplot as plt
+        import numpy as np
         import sys
         sys.argv.append("test")
 
+        scale = 20.0
+        data = scale*np.array('data)
+
         temp = []
-        for d in 'data:
+        for d in data:
             temp.append(d)
             for i in range(0, 'skip_delta-1):
                 temp.append(None)
@@ -279,7 +302,7 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
                 temp2.append(None)
             else:
                 temp2.append(abs(temp[i]-'data2[i]))
-        plt.title('title)
+        plt.title('title+" - filter out scaled by {}".format(scale))
         plt.plot(temp, marker="o", ls="")
         plt.plot('data2, marker="x", ls="")
         plt.plot(temp2, marker="s", ls="")
