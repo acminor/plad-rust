@@ -45,13 +45,47 @@ pub fn inner_product(
         // - http://www.ni.com/tutorial/4880/en/
         let signals = &signals
             .iter()
-            .flat_map(|signal| {
-                signal.iter().chain(
-                    std::iter::repeat(&0.0f32)
-                        .take(signal_max_len - signal.len()),
+            .cloned()
+            .into_iter()
+            .flat_map(|mut signal| {
+                let len = signal.len();
+
+                let mean: f32 = signal.iter().sum();
+                let mean = mean / len as f32;
+
+                // Formula for the corrected sample standard deviation
+                // from the Wikipedia article on standard deviation
+                let stddev: f32 = signal.iter().map(|x| (x-mean).powf(2.0)).sum();
+                let stddev = stddev / (len - 1) as f32;
+                let stddev = stddev.sqrt();
+
+                let threshold = mean + 3.0*stddev;
+
+                // Implements a basic outlier removal scheme that replaces
+                // any point that is beyond 3*stddev of the mean with a
+                // neighboring point
+
+                // NOTE assumes that the signal is at least 2 length wide
+                // and that their is not more that two errors in a row
+                // NOTE last case extracted here to remove redundant if
+                // statement in the for loop below
+                if signal[len - 1] > threshold {
+                    signal[len - 1] = signal[len - 2];
+                }
+
+                for i in 0..len-1 {
+                    // NOTE for now does not handle more than two errors in a row
+                    // - it will back propagate these errors
+                    if signal[i] > threshold {
+                        signal[i] = signal[i+1];
+                    }
+                }
+
+                signal.into_iter().chain(
+                    std::iter::repeat(0.0f32)
+                        .take(signal_max_len - len),
                 )
             })
-            .cloned()
             .collect::<Vec<f32>>()[..];
         let stars = AF_Array::new(
             signals,
