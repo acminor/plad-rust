@@ -17,6 +17,11 @@
       + investigate effects and proper scaling
     + [ ] compress templates by looking at width measures properly
 + [ ] Investigate fft_r2c (seems to output onesided by default???)
-+ [ ] Implement outlier removal and test
-  + [ ] Basic average based outlier removal (>mean+3*stddev => remove)
++ [x] Implement outlier removal and test
+  + [x] Basic average based outlier removal (>mean+3*stddev => remove)
     + what percentage of points are ignored if assume guassian distribution???
++ [ ] Check out the implementation of various window functions
+  + Test against real JSON data
+  + Tends to make similar signals less distinguishable thus other
+    low frequency events suchs a flares in a flare star might show
+    up, investigate the best window for all stars.
