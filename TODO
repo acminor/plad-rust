@@ -16,3 +16,7 @@
     + [ ] only need to generate along one dim.
       + investigate effects and proper scaling
     + [ ] compress templates by looking at width measures properly
++ [ ] Investigate fft_r2c (seems to output onesided by default???)
++ [ ] Implement outlier removal and test
+  + [ ] Basic average based outlier removal (>mean+3*stddev => remove)
+    + what percentage of points are ignored if assume guassian distribution???
