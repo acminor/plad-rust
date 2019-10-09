@@ -8,6 +8,44 @@ use std::path::PathBuf;
 
 use crate::template::*;
 
+#[allow(dead_code)]
+fn nuttall_window(signal: Vec<f32>) -> Vec<f32> {
+    // NOTE implements windowing to cut down on "glitched" in the
+    // final fft output
+    //
+    // Uses the Nuttall window approximation as defined on
+    // the Wikipedia page for window functions.
+    let len = signal.len();
+    signal.into_iter().enumerate().map(|(n, x)| {
+        let n = n as f32;
+        let len = len as f32;
+        let a0 = 0.355768;
+        let a1 = 0.487396;
+        let a2 = 0.144232;
+        let a3 = 0.012604;
+        let res = a0 - a1*(2.0*std::f32::consts::PI*n/(len)).cos()
+            + a2*(4.0*std::f32::consts::PI*n/(len)).cos()
+            - a3*(6.0*std::f32::consts::PI*n/(len)).cos();
+
+        x*res
+    }).collect::<Vec<f32>>()
+}
+
+#[allow(dead_code)]
+fn triangle_window(signal: Vec<f32>) -> Vec<f32> {
+    // NOTE implements as described in ... TODO
+    let len = signal.len();
+    signal.into_iter().enumerate().map(|(n, x)| {
+        let res = if n <= len/2 {
+            (n as f32) / (len as f32 /2.0)
+        } else {
+            ((len - n) as f32) / (len as f32 /2.0)
+        };
+
+        x*res
+    }).collect()
+}
+
 pub fn inner_product(
     templates: &[TemplateGroup],
     signals: &[Vec<f32>],
@@ -81,24 +119,8 @@ pub fn inner_product(
                     }
                 }
 
-                // NOTE implements windowing to cut down on "glitched" in the
-                // final fft output
-                //
-                // Uses the Nuttall window approximation as defined on
-                // the Wikipedia page for window functions.
-                let signal = signal.into_iter().enumerate().map(|(n, x)| {
-                    let n = n as f32;
-                    let len = len as f32;
-                    let a0 = 0.355768;
-                    let a1 = 0.487396;
-                    let a2 = 0.144232;
-                    let a3 = 0.012604;
-                    let res = a0 - a1*(2.0*std::f32::consts::PI*n/(len-1.0)).cos()
-                        + a2*(4.0*std::f32::consts::PI*n/(len-1.0)).cos()
-                        - a3*(6.0*std::f32::consts::PI*n/(len-1.0)).cos();
-
-                    x*res
-                }).collect::<Vec<f32>>();
+                signal = nuttall_window(signal);
+                //signal = triangle_window(signal);
 
                 signal.into_iter().chain(
                     std::iter::repeat(0.0f32)
@@ -282,11 +304,8 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
         import sys
         sys.argv.append("test")
 
-        scale = 20.0
-        data = scale*np.array('data)
-
         temp = []
-        for d in data:
+        for d in 'data:
             temp.append(d)
             for i in range(0, 'skip_delta-1):
                 temp.append(None)
@@ -302,10 +321,17 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
                 temp2.append(None)
             else:
                 temp2.append(abs(temp[i]-'data2[i]))
-        plt.title('title+" - filter out scaled by {}".format(scale))
+
+        data2 = []
+        skip = 16
+        for i in range(0, len('data2), skip):
+            data2.append('data2[i])
+            for i in range(1, skip):
+                data2.append(None)
+        plt.title('title)
         plt.plot(temp, marker="o", ls="")
-        plt.plot('data2, marker="x", ls="")
-        plt.plot(temp2, marker="s", ls="")
+        plt.plot(data2, marker="x", ls="")
+        //plt.plot(temp2, marker="s", ls="")
         plt.show()
     }
 }
