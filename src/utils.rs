@@ -330,7 +330,7 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
                 data2.append(None)
         plt.title('title)
         plt.plot(temp, marker="o", ls="")
-        plt.plot(data2, marker="x", ls="")
+        plt.plot('data2, marker="x", ls="")
         //plt.plot(temp2, marker="s", ls="")
         plt.show()
     }
