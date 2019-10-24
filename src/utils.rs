@@ -46,6 +46,7 @@ fn triangle_window(signal: Vec<f32>) -> Vec<f32> {
     }).collect()
 }
 
+#[allow(dead_code)]
 pub fn inner_product(
     templates: &[TemplateGroup],
     signals: &[Vec<f32>],

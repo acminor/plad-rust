@@ -4,7 +4,8 @@ use crate::info_handler::InformationHandler;
 use crate::log;
 use crate::sw_star::SWStar;
 use crate::template::Templates;
-use crate::utils::inner_product;
+//use crate::utils::inner_product;
+use crate::filter::inner_product;
 use crate::utils::uid_to_t0_tp;
 
 use colored::*;

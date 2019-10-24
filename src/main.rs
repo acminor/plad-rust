@@ -1,5 +1,9 @@
 #![feature(proc_macro_hygiene)]
 
+#[cfg(test)]
+#[macro_use]
+extern crate approx;
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -38,6 +42,8 @@ mod template;
 mod ticker;
 mod toml_star;
 mod utils;
+mod filter;
+mod filter_utils;
 
 use async_utils::{twin_barrier, TwinBarrier};
 use cli::*;

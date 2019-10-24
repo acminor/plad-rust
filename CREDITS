@@ -64,5 +64,8 @@ async-std
 ctrlc
 - Copyright (c) 2019 Antti Keränen. https://github.com/Detegr
 
+approx
+- Copyright (c) 2019 Brendan Zabarauskas. https://https://github.com/brendanzab
+
 Built/programmed using Rust
 - The Rust Project is dual-licensed under Apache 2.0 and MIT terms.
