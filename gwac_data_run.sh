@@ -10,7 +10,7 @@ TEMPS="data/templates__nfd_def.toml"
 #TEMPS="data/templates_no_log_nfd_def.toml"
 
 #DATA="/data/star_extra_data/star_dataset/data/gwac"
-DATA="/home/austin/research/star_subset"
+DATA="/home/austin/research/microlensing_star_data/star_subset"
 
 function safe_call {
     if [[ $1 == "" ]]
@@ -29,15 +29,16 @@ function safe_call {
                   --window-length $2 \
                   --skip-delta 15 \
                   --fragment 1 \
-                  --alert-threshold 200 #0.05 #15.1 #8.1
+                  --alert-threshold 200 \
+                  $3 $4 $5 $6 $7
 }
 
 case $1 in
     "release")
-        safe_call $1 $2
+        safe_call $1 $2 $3 $4 $5 $6 $7
         ;;
     "debug")
-        safe_call "" $2
+        safe_call "" $2 $3 $4 $5 $6 $7
         ;;
     *)
         echo "Must use either release or debug as options."

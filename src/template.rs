@@ -83,7 +83,6 @@ pub fn parse_template_file(file_name: String) -> Templates {
                         let fft_bs = AF::fft(&template, 1.0, max_len as i64);
                         let temp = AF::rows(&fft_bs, 0, real_len as u64);
                         AF::conjg(&temp)
-                        temp
                     })
                     .collect();
 

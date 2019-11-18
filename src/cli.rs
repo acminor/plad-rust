@@ -5,6 +5,7 @@ use crate::star::*;
 use crate::sw_star::SWStar;
 use crate::template::*;
 use crate::toml_star;
+use crate::filter_utils::WindowFunc;
 use clap::{App, Arg};
 use std::fs;
 use std::str::FromStr;
@@ -18,6 +19,20 @@ pub struct RunInfo {
     //    in generation of star data
     //    no need to add here
     pub detector_opts: DetectorOpts,
+    pub log_opts: LogOpts,
+}
+
+arg_enum!{
+    pub enum SortOpt {
+        None,
+        Increasing,
+        Decreasing,
+    }
+}
+
+pub struct LogOpts {
+    pub sort: SortOpt,
+    pub plot: bool,
 }
 
 #[derive(Clone)]
@@ -28,6 +43,7 @@ pub struct DetectorOpts {
     pub fragment: u32,
     pub skip_delta: u32,
     pub alert_threshold: f32,
+    pub window_func: WindowFunc,
 }
 
 fn unwrap_parse_star_files(
@@ -219,6 +235,33 @@ pub fn parse_args() -> RunInfo {
                 .conflicts_with_all(&["input_dir", "license"]),
         )
         .arg(
+            Arg::with_name("window_function")
+                .long("window-func")
+                .help("TODO")
+                .takes_value(true)
+                .default_value("triangle")
+                .possible_values(&WindowFunc::variants())
+                .case_insensitive(true)
+        )
+        .arg(
+            Arg::with_name("sort")
+                .long("sort")
+                .help("TODO")
+                .takes_value(true)
+                .default_value("none")
+                .possible_values(&SortOpt::variants())
+                .case_insensitive(true)
+        )
+        .arg(
+            Arg::with_name("plot")
+                .long("plot")
+                .help("TODO")
+                .takes_value(true)
+                .default_value("true")
+                .possible_values(&["true", "false"])
+                .case_insensitive(true)
+        )
+        .arg(
             Arg::with_name("license")
                 .long("license")
                 .help("Display license and attribution information."),
@@ -295,6 +338,12 @@ pub fn parse_args() -> RunInfo {
             .expect("Problem reading fragment")
             .parse::<u32>()
             .expect("Problem parsing fragment"),
+        window_func: value_t_or_exit!(matches, "window_function", WindowFunc),
+    };
+
+    let log_opts = LogOpts {
+        sort: value_t_or_exit!(matches, "sort", SortOpt),
+        plot: value_t_or_exit!(matches, "plot", bool),
     };
 
     let templates = parse_template_file(
@@ -318,6 +367,7 @@ pub fn parse_args() -> RunInfo {
             gwac_reader: None,
             // [ ] TODO see earlier fixme
             detector_opts,
+            log_opts,
         };
     }
 
@@ -330,6 +380,7 @@ pub fn parse_args() -> RunInfo {
             gwac_reader: Some(GWACReader::new(gwac_file)),
             // [ ] TODO see earlier fixme
             detector_opts,
+            log_opts,
         };
     }
 

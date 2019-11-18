@@ -27,6 +27,7 @@ impl TwinBarrier {
             None => panic!("Twin barrier locking down. Panicking..."),
         }
     }
+
     // NOTE this will serve as explanation of other barriers
     // -- order is really important
     //

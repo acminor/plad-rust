@@ -160,6 +160,7 @@ async fn main() {
         gwac_reader,
         // [ ] TODO see earlier fixme
         detector_opts,
+        log_opts,
     } = run_info;
 
     let mut stars = Lock::new(stars);
@@ -271,47 +272,65 @@ async fn main() {
           "max_star_len"=>max_len);
 
     let mut data = data.iter().collect::<Vec<(&String, &Vec<f32>)>>();
-    /*
-    data.sort_unstable_by(|a, b| {
-        let max_a = {
-            let mut temp_max = -1.0f32;
-            for &i in a.1.iter() {
-                if i > temp_max {
-                    temp_max = i;
+
+    let sort = |data: &mut Vec<(&String, &Vec<f32>)>| {
+        data.sort_unstable_by(|a, b| {
+            let max_a = {
+                let mut temp_max = -1.0f32;
+                for &i in a.1.iter() {
+                    if i > temp_max {
+                        temp_max = i;
+                    }
                 }
-            }
 
-            temp_max
-        };
+                temp_max
+            };
 
-        let max_b = {
-            let mut temp_max = -1.0f32;
-            for &i in b.1.iter() {
-                if i > temp_max {
-                    temp_max = i;
+            let max_b = {
+                let mut temp_max = -1.0f32;
+                for &i in b.1.iter() {
+                    if i > temp_max {
+                        temp_max = i;
+                    }
                 }
+
+                temp_max
+            };
+
+            max_a
+                .partial_cmp(&max_b)
+                .expect("Invalid value in data sort.")
+        });
+    };
+
+    let data = match log_opts.sort {
+        SortOpt::None => {
+            data
+        },
+        SortOpt::Increasing => {
+            sort(&mut data);
+            data
+        },
+        SortOpt::Decreasing => {
+            sort(&mut data);
+            data.reverse();
+            data
+        }
+    };
+
+    if log_opts.plot {
+        for (star_title, star_data) in data.into_iter() {
+            if is_offline {
+                //crate::utils::debug_plt(&star_data, star_title, None);
+                crate::utils::debug_plt_2(
+                    &star_data,
+                    data2.get(star_title).expect("Star should be in data2."),
+                    star_title,
+                    detector_opts.skip_delta,
+                );
+            } else {
+                crate::utils::debug_plt(&star_data, star_title, None);
             }
-
-            temp_max
-        };
-
-        max_a
-            .partial_cmp(&max_b)
-            .expect("Invalid value in data sort.")
-    });
-    //data.reverse();
-    */
-    for (star_title, star_data) in data.into_iter() {
-        if is_offline {
-            //crate::utils::debug_plt(&star_data, star_title, None);
-            crate::utils::debug_plt_2(
-                &star_data,
-                data2.get(star_title).expect("Star should be in data2."),
-                star_title,
-                detector_opts.skip_delta,
-            );
-        } else {
-            crate::utils::debug_plt(&star_data, star_title, None);
         }
     }
 

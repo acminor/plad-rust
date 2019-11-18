@@ -4,12 +4,15 @@ use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
 
-#[allow(dead_code)]
-pub enum WindowFunc {
-    Nuttall,
-    Rectangle,
-    Triangle,
-    Gaussian,
+arg_enum! {
+    #[derive(Clone)]
+    #[allow(dead_code)]
+    pub enum WindowFunc {
+        Nuttall,
+        Rectangle,
+        Triangle,
+        Gaussian,
+    }
 }
 
 pub fn prep_signals(signals: &[Vec<f32>], window_type: WindowFunc) -> (Vec<f32>, usize, usize) {
