@@ -7,6 +7,7 @@ use crate::template::Templates;
 //use crate::utils::inner_product;
 use crate::filter::inner_product;
 use crate::utils::uid_to_t0_tp;
+use crate::cli::Tester;
 
 use colored::*;
 use std::collections::HashMap;
@@ -20,6 +21,7 @@ pub struct Detector {
     info_handler: Arc<InformationHandler>,
     stars: Lock<Vec<SWStar>>,
     templates: Templates,
+    tester: Box<dyn Tester>,
     detector_opts: DetectorOpts,
 }
 
@@ -134,6 +136,26 @@ impl Detector {
             let mut detected_stars = std::collections::HashSet::new();
             ip.iter().zip(window_names).for_each(|(val, star)| {
                 if *val > self.detector_opts.alert_threshold {
+                    // compute values b/c tester is a valid tester
+                    if self.tester.is_valid() {
+                        if self.tester.is_true_positive(&star, sample_time) {
+                            adps.push(self.tester.adp(&star, sample_time));
+                            crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
+                                  "time"=>sample_time.to_string(),
+                                  "star"=>star.to_string(),
+                                  "val"=>val.to_string(),
+                            );
+                            true_events += 1;
+                        } else { // NOTE: is_true_pos mutually exclusive of false_pos
+                            crit!(log, "{}", "FALSE EVENT DETECTED".on_red();
+                                  "time"=>sample_time.to_string(),
+                                  "star"=>star.to_string(),
+                                  "val"=>val.to_string(),
+                            );
+                            false_events += 1;
+                        }
+                    }
+                    /*
                     // TODO this should be a command line option
                     if sample_time >= 40320 && sample_time <= 46080 {
                         // Compute ADP if we have the information to in NFD files
@@ -157,6 +179,7 @@ impl Detector {
                         );
                         false_events += 1;
                     }
+                    */
 
                     detected_stars.insert(star.clone());
                 }
@@ -201,6 +224,7 @@ impl Detector {
         info_handler: Arc<InformationHandler>,
         stars: Lock<Vec<SWStar>>,
         templates: Templates,
+        tester: Box<dyn Tester>,
         detector_opts: DetectorOpts,
     ) -> Detector {
         Detector {
@@ -209,6 +233,7 @@ impl Detector {
             info_handler,
             stars,
             templates,
+            tester,
             detector_opts,
         }
     }

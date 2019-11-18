@@ -20,6 +20,7 @@ pub struct RunInfo {
     //    no need to add here
     pub detector_opts: DetectorOpts,
     pub log_opts: LogOpts,
+    pub tester: Box<dyn Tester>,
 }
 
 arg_enum!{
@@ -28,6 +29,84 @@ arg_enum!{
         Increasing,
         Decreasing,
     }
+}
+
+pub trait Tester {
+    fn is_true_positive(&self, star: &str, sample_time: usize) -> bool;
+    fn is_false_positive(&self, star: &str, sample_time: usize) -> bool {
+        !self.is_true_positive(star, sample_time)
+    }
+
+    fn is_valid(&self) -> bool{
+        false
+    }
+
+    fn _adp(&self, star: &str, sample_time: usize) -> f32;
+    fn adp(&self, star: &str, sample_time: usize) -> f32 {
+        if self.is_false_positive(star, sample_time) {
+            panic!("ADP called on an invalid value")
+        }
+
+        self._adp(star, sample_time)
+    }
+}
+
+pub struct NoneTester {}
+
+impl Tester for NoneTester {
+    fn is_true_positive(&self, star: &str, sample_time: usize) -> bool {
+        true
+    }
+    fn _adp(&self, star: &str, sample_time: usize) -> f32 {
+        0.0
+    }
+}
+
+pub struct TartanTester {
+}
+
+impl Tester for TartanTester {
+    fn is_true_positive(&self, star: &str, sample_time: usize) -> bool {
+        true
+    }
+
+    fn is_valid(&self) -> bool {
+        true
+    }
+
+    fn _adp(&self, star: &str, sample_time: usize) -> f32 {
+        0.0
+    }
+}
+
+pub struct NFDTester {
+}
+
+impl Tester for NFDTester {
+    fn is_true_positive(&self, star: &str, sample_time: usize) -> bool {
+        // FIXME we can make this more accurate XD
+        sample_time >= 40320 && sample_time <= 46080
+    }
+
+    fn is_valid(&self) -> bool {
+        true
+    }
+
+    fn _adp(&self, star: &str, sample_time: usize) -> f32 {
+        if let Some((t0, t_prime)) = crate::utils::uid_to_t0_tp(star) {
+            crate::utils::adp(t0, t_prime, sample_time as f32)
+        } else {
+            panic!("Issue parsing t0, t_prime from NFD star")
+        }
+    }
+}
+
+pub struct TartanTestData {
+}
+
+pub enum TestType {
+    Tartan(TartanTestData),
+    None,
 }
 
 pub struct LogOpts {
@@ -262,6 +341,22 @@ pub fn parse_args() -> RunInfo {
                 .case_insensitive(true)
         )
         .arg(
+            Arg::with_name("tartan_test")
+                .long("tartan-test")
+                .help("TODO")
+                .takes_value(true)
+                .default_value("false")
+                .possible_values(&["true", "false"])
+                .case_insensitive(true)
+        )
+        .arg(
+            Arg::with_name("tartan_test_file")
+                .long("tartan-test-file")
+                .help("TODO")
+                .takes_value(true)
+                .required_if("tartan_test", "true")
+        )
+        .arg(
             Arg::with_name("license")
                 .long("license")
                 .help("Display license and attribution information."),
@@ -346,12 +441,20 @@ pub fn parse_args() -> RunInfo {
         plot: value_t_or_exit!(matches, "plot", bool),
     };
 
+    let test_type = if value_t!(matches, "tartan_test", bool).is_ok() {
+        TestType::Tartan(TartanTestData{})
+    } else {
+        TestType::None
+    };
+
     let templates = parse_template_file(
         matches
             .value_of("templates_file")
             .expect("Problem reading templates_file")
             .to_string(),
     );
+
+    let tester = Box::new(NFDTester{});
 
     // NOTE for simplicity do not allow offline and gwac_files
     //      to be on at same time
@@ -368,6 +471,7 @@ pub fn parse_args() -> RunInfo {
             // [ ] TODO see earlier fixme
             detector_opts,
             log_opts,
+            tester,
         };
     }
 
@@ -381,6 +485,7 @@ pub fn parse_args() -> RunInfo {
             // [ ] TODO see earlier fixme
             detector_opts,
             log_opts,
+            tester,
         };
     }
 

@@ -161,6 +161,7 @@ async fn main() {
         // [ ] TODO see earlier fixme
         detector_opts,
         log_opts,
+        tester,
     } = run_info;
 
     let mut stars = Lock::new(stars);
@@ -253,6 +254,7 @@ async fn main() {
             info_handler,
             stars,
             templates,
+            tester,
             detector_opts,
         )
     };

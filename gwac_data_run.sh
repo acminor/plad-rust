@@ -29,7 +29,7 @@ function safe_call {
                   --window-length $2 \
                   --skip-delta 15 \
                   --fragment 1 \
-                  --alert-threshold 200 \
+                  --alert-threshold 0.1 \
                   $3 $4 $5 $6 $7
 }
 

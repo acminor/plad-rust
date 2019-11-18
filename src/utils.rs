@@ -8,6 +8,11 @@ use std::path::PathBuf;
 
 use crate::template::*;
 
+// NOTE: From NFD Paper TODO better cite
+pub fn adp(t0: f32, t_prime: f32, sample_time: f32) -> f32 {
+    ((sample_time - t0) / t_prime) * 100.0
+}
+
 pub fn uid_to_t0_tp(uid: &str) -> Option<(f32, f32)> {
     let adp_parser = Regex::new(
         r"(?x) # makes white space insignificant and adds comment support
