@@ -23,23 +23,6 @@ pub fn inner_product(
         let (signals, num_stars, signal_max_len) = prep_signals(signals, WindowFunc::Triangle);
 
         let stars = prep_stars(&signals[..], num_stars, signal_max_len);
-        // THESE DO NOT REALLY CHANGE THE RESULT
-        //let stars = AF::add(&stars, &10.0f32, false);
-        //let stars = AF::log10(&stars);
-        //let stars = AF::exp(&stars);
-        /* DID NOT WORK AS WELL AS WANTED TO
-        let b_coeffs = AF_Array::new(
-            &[1.0],
-            AF_Dim4::new(&[1, 1, 1, 1])
-        );
-        let a_coeffs = AF_Array::new(
-            &[1.0        ,6.39245322,20.43172909,42.80206107,64.88239627,74.23342926,
-              64.88239627,42.80206107,20.43172909, 6.39245322, 1.0],
-            AF_Dim4::new(&[11, 1, 1, 1])
-        );
-        */
-        //let stars = AF::iir(&b_coeffs, &a_coeffs, &stars);
-        //let stars = AF::div(&stars, &40.0f32, false);
         let stars = stars_dc_removal(&stars, signal_max_len);
         let stars = stars_fft(&stars, templates[0].fft_len, templates[0].max_len);
 

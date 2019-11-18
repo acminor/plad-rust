@@ -1,0 +1,34 @@
+#+TITLE: Various NOTES
+#+AUTHOR: Austin C. Minor
+
+* filter.rs
+** Various normalization schemes
+
++ Adding a constant mean to initial stars to make always positive magnitude does
+  not change the final result
+  - B/c we do a mean subtraction from the final star in analysis thus this is moot
+  - let stars = AF::add(&stars, &10.0f32, false);
+    - Before stars_dc_removal and other formatting is done 
++ log10 the star before analysis does not really change result
+  - Probably due to how log affects fft output
+  - let stars = AF::log10(&stars);
+    - Before stars_dc_removal and other formatting is done
++ let stars = AF::exp(&stars); same as log10
++ more investigation would need to performed on low-pass filtering
+  - some issues might be...
+    - already low frequency signals
+    - how does this benefit the fft performance
+    - can this be done to templates beforehand
+    - is this done already by the window functions
+  - let b_coeffs = AF_Array::new(
+          &[1.0],
+          AF_Dim4::new(&[1, 1, 1, 1])
+      );
+      let a_coeffs = AF_Array::new(
+          &[1.0        ,6.39245322,20.43172909,42.80206107,64.88239627,74.23342926,
+            64.88239627,42.80206107,20.43172909, 6.39245322, 1.0],
+          AF_Dim4::new(&[11, 1, 1, 1])
+      );
+      */
+      //let stars = AF::iir(&b_coeffs, &a_coeffs, &stars);
+  - in same place as log10
