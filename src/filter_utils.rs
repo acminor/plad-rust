@@ -9,6 +9,7 @@ pub enum WindowFunc {
     Nuttall,
     Rectangle,
     Triangle,
+    Gaussian,
 }
 
 pub fn prep_signals(signals: &[Vec<f32>], window_type: WindowFunc) -> (Vec<f32>, usize, usize) {
@@ -22,6 +23,7 @@ pub fn prep_signals(signals: &[Vec<f32>], window_type: WindowFunc) -> (Vec<f32>,
     let window_func = match window_type {
         WindowFunc::Nuttall => nuttall_window,
         WindowFunc::Triangle => triangle_window,
+        WindowFunc::Gaussian => gaussian_window,
         WindowFunc::Rectangle => |arr| { arr },
     };
 
@@ -180,6 +182,33 @@ fn nuttall_window(signal: Vec<f32>) -> Vec<f32> {
 
         x*res
     }).collect::<Vec<f32>>()
+}
+
+/*
+#[allow(dead_code)]
+fn dolph_tchebyshev_window(signal: Vec<f32>) -> Vec<f32> {
+    // NOTE implements as described in ... TODO
+    let len = signal.len();
+    signal.into_iter().enumerate().map(|(n, x)| {
+        // TODO
+        0.0f32
+    }).collect()
+}
+*/
+
+#[allow(dead_code)]
+fn gaussian_window(signal: Vec<f32>) -> Vec<f32> {
+    // NOTE implements as described in ... TODO
+    let len = signal.len();
+    let alpha = 2.5f32;
+    signal.into_iter().enumerate().map(|(n, x)| {
+        let n = n as i64;
+        let len = len as i64;
+        let scale = -0.5f32;
+        let pos = ((n-(len/2)) as f32).abs()/(len as f32/2.0f32);
+        let inner = (alpha*pos).powf(2.0f32);
+        x*scale*inner.exp()
+    }).collect()
 }
 
 #[allow(dead_code)]

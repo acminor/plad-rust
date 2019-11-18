@@ -271,6 +271,7 @@ async fn main() {
           "max_star_len"=>max_len);
 
     let mut data = data.iter().collect::<Vec<(&String, &Vec<f32>)>>();
+    /*
     data.sort_unstable_by(|a, b| {
         let max_a = {
             let mut temp_max = -1.0f32;
@@ -298,7 +299,8 @@ async fn main() {
             .partial_cmp(&max_b)
             .expect("Invalid value in data sort.")
     });
-    data.reverse();
+    //data.reverse();
+    */
     for (star_title, star_data) in data.into_iter() {
         if is_offline {
             //crate::utils::debug_plt(&star_data, star_title, None);

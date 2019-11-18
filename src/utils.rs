@@ -8,239 +8,6 @@ use std::path::PathBuf;
 
 use crate::template::*;
 
-#[allow(dead_code)]
-fn nuttall_window(signal: Vec<f32>) -> Vec<f32> {
-    // NOTE implements windowing to cut down on "glitched" in the
-    // final fft output
-    //
-    // Uses the Nuttall window approximation as defined on
-    // the Wikipedia page for window functions.
-    let len = signal.len();
-    signal.into_iter().enumerate().map(|(n, x)| {
-        let n = n as f32;
-        let len = len as f32;
-        let a0 = 0.355768;
-        let a1 = 0.487396;
-        let a2 = 0.144232;
-        let a3 = 0.012604;
-        let res = a0 - a1*(2.0*std::f32::consts::PI*n/(len)).cos()
-            + a2*(4.0*std::f32::consts::PI*n/(len)).cos()
-            - a3*(6.0*std::f32::consts::PI*n/(len)).cos();
-
-        x*res
-    }).collect::<Vec<f32>>()
-}
-
-#[allow(dead_code)]
-fn triangle_window(signal: Vec<f32>) -> Vec<f32> {
-    // NOTE implements as described in ... TODO
-    let len = signal.len();
-    signal.into_iter().enumerate().map(|(n, x)| {
-        let res = if n <= len/2 {
-            (n as f32) / (len as f32 /2.0)
-        } else {
-            ((len - n) as f32) / (len as f32 /2.0)
-        };
-
-        x*res
-    }).collect()
-}
-
-#[allow(dead_code)]
-pub fn inner_product(
-    templates: &[TemplateGroup],
-    signals: &[Vec<f32>],
-    // [ ] TODO include in calculations
-    //  - ie work on estitmation, etc.
-    _snf: f32,
-    // [ ] TODO assume always on after template read
-    //  - refactor out
-    _pre_fft: bool,
-    // [ ] TODO refactor into template instant.
-    _template_group_len: usize,
-    signal_group_len: usize,
-) -> Vec<f32> {
-    let mut res: Vec<f32> = Vec::new();
-    for signals in signals.chunks(signal_group_len) {
-        //1) {//signal_group_len) {
-        let num_stars = signals.len();
-        let signal_max_len = signals
-            .iter()
-            .map(|signal| signal.len())
-            .max()
-            .expect("Problem getting the max signal length.");
-        // Zero pad the results to make sure all signals have
-        // same length regardless of window size. This does not
-        // have any effect on output (except binning which is
-        // discussed in the ni article below).
-        //
-        // Corresponds to perfect interpolation as pointed out by
-        // https://math.stackexchange.com/questions/26432/
-        //   discrete-fourier-transform-effects-of-zero-padding-compared-to-time-domain-inte
-        // and with stated theorem referenced here
-        // https://ccrma.stanford.edu/~jos/dft/Zero_Padding_Theorem_Spectral.html
-        //
-        // See here for an analysis of zero padding
-        // - http://www.ni.com/tutorial/4880/en/
-        let signals = &signals
-            .iter()
-            .cloned()
-            .into_iter()
-            .flat_map(|mut signal| {
-                let len = signal.len();
-
-                let mean: f32 = signal.iter().sum();
-                let mean = mean / len as f32;
-
-                // Formula for the corrected sample standard deviation
-                // from the Wikipedia article on standard deviation
-                let stddev: f32 = signal.iter().map(|x| (x-mean).powf(2.0)).sum();
-                let stddev = stddev / (len - 1) as f32;
-                let stddev = stddev.sqrt();
-
-                let threshold = mean + 3.0*stddev;
-
-                // Implements a basic outlier removal scheme that replaces
-                // any point that is beyond 3*stddev of the mean with a
-                // neighboring point
-
-                // NOTE assumes that the signal is at least 2 length wide
-                // and that their is not more that two errors in a row
-                // NOTE last case extracted here to remove redundant if
-                // statement in the for loop below
-                if signal[len - 1] > threshold {
-                    signal[len - 1] = signal[len - 2];
-                }
-
-                for i in 0..len-1 {
-                    // NOTE for now does not handle more than two errors in a row
-                    // - it will back propagate these errors
-                    if signal[i] > threshold {
-                        signal[i] = signal[i+1];
-                    }
-                }
-
-                signal = nuttall_window(signal);
-                //signal = triangle_window(signal);
-
-                signal.into_iter().chain(
-                    std::iter::repeat(0.0f32)
-                        .take(signal_max_len - len),
-                )
-            })
-            .collect::<Vec<f32>>()[..];
-        let stars = AF_Array::new(
-            signals,
-            // [ ] TODO 2nd term should be # of stars???
-            AF_Dim4::new(&[signal_max_len as u64, num_stars as u64, 1, 1]),
-        );
-
-
-        // NOTE Remove DC constant of template to focus on signal
-        //      - This is very important and will lead to false
-        //        detection or searching for the wrong signal
-        let stars_means = AF::mean(
-            &stars,
-            0,
-        );
-
-        let stars_means = AF::tile(
-            &stars_means,
-            AF_Dim4::new(
-                &[signal_max_len as u64, 1, 1, 1]
-            ),
-        );
-
-        let stars = AF::sub(&stars, &stars_means, false);
-
-        /*
-        let stars_max = AF::max(&stars, 0);
-        let stars_min = AF::min(&stars, 0);
-        let stars_min = AF::abs(&stars_min);
-
-        let stars_stats = AF::join(0, &stars_max, &stars_min);
-        let stars_max = AF::max(&stars_stats, 0);
-
-        let stars_scales = AF::div(&1.0f32, &stars_max, false);
-        let stars_scales = AF::tile(
-            &stars_scales,
-            AF_Dim4::new(
-                &[signal_max_len as u64, 1, 1, 1]
-            ),
-        );
-
-        let stars = AF::mul(&stars_scales, &stars, false);
-
-        {
-            let mut temp: Vec<f32> = Vec::new();
-
-            let temp_stars = AF::col(&stars, 0);
-            temp.resize(temp_stars.elements(), 0.0);
-
-            temp_stars.lock();
-            temp_stars.host(&mut temp);
-            temp_stars.unlock();
-
-            debug_plt(&temp[..], "blah", None);
-        }
-        */
-
-        let stars = {
-            let fft_bs = AF::fft(&stars, 1.0, templates[0].fft_len as i64);
-            AF::rows(&fft_bs, 0, (templates[0].max_len - 1) as u64)
-        };
-
-        //stars.eval();
-
-        //let stars = AF::conjg(&stars);
-        //let stars = AF::transpose(&stars, false);
-        // [ ] TODO work on making right grouping
-        //     of templates output and max of them
-        //     -- for now only works bc large template groups (only one group)
-        for template_group in templates {
-            // [ ] TODO add in Delta x scale
-            let res_af = AF::matmul(
-                &stars,
-                &template_group.templates,
-                AF::MatProp::TRANS,
-                AF::MatProp::NONE,
-            );
-
-            //let stars = AF::transpose(&stars, false);
-            /*
-            let stars = AF::tile(&stars, AF_Dim4::new(
-                &[num_stars as u64, template_group.num_templates as u64, 1, 1]));
-            let res_af = AF::mul(
-                &stars,
-                &template_group.templates,
-                false,
-            );
-
-            let res_af = AF::ifft(&res_af, 1.0, window_length as i64);
-            */
-
-            // as in SO questions try using abs to get pos. vals.
-            // https://{{so}}.com/questions/6740545/understanding-fft-output
-            // https://dsp.{{se}}.com/questions/20500/negative-values-of-the-fft
-            // --- can be fixed will describe in other doc
-            let res_af = AF::abs(&res_af);
-
-            let res_af = AF::max(&res_af, 1);
-            res_af.eval();
-
-            let mut temp: Vec<f32> = Vec::new();
-            temp.resize(res_af.elements(), 0.0);
-            res_af.lock();
-            res_af.host(&mut temp);
-            res_af.unlock();
-
-            res.append(&mut temp);
-        }
-    }
-
-    res
-}
-
 pub fn uid_to_t0_tp(uid: &str) -> Option<(f32, f32)> {
     let adp_parser = Regex::new(
         r"(?x) # makes white space insignificant and adds comment support
@@ -300,10 +67,14 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
     let c = inline_python::Context::new();
     python! {
         #![context = &c]
+        import pickle
         import matplotlib.pyplot as plt
         import numpy as np
         import sys
         sys.argv.append("test")
+
+        with open("temp.pickle", "wb+") as file:
+            pickle.dump('data, file)
 
         temp = []
         for d in 'data:
@@ -331,7 +102,7 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
                 data2.append(None)
         plt.title('title)
         plt.plot(temp, marker="o", ls="")
-        plt.plot('data2, marker="x", ls="")
+        plt.plot(data2, marker="x", ls="")
         //plt.plot(temp2, marker="s", ls="")
         plt.show()
     }

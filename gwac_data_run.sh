@@ -21,15 +21,15 @@ function safe_call {
     fi
 
     # fragment should cut time to run by x
-    RUST_BACKTRACE=1 cargo run $opt --\
+    RUST_BACKTRACE=1 cargo run $opt --target-dir=/data/tmp/build_artifacts/match_filter --\
                   --input ${DATA} \
                   --templates-file ${TEMPS} \
                   --noise .06 \
                   --rho 4.0 \
                   --window-length $2 \
-                  --skip-delta 30 \
+                  --skip-delta 15 \
                   --fragment 1 \
-                  --alert-threshold 1.0 #0.05 #15.1 #8.1
+                  --alert-threshold 200 #0.05 #15.1 #8.1
 }
 
 case $1 in
