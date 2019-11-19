@@ -155,31 +155,6 @@ impl Detector {
                             false_events += 1;
                         }
                     }
-                    /*
-                    // TODO this should be a command line option
-                    if sample_time >= 40320 && sample_time <= 46080 {
-                        // Compute ADP if we have the information to in NFD files
-                        // NOTE uses formula from NFD paper
-                        if let Some((t0, t_prime)) = uid_to_t0_tp(&star) {
-                            let adp =
-                                ((sample_time as f32 - t0) / t_prime) * 100.0;
-                            adps.push(adp);
-                        };
-                        crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
-                              "time"=>sample_time.to_string(),
-                              "star"=>star.to_string(),
-                              "val"=>val.to_string(),
-                        );
-                        true_events += 1;
-                    } else {
-                        crit!(log, "{}", "FALSE EVENT DETECTED".on_red();
-                              "time"=>sample_time.to_string(),
-                              "star"=>star.to_string(),
-                              "val"=>val.to_string(),
-                        );
-                        false_events += 1;
-                    }
-                    */
 
                     detected_stars.insert(star.clone());
                 }

@@ -2,11 +2,8 @@ import re
 import subprocess
 import click
 
-def construct_cmd(is_release, data_dir, window_length, alert_threshold):
+def construct_cmd(is_release, data_dir, build_dir, templates, window_length, alert_threshold):
     cmd = '''
-    source ~/.zshenv
-    source src_env.sh
-
     cargo run {} --target-dir={} --\
     --input={}\
     --templates-file={}\
@@ -19,9 +16,9 @@ def construct_cmd(is_release, data_dir, window_length, alert_threshold):
     --plot=false
     '''.format(
         "--release "if is_release else "",
-        "/data/tmp/build_artifacts/match_filter",
+        build_dir, #"/data/tmp/build_artifacts/match_filter",
         data_dir,
-        "data/templates__nfd_def.toml",
+        templates, #"data/templates__nfd_def.toml",
         window_length,
         alert_threshold
     )
@@ -70,11 +67,21 @@ def parse_results(output):
             }
     return adp, pos
 
+
 @click.command()
-def main():
+@click.option('--data-dir', required=True,
+              type=click.Path(exists=True, dir_okay=True, readable=True))
+@click.option('--build-dir', required=True,
+                type=click.Path(dir_okay=True, writable=True, readable=True))
+@click.option('--templates', required=True,
+                type=click.Path(exists=True, file_okay=True, readable=True))
+@click.option('--window-length', required=True, type=int)
+def main(data_dir, build_dir, templates, window_length):
+    # NOTE for now, always assume release for testing
     is_release = True
-    data_dir = "/home/austin/research/microlensing_star_data/star_subset"
-    window_length = 30
+    #data_dir = "/home/austin/research/microlensing_star_data/star_subset"
+    #window_length = 30
+
     alert_threshold_window = [0.0, 200.0]
     alert_threshold = 0.0
     alert_threshold_prev = 100.0
@@ -95,7 +102,8 @@ def main():
         alert_threshold = (alert_threshold_window[0] + alert_threshold_window[1])/2.0
 
         proc = subprocess.run(
-            construct_cmd(is_release, data_dir, window_length, alert_threshold),
+            construct_cmd(is_release, data_dir, build_dir,
+                          templates, window_length, alert_threshold),
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, encoding='utf8'
         )
         output = proc.stdout

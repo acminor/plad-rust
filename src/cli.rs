@@ -9,6 +9,7 @@ use crate::filter_utils::WindowFunc;
 use clap::{App, Arg};
 use std::fs;
 use std::str::FromStr;
+use toml;
 
 pub struct RunInfo {
     pub templates: Templates,
@@ -63,11 +64,44 @@ impl Tester for NoneTester {
 }
 
 pub struct TartanTester {
+    start_len: usize,
+    end_len: usize,
+}
+
+impl TartanTester {
+    fn new(desc_file: &str) -> TartanTester {
+        let contents =
+            fs::read_to_string(desc_file).expect("Failure to read Tartan Tester File");
+        let desc =
+            contents.parse::<toml::Value>().expect("Failure to parse Tartan Tester File");
+
+        TartanTester {
+            start_len: desc["signal"]["start_len"]
+                .as_str().expect("Problem parsing Tartan Tester File")
+                .parse::<usize>().expect("malformed tartan tester file"),
+            end_len: desc["signal"]["end_len"]
+                .as_str().expect("Problem parsing Tartan Tester File")
+                .parse::<usize>().expect("malformed tartan tester file"),
+        }
+    }
+    fn star_name_to_len(star: &str) -> usize {
+        star
+            .split(",")
+            .filter(|kv| kv.contains("len"))
+            .map(|kv| kv.split("=").collect::<Vec<&str>>())
+            .collect::<Vec<Vec<&str>>>()[0][1] // only one entry and 1 is value, 0 is key
+            .parse::<usize>().expect("malformed tartan star name")
+    }
 }
 
 impl Tester for TartanTester {
     fn is_true_positive(&self, star: &str, sample_time: usize) -> bool {
-        true
+        let tot_len = TartanTester::star_name_to_len(star);
+
+        // between the start and end boundaries
+        // -- FIXME should be equality???
+        // ---- Shouldn't mater much (b/c shouldn't predict immediately)
+        sample_time > self.start_len && sample_time < (tot_len - self.end_len)
     }
 
     fn is_valid(&self) -> bool {
@@ -75,7 +109,12 @@ impl Tester for TartanTester {
     }
 
     fn _adp(&self, star: &str, sample_time: usize) -> f32 {
-        0.0
+        let tot_len = TartanTester::star_name_to_len(star);
+        let signal_width = (tot_len - (self.start_len + self.end_len)) as f32;
+        // NOTE: ignores discrete values and approximates as continuous
+        let center_of_signal = signal_width/2.0 + self.start_len as f32;
+
+        crate::utils::adp(center_of_signal, signal_width, sample_time as f32)
     }
 }
 
