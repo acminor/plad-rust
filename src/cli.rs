@@ -75,13 +75,13 @@ impl TartanTester {
         let desc =
             contents.parse::<toml::Value>().expect("Failure to parse Tartan Tester File");
 
+        println!("{:?}", desc["signal"]["start_len"]);
+
         TartanTester {
             start_len: desc["signal"]["start_len"]
-                .as_str().expect("Problem parsing Tartan Tester File")
-                .parse::<usize>().expect("malformed tartan tester file"),
+                .as_integer().expect("Problem parsing Tartan Tester File: start_len") as usize,
             end_len: desc["signal"]["end_len"]
-                .as_str().expect("Problem parsing Tartan Tester File")
-                .parse::<usize>().expect("malformed tartan tester file"),
+                .as_integer().expect("Problem parsing Tartan Tester File: end_len") as usize,
         }
     }
     fn star_name_to_len(star: &str) -> usize {
@@ -493,7 +493,15 @@ pub fn parse_args() -> RunInfo {
             .to_string(),
     );
 
-    let tester = Box::new(NFDTester{});
+    let tester: Box<dyn Tester> = match value_t!(matches, "tartan_test", bool) {
+        Ok(val) if val => {
+            println!("Using the TARTAN.");
+            Box::new(TartanTester::new(&value_t_or_exit!(matches, "tartan_test_file", String)))
+        }
+        _ => {
+            Box::new(NFDTester{})
+        }
+    };
 
     // NOTE for simplicity do not allow offline and gwac_files
     //      to be on at same time

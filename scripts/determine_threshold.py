@@ -2,7 +2,9 @@ import re
 import subprocess
 import click
 
-def construct_cmd(is_release, data_dir, build_dir, templates, window_length, alert_threshold):
+def construct_cmd(is_release, data_dir, build_dir,
+                  templates, window_length, alert_threshold,
+                  tartan_file):
     cmd = '''
     cargo run {} --target-dir={} --\
     --input={}\
@@ -10,17 +12,19 @@ def construct_cmd(is_release, data_dir, build_dir, templates, window_length, ale
     --noise=.06\
     --rho=4.0\
     --window-length={}\
-    --skip-delta=15\
+    --skip-delta=1\
     --fragment=1\
     --alert-threshold={}\
-    --plot=false
+    --plot=false\
+    {}
     '''.format(
         "--release "if is_release else "",
         build_dir, #"/data/tmp/build_artifacts/match_filter",
         data_dir,
         templates, #"data/templates__nfd_def.toml",
         window_length,
-        alert_threshold
+        alert_threshold,
+        '--tartan-test True --tartan-test-file {}'.format(tartan_file) if tartan_file else ''
     )
 
     return cmd
@@ -76,7 +80,9 @@ def parse_results(output):
 @click.option('--templates', required=True,
                 type=click.Path(exists=True, file_okay=True, readable=True))
 @click.option('--window-length', required=True, type=int)
-def main(data_dir, build_dir, templates, window_length):
+@click.option('--tartan-file',
+              type=click.Path(exists=True, file_okay=True, readable=True))
+def main(data_dir, build_dir, templates, window_length, tartan_file):
     # NOTE for now, always assume release for testing
     is_release = True
     #data_dir = "/home/austin/research/microlensing_star_data/star_subset"
@@ -103,11 +109,16 @@ def main(data_dir, build_dir, templates, window_length):
 
         proc = subprocess.run(
             construct_cmd(is_release, data_dir, build_dir,
-                          templates, window_length, alert_threshold),
+                          templates, window_length, alert_threshold, tartan_file),
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, encoding='utf8'
         )
         output = proc.stdout
         adp, pos = parse_results(output)
+
+        # NOTE: error occurred b/c output is not good
+        if len(adp) == 0:
+            print(output)
+            exit(-1)
 
         print("Alert Threshold: {}".format(alert_threshold))
         print("ADP Stats: {}".format(adp))
@@ -117,7 +128,8 @@ def main(data_dir, build_dir, templates, window_length):
         alert_threshold += 0.0001
 
         proc = subprocess.run(
-            construct_cmd(is_release, data_dir, window_length, alert_threshold),
+            construct_cmd(is_release, data_dir, build_dir, templates,
+                          window_length, alert_threshold, tartan_file),
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, encoding='utf8'
         )
         output = proc.stdout
