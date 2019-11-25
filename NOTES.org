@@ -32,3 +32,35 @@
       */
       //let stars = AF::iir(&b_coeffs, &a_coeffs, &stars);
   - in same place as log10
+
+** DC Removal
+
+It appears I had some issues with DC removal logic (in the maths).
+So initially I removed all DC b/c it seemed to make any filter work.
+Now I need to investigate adding them all back. It may be that the best scheme is
+to only remove the DC from the templates and not the stars. As put in another note
+we were having an issues with weird output (esp. with abs)
+
+       /\/\
+------/    \------
+
+resulting in the following image like phenomeon occuring when it should only
+be increasing. Focusing only on reals seemed to solve it partially but still
+gave strange results in lack of amplitude and for the NFD test dataset. Thus,
+through some testing we removed dc removal from the star windows and that seems
+to have fixed the issue along with (maybe boosting detection level -- need to validate).
+Mismatched filters still seem to pretty much ignore the pressence thus with further
+validation this will probably be the best way going forward.
+
+- [ ] TODO further validate these claims...
+  - mismatch effect (make it less than with or without)
+    - ie with dc is the mismatch amplified or diminished and vice-versa
+  - check removal of template
+    - both with
+    - and singularly opposed to (turn back on star dc removal)
+  - detection rate of NFD and generated dataset
+  - the addition of a DC component to the result and does this
+    change based on overall DC component of each signal
+    - this does appear to be the case X/
+      - look into adding some kind of average DC subtraction logic for stars
+- [ ] TODO add back other code and notes from diff 

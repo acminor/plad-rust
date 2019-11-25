@@ -20,10 +20,10 @@ pub fn inner_product(
 ) -> Vec<f32> {
     let mut res: Vec<f32> = Vec::new();
     for signals in signals.chunks(signal_group_len) {
-        let (signals, num_stars, signal_max_len) = prep_signals(signals, WindowFunc::Triangle);
+        let (signals, num_stars, signal_max_len) = prep_signals(signals, WindowFunc::Rectangle);
 
         let stars = prep_stars(&signals[..], num_stars, signal_max_len);
-        let stars = stars_dc_removal(&stars, signal_max_len);
+        //let stars = stars_dc_removal(&stars, signal_max_len);
         let stars = stars_fft(&stars, templates[0].fft_len, templates[0].max_len);
 
         // [ ] TODO work on making right grouping
@@ -34,7 +34,7 @@ pub fn inner_product(
             let res_af = AF::matmul(
                 &stars,
                 &template_group.templates,
-                AF::MatProp::TRANS,
+                AF::MatProp::CTRANS,
                 AF::MatProp::NONE,
             );
 
