@@ -1,5 +1,8 @@
 use num::Complex;
 
+use std::sync::Mutex;
+use std::collections::HashMap;
+
 use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
@@ -134,6 +137,98 @@ pub fn stars_norm_at_zero(stars: &AF_Array<f32>, signal_max_len: usize) -> AF_Ar
     );
 
     AF::sub(stars, &stars_adjust, false)
+}
+
+struct HistoricalMeanEntry {
+}
+
+lazy_static!{
+    static ref historical_means_global: Mutex<HashMap<String, Vec<f32>>>
+        = Mutex::new(HashMap::new());
+}
+
+/// Keeps track of historical means and updates stars accordingly
+///
+/// current_time and min/max_time in number of sample time increments
+///
+/// Algorithm:
+/// 1. Calculate current window means
+/// 2. Add current window means to historical means
+/// 3. Reduce historical means
+///    - min/max_time is how many time periods must have passed for the data to be considered
+///    - we only want to consider older times not newer to get true mean while event is occuring
+///    - for the first (time) data points, consider all points in mean estimation
+/// 4. Subtract historical means from current window means
+///
+/// NOTE: min/max_time should not change throughout the run
+pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String],
+                                     signal_max_len: usize, min_time: usize,
+                                     max_time: usize, current_time: usize) -> AF_Array<f32> {
+    // Borrow for WHOLE function as inner_product is only called in a single threaded fashion
+    let mut historical_means = historical_means_global.lock().unwrap();
+
+    let num_stars = star_names.len();
+
+    let stars_means = AF::mean(
+        stars,
+        0,
+    );
+    let stars_means = af_to_vec1d(&stars_means);
+
+    star_names
+        .iter()
+        .zip(stars_means.iter())
+        .for_each(|(name, mean)| {
+            if !historical_means.contains_key(name) {
+                historical_means.insert(name.to_string(), Vec::new());
+            }
+
+            let mut data: &mut Vec<f32> = historical_means
+                .get_mut(name)
+                .expect("historical mean removal issue with get_mut (shouldn't happen)");
+
+            // [ ] TODO make a commandline parameter (make based on window length???)
+            // -- maybe make a running length instead???
+            // makes sure the historical mean window is kept small
+            if data.len() > max_time {
+                data.remove(0);
+            }
+
+            data.push(*mean);
+        });
+
+    let stars_means = star_names
+        .iter()
+        .map(|name| {
+            let means = historical_means
+                .get(name)
+                .expect("historical mean removal issue with get (shouldn't happen)");
+
+            // [ ] TODO make more efficient with running alg.
+            let mean: f32 =
+                if means.len() < min_time {
+                    means.iter().sum()
+                } else {
+                    means[..means.len()-min_time].iter().sum()
+                };
+
+            let mean = mean / means.len() as f32;
+
+            mean
+        }).collect::<Vec<f32>>();
+
+    let stars_means = AF_Array::new(
+        &stars_means[..],
+        AF_Dim4::new(&[1 as u64, num_stars as u64, 1, 1]),
+    );
+    let stars_means = AF::tile(
+        &stars_means,
+        AF_Dim4::new(
+            &[signal_max_len as u64, 1, 1, 1]
+        ),
+    );
+
+    AF::sub(stars, &stars_means, false)
 }
 
 pub fn stars_fft(stars: &AF_Array<f32>, fft_len: usize, fft_half_len: usize) -> AF_Array<Complex<f32>> {

@@ -2,6 +2,9 @@ use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
 
+use std::sync::Mutex;
+use std::collections::HashMap;
+
 use crate::cli::DCNorm;
 use crate::template::*;
 use crate::filter_utils::*;
@@ -9,6 +12,8 @@ use crate::filter_utils::*;
 pub fn inner_product(
     templates: &[TemplateGroup],
     signals: &[Vec<f32>],
+    signal_names: &[String],
+    current_time: usize,
     // [ ] TODO include in calculations
     //  - ie work on estitmation, etc.
     _snf: f32,
@@ -40,7 +45,10 @@ pub fn inner_product(
             DCNorm::HistMeanRemoveStar |
             DCNorm::HistMeanRemoveStarAndTemplate |
             DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate => {
-                stars // TODO
+                let min_time = 30;
+                let max_time = 120;
+                stars_historical_mean_removal(&stars, signal_names, signal_max_len,
+                                              min_time, max_time, current_time)
             }
             _ => stars
         };
