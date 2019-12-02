@@ -116,6 +116,26 @@ pub fn stars_dc_removal(stars: &AF_Array<f32>, signal_max_len: usize) -> AF_Arra
     AF::sub(stars, &stars_means, false)
 }
 
+/// Normalizes stars to have their minimum value at zero.
+///
+/// Algorithm: Subtract min from signal.
+/// - Raises or lowers DC depending on if signal minimum is above or below zero.
+pub fn stars_norm_at_zero(stars: &AF_Array<f32>, signal_max_len: usize) -> AF_Array<f32> {
+    let star_mins = AF::min(
+        stars,
+        0,
+    );
+
+    let stars_adjust = AF::tile(
+        &star_mins,
+        AF_Dim4::new(
+            &[signal_max_len as u64, 1, 1, 1]
+        ),
+    );
+
+    AF::sub(stars, &stars_adjust, false)
+}
+
 pub fn stars_fft(stars: &AF_Array<f32>, fft_len: usize, fft_half_len: usize) -> AF_Array<Complex<f32>> {
     let stars = {
         let fft_bs = AF::fft(stars, 1.0, fft_len as i64);
@@ -388,6 +408,36 @@ mod tests {
         let act_stars = prep_stars(&act_stars, num_stars, max_len);
 
         let act_stars = stars_dc_removal(&act_stars, max_len);
+        let act_stars = af_to_vec1d(&act_stars);
+
+        exp_stars.iter().zip(act_stars.iter()).for_each(|(e, a)| {
+            assert_abs_diff_eq!(e, a, epsilon = std::f32::EPSILON);
+        });
+    }
+
+    #[test]
+    fn test_stars_norm_at_zero() {
+        init_af();
+
+        let num_stars = 3;
+        let max_len = 12;
+
+        let stars = vec!{
+            vec!{0.1, 1.0, 0.5, 0.7, 0.7, 0.1, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{-0.3, 1.0, 0.5, 0.7, 0.7, -0.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+        };
+
+        let exp_stars = vec!{
+            0.0, 0.9, 0.4, 0.6, 0.6, 0.0, 0.4, 0.7, 0.7, 0.6, 0.1, 0.0,
+            0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1,
+            0.2, 1.5, 1.0, 1.2, 1.2, 0.0, 1.0, 1.3, 1.3, 1.2, 0.7, 0.6,
+        };
+
+        let act_stars = prep_signals(&stars[..], WindowFunc::Rectangle).0;
+        let act_stars = prep_stars(&act_stars, num_stars, max_len);
+
+        let act_stars = stars_norm_at_zero(&act_stars, max_len);
         let act_stars = af_to_vec1d(&act_stars);
 
         exp_stars.iter().zip(act_stars.iter()).for_each(|(e, a)| {

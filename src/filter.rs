@@ -35,7 +35,7 @@ pub fn inner_product(
             DCNorm::NormAtZeroStar |
             DCNorm::NormAtZeroTemplateAndStar |
             DCNorm::NormAtZeroStarAndMeanRemoveTemplate => {
-                stars // TODO
+                stars_norm_at_zero(&stars, signal_max_len)
             }
             DCNorm::HistMeanRemoveStar |
             DCNorm::HistMeanRemoveStarAndTemplate |
