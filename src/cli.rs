@@ -36,6 +36,36 @@ arg_enum!{
 arg_enum!{
     #[derive(Clone, Copy)]
     // [ ] TODO verify that the logic is correctly spread into filter.rs and template.rs
+    ///
+    /// DCNorm carries information about which types of normalization should be applied to
+    /// the DC factors in the signal. e.g. should it be scaled, remove, etc.
+    ///
+    /// DC Normalization is important for match filtering as two templates and with different
+    /// DC values are incomparable in most instances
+    /// (one exception is template starting at 0 and bound between 0,1).
+    ///
+    /// The following enum values are used as commandline arguments into the program
+    ///
+    /// MeanRemove...
+    /// - Subtracts the DC component from the given values
+    ///
+    /// NormAtZero...
+    /// - Scales the DC component so that all values are >= 0 and the minimum value is at 0
+    /// - kind of similar to MeanRemove except slightly imprecise
+    ///   (inter-star DC values are similar but not the same)
+    /// - We are testing this to see if we can get rid of negative value matched filtering anomalies
+    ///
+    /// HistMean...
+    /// - Scales the DC component of each star so that all values are
+    ///   subtracted by the historical mean
+    /// - Attempts to subtract the stars "true" DC value out
+    /// - Could have issues if pipeline is started when microlensing anomaly is occurring;
+    ///   however, this should only decrease events (miss more events) instead of giving false
+    ///   positives due to more negative values in final output result
+    ///   (theorized but needs testing to confirm)
+    /// - HistMeanRemoveStarAndTemplate
+    ///    - For the template, do normal mean removal and not history based (template has no history)
+    ///
     pub enum DCNorm {
         None,
         MeanRemoveTemplate,
@@ -149,7 +179,7 @@ pub fn parse_args() -> RunInfo {
             Arg::with_name("input_dir")
                 .short("i")
                 .long("input")
-                .help("TODO")
+                .help("Directory containing the star data files.")
                 .number_of_values(1)
                 .multiple(true)
                 .takes_value(true)
@@ -160,7 +190,7 @@ pub fn parse_args() -> RunInfo {
             Arg::with_name("templates_file")
                 .short("t")
                 .long("templates-file")
-                .help("TODO")
+                .help("File describing the templates.")
                 .takes_value(true)
                 .conflicts_with("license")
                 .required_unless("license")
@@ -170,7 +200,7 @@ pub fn parse_args() -> RunInfo {
             Arg::with_name("rho")
                 .short("p")
                 .long("rho")
-                .help("TODO")
+                .help("<<For now not used>>")
                 .takes_value(true)
                 .conflicts_with("license")
                 .required_unless("license")
@@ -180,7 +210,7 @@ pub fn parse_args() -> RunInfo {
             Arg::with_name("noise")
                 .short("n")
                 .long("noise")
-                .help("TODO")
+                .help("<<For now not used>>")
                 .takes_value(true)
                 .conflicts_with("license")
                 .required_unless("license")
@@ -190,7 +220,7 @@ pub fn parse_args() -> RunInfo {
             Arg::with_name("window_length")
                 .short("w")
                 .long("window-length")
-                .help("TODO")
+                .help("Fixed window length used in filtering star data. See min_/max_ window_length for variable window lengths")
                 .takes_value(true)
                 .conflicts_with_all(&[
                     "min_window_length",
@@ -206,7 +236,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("min_window_length")
                 .long("min-window-length")
-                .help("TODO")
+                .help("Minimum window size before we start filtering star data.")
                 .requires("max_window_length")
                 .required_unless_one(&["window_length", "license"])
                 .conflicts_with("license")
@@ -215,7 +245,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("max_window_length")
                 .long("max-window-length")
-                .help("TODO")
+                .help("Maximum window size for star data.")
                 .requires("min_window_length")
                 .required_unless_one(&["window_length", "license"])
                 .conflicts_with("license")
@@ -224,7 +254,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("skip_delta")
                 .long("skip-delta")
-                .help("TODO")
+                .help("How many data points we skip before executing another matched filtering operation (happens per star).")
                 .takes_value(true)
                 .conflicts_with("license")
                 .required_unless("license")
@@ -234,7 +264,7 @@ pub fn parse_args() -> RunInfo {
             Arg::with_name("alert_threshold")
                 .short("a")
                 .long("alert-threshold")
-                .help("TODO")
+                .help("Threshold value at which we trigger an anomaly.")
                 .takes_value(true)
                 .conflicts_with("license")
                 .required_unless("license")
@@ -243,7 +273,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("fragment")
                 .long("fragment")
-                .help("number of fragments to split stars into")
+                .help("Number of fragments to split stars into. i.e. how we delay stars to group them (star a starts at 1, star b at 2, etc.)")
                 .takes_value(true)
                 .conflicts_with("license")
                 .required_unless("license")
@@ -252,7 +282,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("gwac_file")
                 .long("gwac-file")
-                .help("TODO")
+                .help("GWAC Unix Domain Sockets file for processing live data.")
                 .takes_value(true)
                 .required_unless_one(&["input_dir", "license"])
                 .conflicts_with_all(&["input_dir", "license"]),
@@ -260,7 +290,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("window_function")
                 .long("window-func")
-                .help("TODO")
+                .help("Window function used to adjust the star windows.")
                 .takes_value(true)
                 .default_value("triangle")
                 .possible_values(&WindowFunc::variants())
@@ -269,7 +299,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("sort")
                 .long("sort")
-                .help("TODO")
+                .help("How we want to sort the output data for a local test data run.")
                 .takes_value(true)
                 .default_value("none")
                 .possible_values(&SortOpt::variants())
@@ -278,7 +308,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("plot")
                 .long("plot")
-                .help("TODO")
+                .help("Do we want to plot the data for a local test data run.")
                 .takes_value(true)
                 .default_value("true")
                 .possible_values(&["true", "false"])
@@ -287,7 +317,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("tartan_test")
                 .long("tartan-test")
-                .help("TODO")
+                .help("Specifies to use Tartan generated data parsing to determine (statistics: true positive, false positive, etc.)")
                 .takes_value(true)
                 .default_value("false")
                 .possible_values(&["true", "false"])
@@ -296,7 +326,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("tartan_test_file")
                 .long("tartan-test-file")
-                .help("TODO")
+                .help("File specifying the Tartan generated data parameters.")
                 .takes_value(true)
                 .required_if("tartan_test", "true")
         )

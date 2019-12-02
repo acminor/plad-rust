@@ -28,7 +28,7 @@ extern crate jemallocator;
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 mod async_utils;
-mod cli;
+pub mod cli; // pub for documentation purposes
 mod dat_star;
 mod detector;
 mod gwac_reader;
