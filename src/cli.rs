@@ -32,6 +32,15 @@ arg_enum!{
     }
 }
 
+arg_enum!{
+    pub enum DCOpt {
+        None,
+        Template,
+        Star,
+        TemplateAndStar,
+    }
+}
+
 pub trait Tester {
     fn is_true_positive(&self, star: &str, sample_time: usize) -> bool;
     fn is_false_positive(&self, star: &str, sample_time: usize) -> bool {
@@ -394,6 +403,15 @@ pub fn parse_args() -> RunInfo {
                 .help("TODO")
                 .takes_value(true)
                 .required_if("tartan_test", "true")
+        )
+        .arg(
+            Arg::with_name("dc_norm")
+                .long("dc_norm")
+                .help("Specifies which (if any) DC normalization should be applied")
+                .takes_value(true)
+                .default_value("none")
+                .possible_values(&DCOpt::variants())
+                .case_insensitive(true)
         )
         .arg(
             Arg::with_name("license")
