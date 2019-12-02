@@ -1,3 +1,5 @@
+use crate::cli::DCNorm;
+
 use serde_derive::Deserialize;
 use std::fs;
 use std::io::Read;
@@ -26,7 +28,7 @@ pub struct Templates {
     pub pre_fft: bool,
 }
 
-pub fn parse_template_file(file_name: String) -> Templates {
+pub fn parse_template_file(file_name: String, dc_norm: DCNorm) -> Templates {
     let contents = fs::read_to_string(file_name)
         .expect("Failed to read Templates TOML file");
 
@@ -77,8 +79,21 @@ pub fn parse_template_file(file_name: String) -> Templates {
                         // NOTE Remove DC constant of template to focus on signal
                         //      - This is very important and will lead to false
                         //        detection or searching for the wrong signal
-                        let template_mean = AF::mean(&template, 0);
-                        let template = AF::sub(&template, &template_mean, false);
+                        let template = match dc_norm {
+                            DCNorm::MeanRemoveTemplate |
+                            DCNorm::MeanRemoveTemplateAndStar |
+                            DCNorm::HistMeanRemoveStarAndTemplate |
+                            DCNorm::NormAtZeroStarAndMeanRemoveTemplate => {
+                                let template_mean = AF::mean(&template, 0);
+                                AF::sub(&template, &template_mean, false)
+                            }
+                            DCNorm::NormAtZeroTemplate |
+                            DCNorm::NormAtZeroTemplateAndStar |
+                            DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate => {
+                                template // TODO
+                            }
+                            _ => template
+                        };
 
                         let fft_bs = AF::fft(&template, 1.0, max_len as i64);
                         let temp = AF::rows(&fft_bs, 0, real_len as u64);

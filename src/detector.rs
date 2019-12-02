@@ -7,7 +7,7 @@ use crate::template::Templates;
 //use crate::utils::inner_product;
 use crate::filter::inner_product;
 use crate::utils::uid_to_t0_tp;
-use crate::cli::Tester;
+use crate::tester::Tester;
 
 use colored::*;
 use std::collections::HashMap;
@@ -123,6 +123,7 @@ impl Detector {
                     &windows,
                     self.detector_opts.noise_stddev,
                     true,
+                    self.detector_opts.dc_norm,
                     200,
                     200,
                 )

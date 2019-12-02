@@ -2,6 +2,7 @@ use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
 
+use crate::cli::DCNorm;
 use crate::template::*;
 use crate::filter_utils::*;
 
@@ -14,6 +15,7 @@ pub fn inner_product(
     // [ ] TODO assume always on after template read
     //  - refactor out
     _pre_fft: bool,
+    dc_norm: DCNorm,
     // [ ] TODO refactor into template instant.
     _template_group_len: usize,
     signal_group_len: usize,
@@ -23,7 +25,26 @@ pub fn inner_product(
         let (signals, num_stars, signal_max_len) = prep_signals(signals, WindowFunc::Rectangle);
 
         let stars = prep_stars(&signals[..], num_stars, signal_max_len);
-        //let stars = stars_dc_removal(&stars, signal_max_len);
+
+        let stars = match dc_norm {
+            DCNorm::MeanRemoveStar |
+            DCNorm::MeanRemoveTemplateAndStar |
+            DCNorm::NormAtZeroTemplateAndMeanRemoveStar => {
+                stars_dc_removal(&stars, signal_max_len)
+            }
+            DCNorm::NormAtZeroStar |
+            DCNorm::NormAtZeroTemplateAndStar |
+            DCNorm::NormAtZeroStarAndMeanRemoveTemplate => {
+                stars // TODO
+            }
+            DCNorm::HistMeanRemoveStar |
+            DCNorm::HistMeanRemoveStarAndTemplate |
+            DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate => {
+                stars // TODO
+            }
+            _ => stars
+        };
+
         let stars = stars_fft(&stars, templates[0].fft_len, templates[0].max_len);
 
         // [ ] TODO work on making right grouping

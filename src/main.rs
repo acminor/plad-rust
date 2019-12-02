@@ -44,6 +44,7 @@ mod toml_star;
 mod utils;
 mod filter;
 mod filter_utils;
+mod tester;
 
 use async_utils::{twin_barrier, TwinBarrier};
 use cli::*;
