@@ -8,6 +8,7 @@ use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
 
 use ring_buffer::RingBuffer;
+use crate::cyclic_queue::{CyclicQueue, CyclicQueueInterface};
 
 arg_enum! {
     #[derive(Clone)]
@@ -143,7 +144,7 @@ pub fn stars_norm_at_zero(stars: &AF_Array<f32>, signal_max_len: usize) -> AF_Ar
 
 struct HistoricalMeanEntry {
     prev_sum: f32,
-    prev_means: RingBuffer<f32>,
+    prev_means: CyclicQueue<f32>,
     has_finished_startup: bool,
     next_point: usize,
 }
@@ -152,7 +153,7 @@ impl HistoricalMeanEntry {
     fn new(capacity: usize) -> HistoricalMeanEntry {
         HistoricalMeanEntry {
             prev_sum: 0.0,
-            prev_means: RingBuffer::with_capacity(capacity),
+            prev_means: CyclicQueue::new(capacity),
             has_finished_startup: false,
             next_point: 0,
         }
@@ -181,7 +182,7 @@ lazy_static!{
 pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String],
     //stars: &[Vec<f32>], star_names: &[String],
                                      signal_max_len: usize, min_time: usize,
-                                     max_time: usize, current_time: usize) -> AF_Array<f32> {
+                                     delta_time: usize, current_time: usize) -> AF_Array<f32> {
     // Borrow for WHOLE function as inner_product is only called in a single threaded fashion
     let mut historical_means = historical_means_global.lock().unwrap();
 
@@ -208,34 +209,36 @@ pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String
         .collect::<Vec<f32>>();
     */
 
-    star_names
+    let adjustment_factors = star_names
         .iter()
         .zip(stars_means.iter())
-        .for_each(|(name, mean)| {
+        .map(|(name, mean)| {
             if !historical_means.contains_key(name) {
                 historical_means.insert(name.to_string(),
-                                        HistoricalMeanEntry::new(max_time+min_time));
+                                        HistoricalMeanEntry::new(delta_time+min_time));
             }
 
             let mut data = historical_means
                 .get_mut(name)
                 .expect("historical mean removal issue with get_mut (shouldn't happen)");
 
-            data.prev_means.push(*mean);
-
-            if data.next_point < max_time+min_time {
+            if data.next_point < min_time {
                 data.next_point += 1;
             }
-        });
+
+            data.prev_means.push(*mean)
+        }).collect::<Vec<Option<f32>>>();
 
     let stars_means = star_names
         .iter()
-        .map(|name| {
+        .zip(adjustment_factors.iter())
+        .map(|(name, adjustment_factor)| {
             let mut data = historical_means
                 .get_mut(name)
                 .expect("historical mean removal issue with get (shouldn't happen)");
 
-            let mut adjustment_factor = 0.0;
+            // make sure the removed value is considered as negative (subtraction)
+            let mut adjustment_factor = adjustment_factor.map(|val| -val).unwrap_or(0.0);
 
             // makes sure the historical mean window is kept small
             // - subtract min_time to
@@ -249,22 +252,19 @@ pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String
             // data only consists of historic data (operate normally)
             if data.prev_means.len() >= min_time && data.has_finished_startup {
                 adjustment_factor +=
-                    data.prev_means.get_relative(data.next_point).unwrap(); // get current point
+                    data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
             } // data only consists of non-historic startup data; except first point (leave startup)
-            else if data.prev_means.len() >= min_time {
-                //data.next_point = 1;
+            else if data.prev_means.len() > min_time {
+                data.next_point = 1;
                 data.prev_sum = 0.0;
                 data.has_finished_startup = true;
 
                 adjustment_factor +=
-                    data.prev_means.get_relative(
-                        data.next_point).unwrap(); // get current point
+                    data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
             } // data only consists of non-historic startup data (operate startup)
             else {
                adjustment_factor +=
-                    data.prev_means.get_relative(
-                        data.prev_means.len() - data.next_point).unwrap(); // get current point
-                   //data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
+                   data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
             }
 
             println!("Last clause with np {}, cp {}, af {}, new_mean {}, dp {}",
@@ -279,11 +279,7 @@ pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String
 
             data.prev_sum += adjustment_factor;
 
-            if data.has_finished_startup {
-                data.prev_sum / (data.next_point - (min_time - 1)) as f32 // here next_point can represent window length
-            } else {
-                data.prev_sum / data.next_point as f32 // here next_point can represent window length
-            }
+            data.prev_sum / data.next_point as f32 // here next_point can represent window length
         }).collect::<Vec<f32>>();
 
     println!("Means {:?}", stars_means);
@@ -686,7 +682,7 @@ mod tests {
             let act_stars = prep_stars(&act_stars, num_stars, max_len);
 
             let act_stars = stars_historical_mean_removal(&act_stars, &["blah".to_string()],
-                                                          max_len, 11, 10, i);
+                                                          max_len, 10, 10, i);
             let act_stars = af_to_vec1d(&act_stars);
 
             // all of my calculations were done to 3 significant places and then rounded

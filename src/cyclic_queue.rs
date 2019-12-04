@@ -10,7 +10,8 @@ pub trait CyclicQueueInterface {
     fn get_relative(&self, i: usize) -> Option<&Self::VAL_TYPE>;
 }
 
-struct CyclicQueue<T> {
+#[derive(Debug)]
+pub struct CyclicQueue<T> {
     data: Vec<T>,
     len: usize,
     cap: usize,
