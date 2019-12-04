@@ -29,6 +29,7 @@ static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 mod async_utils;
 pub mod cli; // pub for documentation purposes
+pub mod cyclic_queue;
 mod dat_star;
 mod detector;
 mod gwac_reader;
