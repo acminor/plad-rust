@@ -7,6 +7,8 @@ use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
 
+use ring_buffer::RingBuffer;
+
 arg_enum! {
     #[derive(Clone)]
     #[allow(dead_code)]
@@ -52,7 +54,7 @@ pub fn prep_signals(signals: &[Vec<f32>], window_type: WindowFunc) -> (Vec<f32>,
         .into_iter()
         .flat_map(|mut signal| {
             let len = signal.len();
-            signal = stddev_outlier_removal(signal);
+            //signal = stddev_outlier_removal(signal);
             //signal = nuttall_window(signal);
             //signal = triangle_window(signal);
 
@@ -140,10 +142,25 @@ pub fn stars_norm_at_zero(stars: &AF_Array<f32>, signal_max_len: usize) -> AF_Ar
 }
 
 struct HistoricalMeanEntry {
+    prev_sum: f32,
+    prev_means: RingBuffer<f32>,
+    has_finished_startup: bool,
+    next_point: usize,
+}
+
+impl HistoricalMeanEntry {
+    fn new(capacity: usize) -> HistoricalMeanEntry {
+        HistoricalMeanEntry {
+            prev_sum: 0.0,
+            prev_means: RingBuffer::with_capacity(capacity),
+            has_finished_startup: false,
+            next_point: 0,
+        }
+    }
 }
 
 lazy_static!{
-    static ref historical_means_global: Mutex<HashMap<String, Vec<f32>>>
+    static ref historical_means_global: Mutex<HashMap<String, HistoricalMeanEntry>>
         = Mutex::new(HashMap::new());
 }
 
@@ -162,6 +179,7 @@ lazy_static!{
 ///
 /// NOTE: min/max_time should not change throughout the run
 pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String],
+    //stars: &[Vec<f32>], star_names: &[String],
                                      signal_max_len: usize, min_time: usize,
                                      max_time: usize, current_time: usize) -> AF_Array<f32> {
     // Borrow for WHOLE function as inner_product is only called in a single threaded fashion
@@ -173,49 +191,104 @@ pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String
         stars,
         0,
     );
+
     let stars_means = af_to_vec1d(&stars_means);
+    println!("New Means: {:?}", stars_means);
+
+    /*
+    let stars_means = stars
+        .iter()
+        .map(|star| {
+            let mean = star
+                .iter()
+                .sum();
+
+            mean / star.len()
+        })
+        .collect::<Vec<f32>>();
+    */
 
     star_names
         .iter()
         .zip(stars_means.iter())
         .for_each(|(name, mean)| {
             if !historical_means.contains_key(name) {
-                historical_means.insert(name.to_string(), Vec::new());
+                historical_means.insert(name.to_string(),
+                                        HistoricalMeanEntry::new(max_time+min_time));
             }
 
-            let mut data: &mut Vec<f32> = historical_means
+            let mut data = historical_means
                 .get_mut(name)
                 .expect("historical mean removal issue with get_mut (shouldn't happen)");
 
-            // [ ] TODO make a commandline parameter (make based on window length???)
-            // -- maybe make a running length instead???
-            // makes sure the historical mean window is kept small
-            if data.len() > max_time {
-                data.remove(0);
-            }
+            data.prev_means.push(*mean);
 
-            data.push(*mean);
+            if data.next_point < max_time+min_time {
+                data.next_point += 1;
+            }
         });
 
     let stars_means = star_names
         .iter()
         .map(|name| {
-            let means = historical_means
-                .get(name)
+            let mut data = historical_means
+                .get_mut(name)
                 .expect("historical mean removal issue with get (shouldn't happen)");
 
-            // [ ] TODO make more efficient with running alg.
-            let mean: f32 =
-                if means.len() < min_time {
-                    means.iter().sum()
-                } else {
-                    means[..means.len()-min_time].iter().sum()
-                };
+            let mut adjustment_factor = 0.0;
 
-            let mean = mean / means.len() as f32;
+            // makes sure the historical mean window is kept small
+            // - subtract min_time to
+            // -- i.e. that the data averaged is max_time window long
+            // - total storage space = max_time + min_time
+            //if data.prev_means.len() as i64 - min_time as i64 > max_time as i64 {
+            //    // remove oldest
+            //    adjustment_factor -= data.prev_means.remove(0);
+            //}
 
-            mean
+            // data only consists of historic data (operate normally)
+            if data.prev_means.len() >= min_time && data.has_finished_startup {
+                adjustment_factor +=
+                    data.prev_means.get_relative(data.next_point).unwrap(); // get current point
+            } // data only consists of non-historic startup data; except first point (leave startup)
+            else if data.prev_means.len() >= min_time {
+                //data.next_point = 1;
+                data.prev_sum = 0.0;
+                data.has_finished_startup = true;
+
+                adjustment_factor +=
+                    data.prev_means.get_relative(
+                        data.next_point).unwrap(); // get current point
+            } // data only consists of non-historic startup data (operate startup)
+            else {
+               adjustment_factor +=
+                    data.prev_means.get_relative(
+                        data.prev_means.len() - data.next_point).unwrap(); // get current point
+                   //data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
+            }
+
+            println!("Last clause with np {}, cp {}, af {}, new_mean {}, dp {}",
+                     data.next_point, data.next_point - 1, adjustment_factor,
+                     (data.prev_sum + adjustment_factor)/data.next_point as f32,
+                     data.prev_means.get_relative(data.prev_means.len() - (data.next_point))
+                     .unwrap());
+            println!("Buffer: {:?}", data.prev_means);
+            println!("Buffer np: {:?}", data.prev_means.get_relative(data.next_point));
+            println!("Buffer cp: {:?}", data.prev_means.get_relative(data.next_point - 1));
+            println!("Buffer cp-1: {:?}", data.prev_means.get_relative(data.next_point - 2));
+
+            data.prev_sum += adjustment_factor;
+
+            if data.has_finished_startup {
+                data.prev_sum / (data.next_point - (min_time - 1)) as f32 // here next_point can represent window length
+            } else {
+                data.prev_sum / data.next_point as f32 // here next_point can represent window length
+            }
         }).collect::<Vec<f32>>();
+
+    println!("Means {:?}", stars_means);
+
+    //let stars = prep_stars(&stars[..], num_stars, signal_max_len);
 
     let stars_means = AF_Array::new(
         &stars_means[..],
@@ -228,6 +301,7 @@ pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String
         ),
     );
 
+    //AF::sub(&stars, &stars_means, false)
     AF::sub(stars, &stars_means, false)
 }
 
@@ -508,6 +582,119 @@ mod tests {
         exp_stars.iter().zip(act_stars.iter()).for_each(|(e, a)| {
             assert_abs_diff_eq!(e, a, epsilon = std::f32::EPSILON);
         });
+    }
+
+    #[test]
+    fn test_stars_historical_mean_removal() {
+        init_af();
+
+        let star_windows: Vec<Vec<f32>> = vec!{
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 1.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.583
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 2.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.667
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 3.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.750
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 4.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.833
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 5.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.917
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 6.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 1.000
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 7.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 1.083
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 8.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 1.167
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 9.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 1.250
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 1.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.625
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 2.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.708
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 3.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.792
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 4.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.875
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 5.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.958
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 6.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 1.042
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 7.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 1.125
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 8.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 1.208
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 9.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 1.292
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 1.7, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.642
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 2.7, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.725
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 3.7, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1}, // mean: 0.808
+        };
+
+        let star_means: Vec<f32> = vec!{
+            0.583, 0.667, 0.750, 0.833, 0.917, 1.000, 1.083, 1.167, 1.250,
+            0.625, 0.708, 0.792, 0.875, 0.958, 1.042, 1.125, 1.208, 1.292,
+            0.642, 0.725, 0.808
+        };
+
+        let exp_star_windows: Vec<Vec<f32>> = vec!{
+            // first stage (average of averages)
+            vec!{-0.583,  0.417, -0.083,  0.117,  0.117,  0.417, -0.083,  0.217,
+                 0.217,  0.117, -0.383, -0.483}, // mean: 0.583
+            vec!{-0.625,  0.375, -0.125,  0.075,  0.075,  1.375, -0.125,  0.175,
+                 0.175,  0.075, -0.425, -0.525}, // mean: 0.667
+            vec!{-0.66666667,  0.33333333, -0.16666667,  0.03333333,  0.03333333,
+                 2.33333333, -0.16666667,  0.13333333,  0.13333333,  0.03333333,
+                 -0.46666667, -0.56666667}, // mean: 0.750
+            vec!{-0.70825,  0.29175, -0.20825, -0.00825, -0.00825,  3.29175,
+                 -0.20825,  0.09175,  0.09175, -0.00825, -0.50825, -0.60825}, // mean: 0.833
+            vec!{-0.75,  0.25, -0.25, -0.05, -0.05,  4.25, -0.25,  0.05,  0.05,
+                 -0.05, -0.55, -0.65}, // mean: 0.917
+            vec!{-0.79166667,  0.20833333, -0.29166667, -0.09166667, -0.09166667,
+                 5.20833333, -0.29166667,  0.00833333,  0.00833333, -0.09166667,
+                 -0.59166667, -0.69166667}, // mean: 1.000
+            vec!{-0.83328571,  0.16671429, -0.33328571, -0.13328571, -0.13328571,
+                 6.16671429, -0.33328571, -0.03328571, -0.03328571, -0.13328571,
+                 -0.63328571, -0.73328571}, // mean: 1.083
+            vec!{-0.875,  0.125, -0.375, -0.175, -0.175,  7.125, -0.375, -0.075,
+                 -0.075, -0.175, -0.675, -0.775}, // mean: 1.167
+            vec!{-0.91666667,  0.08333333, -0.41666667, -0.21666667, -0.21666667,
+                 8.08333333, -0.41666667, -0.11666667, -0.11666667, -0.21666667,
+                 -0.71666667, -0.81666667}, // mean: 1.250
+            vec!{-0.8875,  0.1125, -0.3875, -0.1875, -0.1875,  0.6125, -0.3875,
+                 -0.0875, -0.0875, -0.1875, -0.6875, -0.7875}, // mean: 0.625
+            // transition to second stage (restart average of averages)
+            vec!{-0.583,  0.417, -0.083,  0.117,  0.117,  1.917, -0.083,  0.217,
+                 0.217,  0.117, -0.383, -0.483}, // mean: 0.708
+            vec!{-0.625,  0.375, -0.125,  0.075,  0.075,  2.875, -0.125,  0.175,
+                 0.175,  0.075, -0.425, -0.525}, // mean: 0.792
+            vec!{-0.66666667,  0.33333333, -0.16666667,  0.03333333,  0.03333333,
+                 3.83333333, -0.16666667,  0.13333333,  0.13333333,  0.03333333,
+                 -0.46666667, -0.56666667}, // mean: 0.875
+            vec!{-0.70825,  0.29175, -0.20825, -0.00825, -0.00825,  4.79175,
+                 -0.20825,  0.09175,  0.09175, -0.00825, -0.50825, -0.60825}, // mean: 0.958
+            vec!{-0.75,  0.25, -0.25, -0.05, -0.05,  5.75, -0.25,  0.05,  0.05,
+                 -0.05, -0.55, -0.65}, // mean: 1.042
+            vec!{-0.79166667,  0.20833333, -0.29166667, -0.09166667, -0.09166667,
+                 6.70833333, -0.29166667,  0.00833333,  0.00833333, -0.09166667,
+                 -0.59166667, -0.69166667}, // mean: 1.125
+            vec!{-0.83328571,  0.16671429, -0.33328571, -0.13328571, -0.13328571,
+                 7.66671429, -0.33328571, -0.03328571, -0.03328571, -0.13328571,
+                 -0.63328571, -0.73328571}, // mean: 1.208
+            vec!{-0.875,  0.125, -0.375, -0.175, -0.175,  8.625, -0.375, -0.075,
+                 -0.075, -0.175, -0.675, -0.775}, // mean: 1.292
+            vec!{-0.91666667,  0.08333333, -0.41666667, -0.21666667, -0.21666667,
+                 0.78333333, -0.41666667, -0.11666667, -0.11666667, -0.21666667,
+                 -0.71666667, -0.81666667}, // mean: 0.642
+            vec!{-0.8875,  0.1125, -0.3875, -0.1875, -0.1875,  1.8125, -0.3875,
+                 -0.0875, -0.0875, -0.1875, -0.6875, -0.7875}, // mean: 0.725
+            // cross transition point and start shifting out values
+            // (i.e. don't include 0.583 in calculation)
+            vec!{-0.9,  0.1, -0.4, -0.2, -0.2,  2.8, -0.4, -0.1, -0.1, -0.2, -0.7,
+                 -0.8}, // mean: 0.808
+        };
+
+        let max_len = 12;
+        let num_windows = 21;
+        let num_stars = 1;
+        for i in 0..num_windows {
+            println!("Checking star window {}", i);
+            println!("act stars {:?}", star_windows[i].clone());
+            let act_stars = prep_signals(&[star_windows[i].clone()], WindowFunc::Rectangle).0;
+            println!("act stars {:?}", act_stars);
+            let act_stars = prep_stars(&act_stars, num_stars, max_len);
+
+            let act_stars = stars_historical_mean_removal(&act_stars, &["blah".to_string()],
+                                                          max_len, 11, 10, i);
+            let act_stars = af_to_vec1d(&act_stars);
+
+            // all of my calculations were done to 3 significant places and then rounded
+            // thus, we use 0.001 as the epsilon
+            exp_star_windows[i].iter().zip(act_stars.iter()).for_each(|(e, a)| {
+                assert_abs_diff_eq!(e, a, epsilon = 0.001);
+            });
+        }
     }
 
     #[test]

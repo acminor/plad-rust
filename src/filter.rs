@@ -27,6 +27,7 @@ pub fn inner_product(
 ) -> Vec<f32> {
     let mut res: Vec<f32> = Vec::new();
     for signals in signals.chunks(signal_group_len) {
+        let original_signals = signals;
         let (signals, num_stars, signal_max_len) = prep_signals(signals, WindowFunc::Rectangle);
 
         let stars = prep_stars(&signals[..], num_stars, signal_max_len);
@@ -47,6 +48,8 @@ pub fn inner_product(
             DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate => {
                 let min_time = 30;
                 let max_time = 120;
+                //stars_historical_mean_removal(&original_signals[..], signal_names, signal_max_len,
+                //                              min_time, max_time, current_time)
                 stars_historical_mean_removal(&stars, signal_names, signal_max_len,
                                               min_time, max_time, current_time)
             }
