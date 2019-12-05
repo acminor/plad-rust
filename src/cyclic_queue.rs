@@ -42,6 +42,8 @@ impl<T> CyclicQueueInterface for CyclicQueue<T> {
         self.len
     }
 
+    // From a naming decision used by the ring_buffer
+    // although I actual implement the interface correctly
     fn get_relative(&self, i: usize) -> Option<&T> {
         if i >= self.len {
             None

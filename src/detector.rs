@@ -141,8 +141,13 @@ impl Detector {
                 self.detector_opts.noise_stddev,
                 true,
                 self.detector_opts.dc_norm,
-                200,
-                200,
+                // [ ] FIXME XXX had to increase but wrong logic is affecting results
+                // - quick visual test, reduce number and run on constant stars
+                //   - very easy to see the jumps and issues
+                //   - also could add logging at transition point
+                //     to historical mean removal to see other issues
+                2000,
+                2000,
             ));
 
             let ip = match ip {

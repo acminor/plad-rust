@@ -7,7 +7,6 @@ use arrayfire as AF;
 use arrayfire::Array as AF_Array;
 use arrayfire::Dim4 as AF_Dim4;
 
-use ring_buffer::RingBuffer;
 use crate::cyclic_queue::{CyclicQueue, CyclicQueueInterface};
 
 arg_enum! {
@@ -21,14 +20,14 @@ arg_enum! {
     }
 }
 
-pub fn prep_signals(signals: &[Vec<f32>], window_type: WindowFunc) -> (Vec<f32>, usize, usize) {
-    let num_stars = signals.len();
-    let signal_max_len = signals
-        .iter()
-        .map(|signal| signal.len())
-        .max()
-        .expect("Problem getting the max signal length.");
+pub fn outlier_removal_stars(signals: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
+    signals
+        .into_iter()
+        .map(|signal| stddev_outlier_removal(signal))
+        .collect::<Vec<Vec<f32>>>()
+}
 
+pub fn window_signals(signals: Vec<Vec<f32>>, window_type: WindowFunc) -> Vec<Vec<f32>> {
     let window_func = match window_type {
         WindowFunc::Nuttall => nuttall_window,
         WindowFunc::Triangle => triangle_window,
@@ -50,17 +49,29 @@ pub fn prep_signals(signals: &[Vec<f32>], window_type: WindowFunc) -> (Vec<f32>,
     // See here for an analysis of zero padding
     // - http://www.ni.com/tutorial/4880/en/
     let signals = signals
-        .iter()
-        .cloned()
         .into_iter()
-        .flat_map(|mut signal| {
+        .map(|signal| {
+            window_func(signal)
+        })
+        .collect::<Vec<Vec<f32>>>();
+
+    signals
+}
+
+pub fn stars_to_af(signals: Vec<Vec<f32>>)
+                   -> (AF_Array<f32>, usize, usize) {
+    let num_stars = signals.len();
+    let signal_max_len = signals
+        .iter()
+        .map(|signal| signal.len())
+        .max()
+        .expect("Problem getting the max signal length.");
+
+
+    let signals = signals
+        .into_iter()
+        .flat_map(|signal| {
             let len = signal.len();
-            //signal = stddev_outlier_removal(signal);
-            //signal = nuttall_window(signal);
-            //signal = triangle_window(signal);
-
-            signal = window_func(signal);
-
             signal.into_iter().chain(
                 std::iter::repeat(0.0f32)
                     .take(signal_max_len - len),
@@ -68,17 +79,12 @@ pub fn prep_signals(signals: &[Vec<f32>], window_type: WindowFunc) -> (Vec<f32>,
         })
         .collect::<Vec<f32>>();
 
-    (signals, num_stars, signal_max_len)
-}
-
-pub fn prep_stars(signals: &[f32], num_stars:usize, signal_max_len: usize) -> AF_Array<f32> {
     let stars = AF_Array::new(
         &signals[..],
-        // [ ] TODO 2nd term should be # of stars???
         AF_Dim4::new(&[signal_max_len as u64, num_stars as u64, 1, 1]),
     );
 
-    stars
+    (stars, num_stars, signal_max_len)
 }
 
 pub fn af_to_vec1d<T>(arr: &AF_Array<T>) -> Vec<T> where
@@ -104,48 +110,50 @@ pub fn af_to_vec2d<T>(arr: &AF_Array<T>, dim_1_len: usize) -> Vec<Vec<T>> where
     temp.chunks(dim_1_len).map(|chunk| Vec::from(chunk)).collect()
 }
 
-pub fn stars_dc_removal(stars: &AF_Array<f32>, signal_max_len: usize) -> AF_Array<f32> {
+pub fn stars_dc_removal(stars: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
     // NOTE Remove DC constant of template to focus on signal
     //      - This is very important and will lead to false
     //        detection or searching for the wrong signal
-    let stars_means = AF::mean(
-        stars,
-        0,
-    );
-    let stars_means = AF::tile(
-        &stars_means,
-        AF_Dim4::new(
-            &[signal_max_len as u64, 1, 1, 1]
-        ),
-    );
+    let stars_means = means(&stars);
 
-    AF::sub(stars, &stars_means, false)
+    subtract_means(stars, &stars_means)
 }
 
 /// Normalizes stars to have their minimum value at zero.
 ///
 /// Algorithm: Subtract min from signal.
 /// - Raises or lowers DC depending on if signal minimum is above or below zero.
-pub fn stars_norm_at_zero(stars: &AF_Array<f32>, signal_max_len: usize) -> AF_Array<f32> {
-    let star_mins = AF::min(
-        stars,
-        0,
-    );
+pub fn stars_norm_at_zero(stars: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
+    let star_mins = stars
+        .iter()
+        .map(|star| {
+            star.iter()
+                .fold(std::f32::MAX, |acc, &val| {
+                    if val < acc {
+                        val
+                    } else {
+                        acc
+                    }
+                })
+        })
+        .collect::<Vec<f32>>();
 
-    let stars_adjust = AF::tile(
-        &star_mins,
-        AF_Dim4::new(
-            &[signal_max_len as u64, 1, 1, 1]
-        ),
-    );
+    subtract_means(stars, &star_mins)
+}
 
-    AF::sub(stars, &stars_adjust, false)
+#[derive(Clone, Copy)]
+enum HistoricalMeanEntryStage {
+    /// data only consists of non-historic startup data (operate startup)
+    Startup,
+    PostStartupWarmup,
+    /// data only consists of historic data (operate normally)
+    PostStartup,
 }
 
 struct HistoricalMeanEntry {
     prev_sum: f32,
     prev_means: CyclicQueue<f32>,
-    has_finished_startup: bool,
+    stage: HistoricalMeanEntryStage,
     next_point: usize,
 }
 
@@ -154,7 +162,7 @@ impl HistoricalMeanEntry {
         HistoricalMeanEntry {
             prev_sum: 0.0,
             prev_means: CyclicQueue::new(capacity),
-            has_finished_startup: false,
+            stage: HistoricalMeanEntryStage::Startup,
             next_point: 0,
         }
     }
@@ -163,6 +171,34 @@ impl HistoricalMeanEntry {
 lazy_static!{
     static ref historical_means_global: Mutex<HashMap<String, HistoricalMeanEntry>>
         = Mutex::new(HashMap::new());
+}
+
+fn means(signals: &[Vec<f32>]) -> Vec<f32> {
+    signals
+        .iter()
+        .map(|signal| {
+            let mean: f32 = signal
+                .iter()
+                .sum();
+
+            mean / signal.len() as f32
+        })
+        .collect::<Vec<f32>>()
+}
+
+fn subtract_means(signals: Vec<Vec<f32>>, means: &Vec<f32>) -> Vec<Vec<f32>> {
+    signals
+        .into_iter()
+        .zip(means.iter())
+        .map(|(signal, mean)| {
+            signal
+                .into_iter()
+                .map(|val| {
+                    val - mean
+                })
+                .collect::<Vec<f32>>()
+        })
+        .collect()
 }
 
 /// Keeps track of historical means and updates stars accordingly
@@ -179,35 +215,16 @@ lazy_static!{
 /// 4. Subtract historical means from current window means
 ///
 /// NOTE: min/max_time should not change throughout the run
-pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String],
+pub fn stars_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String],
     //stars: &[Vec<f32>], star_names: &[String],
-                                     signal_max_len: usize, min_time: usize,
-                                     delta_time: usize, current_time: usize) -> AF_Array<f32> {
+                                     min_time: usize,
+                                     delta_time: usize, current_time: usize) -> Vec<Vec<f32>> {
     // Borrow for WHOLE function as inner_product is only called in a single threaded fashion
     let mut historical_means = historical_means_global.lock().unwrap();
 
     let num_stars = star_names.len();
 
-    let stars_means = AF::mean(
-        stars,
-        0,
-    );
-
-    let stars_means = af_to_vec1d(&stars_means);
-    println!("New Means: {:?}", stars_means);
-
-    /*
-    let stars_means = stars
-        .iter()
-        .map(|star| {
-            let mean = star
-                .iter()
-                .sum();
-
-            mean / star.len()
-        })
-        .collect::<Vec<f32>>();
-    */
+    let stars_means = means(&stars);
 
     let adjustment_factors = star_names
         .iter()
@@ -222,7 +239,7 @@ pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String
                 .get_mut(name)
                 .expect("historical mean removal issue with get_mut (shouldn't happen)");
 
-            if data.next_point < min_time {
+            if data.next_point < delta_time {//min_time {
                 data.next_point += 1;
             }
 
@@ -249,10 +266,8 @@ pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String
             //    adjustment_factor -= data.prev_means.remove(0);
             //}
 
-            // data only consists of historic data (operate normally)
+            /*
             if data.prev_means.len() >= min_time && data.has_finished_startup {
-                adjustment_factor +=
-                    data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
             } // data only consists of non-historic startup data; except first point (leave startup)
             else if data.prev_means.len() > min_time {
                 data.next_point = 1;
@@ -261,44 +276,51 @@ pub fn stars_historical_mean_removal(stars: &AF_Array<f32>, star_names: &[String
 
                 adjustment_factor +=
                     data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
-            } // data only consists of non-historic startup data (operate startup)
-            else {
-               adjustment_factor +=
-                   data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
             }
+            else {
+               //adjustment_factor +=
+               //    data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
+            }
+            */
 
-            println!("Last clause with np {}, cp {}, af {}, new_mean {}, dp {}",
-                     data.next_point, data.next_point - 1, adjustment_factor,
-                     (data.prev_sum + adjustment_factor)/data.next_point as f32,
-                     data.prev_means.get_relative(data.prev_means.len() - (data.next_point))
-                     .unwrap());
-            println!("Buffer: {:?}", data.prev_means);
-            println!("Buffer np: {:?}", data.prev_means.get_relative(data.next_point));
-            println!("Buffer cp: {:?}", data.prev_means.get_relative(data.next_point - 1));
-            println!("Buffer cp-1: {:?}", data.prev_means.get_relative(data.next_point - 2));
+            match data.stage {
+                HistoricalMeanEntryStage::Startup => {
+                    // Transition to POST_STARTUP
+                    if data.prev_means.len() > min_time {
+                        // NOTE could be useful in testing fix for grouping issue
+                        //     (see FIXME XXX in detector.rs)
+                        //println!("{} trans at {}", name, data.next_point);
+                        data.next_point = 1;
+                        data.prev_sum = 0.0;
+                        data.stage = HistoricalMeanEntryStage::PostStartup;
+
+                        adjustment_factor += // get current point
+                            data.prev_means.get_relative(data.next_point - 1).unwrap();
+                    } else {
+                        // NOTE: for startup for each window only use current windows average
+                        // - helps to avoid issues where upward/downward slopes
+                        //   arbitrarily increase filter output (has been observed)
+                        // multiply by data.next_point b/c dividing that for average
+                        // - ensures only using current average while not adding additional if-stmt
+                        data.prev_sum = data.next_point as f32 *
+                            data.prev_means.get_relative(data.next_point - 1).unwrap();
+                    }
+                }
+                HistoricalMeanEntryStage::PostStartupWarmup => {
+                   // [ ] TODO add additional stage for better transition
+                }
+                HistoricalMeanEntryStage::PostStartup => {
+                    adjustment_factor += // get current point
+                        data.prev_means.get_relative(data.next_point - 1).unwrap();
+                }
+            }
 
             data.prev_sum += adjustment_factor;
 
             data.prev_sum / data.next_point as f32 // here next_point can represent window length
         }).collect::<Vec<f32>>();
 
-    println!("Means {:?}", stars_means);
-
-    //let stars = prep_stars(&stars[..], num_stars, signal_max_len);
-
-    let stars_means = AF_Array::new(
-        &stars_means[..],
-        AF_Dim4::new(&[1 as u64, num_stars as u64, 1, 1]),
-    );
-    let stars_means = AF::tile(
-        &stars_means,
-        AF_Dim4::new(
-            &[signal_max_len as u64, 1, 1, 1]
-        ),
-    );
-
-    //AF::sub(&stars, &stars_means, false)
-    AF::sub(stars, &stars_means, false)
+    subtract_means(stars, &stars_means)
 }
 
 pub fn stars_fft(stars: &AF_Array<f32>, fft_len: usize, fft_half_len: usize) -> AF_Array<Complex<f32>> {
@@ -475,7 +497,7 @@ mod tests {
     }
 
     #[test]
-    fn test_prep_signals() {
+    fn test_window_signals() {
         let num_stars = 3;
         let max_len = 12;
 
@@ -486,14 +508,14 @@ mod tests {
         };
 
         let exp_stars = vec!{
-            0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1,
-            0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1,
-            0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1,
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
         };
 
-        let act_stars = prep_signals(&stars[..], WindowFunc::Rectangle);
+        let act_stars = window_signals(stars, WindowFunc::Rectangle);
 
-        assert_eq!((exp_stars, num_stars, max_len), act_stars);
+        assert_eq!(exp_stars, act_stars);
 
         let num_stars = 3;
         let max_len = 12;
@@ -505,18 +527,59 @@ mod tests {
         };
 
         let exp_stars = vec!{
-            0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1,
-            0.0, 1.0, 0.5, 0.7, 0.7, 0.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1,
-            0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.2,
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 20.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 20.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 20.1},
         };
 
-        let act_stars = prep_signals(&stars[..], WindowFunc::Rectangle);
+        let act_stars = window_signals(stars, WindowFunc::Rectangle);
 
-        assert_eq!((exp_stars, num_stars, max_len), act_stars);
+        assert_eq!(exp_stars, act_stars);
     }
 
     #[test]
-    fn test_prep_stars_and_af_to_vec() {
+    fn test_outlier_removal_stars() {
+        let num_stars = 3;
+        let max_len = 12;
+
+        let stars = vec!{
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+        };
+
+        let exp_stars = vec!{
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+        };
+
+        let act_stars = outlier_removal_stars(stars);
+
+        assert_eq!(exp_stars, act_stars);
+
+        let num_stars = 3;
+        let max_len = 12;
+
+        let stars = vec!{
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 20.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 20.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 20.1},
+        };
+
+        let exp_stars = vec!{
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.5, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.2},
+        };
+
+        let act_stars = outlier_removal_stars(stars);
+
+        assert_eq!(exp_stars, act_stars);
+    }
+
+    #[test]
+    fn test_stars_to_af_and_af_to_vec() {
         init_af();
 
         let num_stars = 3;
@@ -540,8 +603,7 @@ mod tests {
             vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.8, 0.7, 0.2, 0.1},
         };
 
-        let act_stars = prep_signals(&stars[..], WindowFunc::Rectangle).0;
-        let act_stars = prep_stars(&act_stars, num_stars, max_len);
+        let (act_stars, num_stars, max_len) = stars_to_af(stars);
 
         let act_stars_1d = af_to_vec1d(&act_stars);
         let act_stars_2d = af_to_vec2d(&act_stars, max_len);
@@ -569,13 +631,10 @@ mod tests {
             -0.5,  0.5,  0. ,  0.2,  0.2, -0.5,  0. ,  0.3,  0.3,  0.2, -0.3, -0.4,
         };
 
-        let act_stars = prep_signals(&stars[..], WindowFunc::Rectangle).0;
-        let act_stars = prep_stars(&act_stars, num_stars, max_len);
+        let act_stars = stars_dc_removal(stars);
+        let act_stars = act_stars.into_iter().flat_map(|star| star.into_iter());
 
-        let act_stars = stars_dc_removal(&act_stars, max_len);
-        let act_stars = af_to_vec1d(&act_stars);
-
-        exp_stars.iter().zip(act_stars.iter()).for_each(|(e, a)| {
+        exp_stars.into_iter().zip(act_stars).for_each(|(e, a)| {
             assert_abs_diff_eq!(e, a, epsilon = std::f32::EPSILON);
         });
     }
@@ -676,14 +735,13 @@ mod tests {
         let num_stars = 1;
         for i in 0..num_windows {
             println!("Checking star window {}", i);
-            println!("act stars {:?}", star_windows[i].clone());
-            let act_stars = prep_signals(&[star_windows[i].clone()], WindowFunc::Rectangle).0;
-            println!("act stars {:?}", act_stars);
-            let act_stars = prep_stars(&act_stars, num_stars, max_len);
-
-            let act_stars = stars_historical_mean_removal(&act_stars, &["blah".to_string()],
-                                                          max_len, 10, 10, i);
-            let act_stars = af_to_vec1d(&act_stars);
+            let act_stars = stars_historical_mean_removal(vec!{star_windows[i].clone()},
+                                                          &["blah".to_string()],
+                                                          10, 10, i);
+            let act_stars = act_stars
+                .into_iter()
+                .flat_map(|star| star.into_iter())
+                .collect::<Vec<f32>>();
 
             // all of my calculations were done to 3 significant places and then rounded
             // thus, we use 0.001 as the epsilon
@@ -712,13 +770,9 @@ mod tests {
             0.2, 1.5, 1.0, 1.2, 1.2, 0.0, 1.0, 1.3, 1.3, 1.2, 0.7, 0.6,
         };
 
-        let act_stars = prep_signals(&stars[..], WindowFunc::Rectangle).0;
-        let act_stars = prep_stars(&act_stars, num_stars, max_len);
+        let act_stars = stars_norm_at_zero(stars).into_iter().flat_map(|star| star.into_iter());
 
-        let act_stars = stars_norm_at_zero(&act_stars, max_len);
-        let act_stars = af_to_vec1d(&act_stars);
-
-        exp_stars.iter().zip(act_stars.iter()).for_each(|(e, a)| {
+        exp_stars.into_iter().zip(act_stars).for_each(|(e, a)| {
             assert_abs_diff_eq!(e, a, epsilon = std::f32::EPSILON);
         });
     }
@@ -747,8 +801,7 @@ mod tests {
             Complex::new(-0.3, 0.5), Complex::new(-1.47781746, -0.6363961),
         };
 
-        let act_stars = prep_signals(&stars[..], WindowFunc::Rectangle).0;
-        let act_stars = prep_stars(&act_stars, num_stars, max_len);
+        let (act_stars, _, _) = stars_to_af(stars);
         let act_stars = stars_fft(&act_stars, 8, 8/2 - 1);
         let act_stars_1d = af_to_vec1d(&act_stars);
 
@@ -762,8 +815,8 @@ mod tests {
 
         let stars = vec!{
             vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.9},
-            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8},
-            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.9},
+            vec!{0.0, 1.0, 0.5, 0.7, 0.7, 0.0, 0.5, 0.8, 0.9},
         };
 
         let exp_stars_1d: Vec<Complex<f32>> = vec!{
@@ -780,8 +833,7 @@ mod tests {
             Complex::new(-1.26800448, 0.28912205),
         };
 
-        let act_stars = prep_signals(&stars[..], WindowFunc::Rectangle).0;
-        let act_stars = prep_stars(&act_stars, num_stars, max_len);
+        let (act_stars, _, _) = stars_to_af(stars);
         let act_stars = stars_fft(&act_stars, 9, (9-1)/2);
         let act_stars_1d = af_to_vec1d(&act_stars);
 

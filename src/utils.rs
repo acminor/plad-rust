@@ -68,7 +68,7 @@ pub fn debug_plt(data: &[f32], title: &str, _x_range: Option<&Vec<f32>>) {
 }
 
 #[allow(dead_code)]
-pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
+pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32, window_len: usize) {
     let c = inline_python::Context::new();
     python! {
         #![context = &c]
@@ -82,6 +82,11 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
             pickle.dump('data, file)
 
         temp = []
+        // detector does not start output until
+        // we have window length number of points
+        // - shift to line up original data and results
+        for d in  range(0, 'window_len):
+            temp.append(None)
         for d in 'data:
             temp.append(d)
             for i in range(0, 'skip_delta-1):
@@ -101,13 +106,13 @@ pub fn debug_plt_2(data: &[f32], data2: &[f32], title: &str, skip_delta: u32) {
 
         data2 = []
         skip = 16
-        for i in range(0, len('data2), skip):
-            data2.append('data2[i])
-            for i in range(1, skip):
-                data2.append(None)
+        //for i in range(0, len('data2), skip):
+        //   data2.append('data2[i])
+        //   for i in range(1, skip):
+        //       data2.append(None)
         plt.title('title)
         plt.plot(temp, marker="o", ls="")
-        plt.plot(data2, marker="x", ls="")
+        plt.plot('data2, marker="x", ls="")
         //plt.plot(temp2, marker="s", ls="")
         plt.show()
     }

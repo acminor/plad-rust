@@ -331,6 +331,8 @@ async fn main() {
                     data2.get(star_title).expect("Star should be in data2."),
                     star_title,
                     detector_opts.skip_delta,
+                    // use minimum as that is the first starting point
+                    detector_opts.window_length.0,
                 );
             } else {
                 crate::utils::debug_plt(&star_data, star_title, None);

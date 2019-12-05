@@ -27,34 +27,33 @@ pub fn inner_product(
 ) -> Vec<f32> {
     let mut res: Vec<f32> = Vec::new();
     for signals in signals.chunks(signal_group_len) {
-        let original_signals = signals;
-        let (signals, num_stars, signal_max_len) = prep_signals(signals, WindowFunc::Rectangle);
+        let signals = signals.to_vec();
 
-        let stars = prep_stars(&signals[..], num_stars, signal_max_len);
-
-        let stars = match dc_norm {
+        let signals = match dc_norm {
             DCNorm::MeanRemoveStar |
             DCNorm::MeanRemoveTemplateAndStar |
             DCNorm::NormAtZeroTemplateAndMeanRemoveStar => {
-                stars_dc_removal(&stars, signal_max_len)
+                stars_dc_removal(signals)
             }
             DCNorm::NormAtZeroStar |
             DCNorm::NormAtZeroTemplateAndStar |
             DCNorm::NormAtZeroStarAndMeanRemoveTemplate => {
-                stars_norm_at_zero(&stars, signal_max_len)
+                stars_norm_at_zero(signals)
             }
             DCNorm::HistMeanRemoveStar |
             DCNorm::HistMeanRemoveStarAndTemplate |
             DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate => {
                 let min_time = 30;
-                let max_time = 120;
-                //stars_historical_mean_removal(&original_signals[..], signal_names, signal_max_len,
-                //                              min_time, max_time, current_time)
-                stars_historical_mean_removal(&stars, signal_names, signal_max_len,
-                                              min_time, max_time, current_time)
+                let max_duration = 1200;
+                stars_historical_mean_removal(signals, signal_names,
+                                              min_time, max_duration, current_time)
             }
-            _ => stars
+            _ => signals
         };
+
+        let signals = outlier_removal_stars(signals);
+        let signals = window_signals(signals, WindowFunc::Rectangle);
+        let (stars, num_stars, signal_max_len) = stars_to_af(signals);
 
         let stars = stars_fft(&stars, templates[0].fft_len, templates[0].max_len);
 
