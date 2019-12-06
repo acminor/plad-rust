@@ -1,6 +1,6 @@
 #![feature(proc_macro_hygiene)]
 
-#[cfg(test)]
+//#[cfg(test)]
 #[macro_use]
 extern crate approx;
 

@@ -124,19 +124,7 @@ pub fn stars_dc_removal(stars: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
 /// Algorithm: Subtract min from signal.
 /// - Raises or lowers DC depending on if signal minimum is above or below zero.
 pub fn stars_norm_at_zero(stars: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
-    let star_mins = stars
-        .iter()
-        .map(|star| {
-            star.iter()
-                .fold(std::f32::MAX, |acc, &val| {
-                    if val < acc {
-                        val
-                    } else {
-                        acc
-                    }
-                })
-        })
-        .collect::<Vec<f32>>();
+    let star_mins = mins(&stars);
 
     subtract_means(stars, &star_mins)
 }
@@ -155,6 +143,13 @@ struct HistoricalMeanEntry {
     prev_means: CyclicQueue<f32>,
     stage: HistoricalMeanEntryStage,
     next_point: usize,
+    /// for use in adjusting mean by current for warmup stage
+    current_mean: f32,
+    /// for use in adjusting mean by current for warmup stage
+    /// - percentage of mean that should be b/c of current mean
+    current_mean_split: f32,
+    /// for use in transitioning to the final stage
+    counter: usize,
 }
 
 impl HistoricalMeanEntry {
@@ -164,6 +159,9 @@ impl HistoricalMeanEntry {
             prev_means: CyclicQueue::new(capacity),
             stage: HistoricalMeanEntryStage::Startup,
             next_point: 0,
+            current_mean: 0.0,
+            current_mean_split: 0.0,
+            counter: 0,
         }
     }
 }
@@ -186,6 +184,42 @@ fn means(signals: &[Vec<f32>]) -> Vec<f32> {
         .collect::<Vec<f32>>()
 }
 
+fn maxes(signals: &[Vec<f32>]) -> Vec<f32> {
+    let maxes = signals
+        .iter()
+        .map(|star| {
+            star.iter()
+                .fold(std::f32::MIN, |acc, &val| {
+                    if val > acc {
+                        val
+                    } else {
+                        acc
+                    }
+                })
+        })
+        .collect::<Vec<f32>>();
+
+    maxes
+}
+
+fn mins(signals: &[Vec<f32>]) -> Vec<f32> {
+    let mins = signals
+        .iter()
+        .map(|star| {
+            star.iter()
+                .fold(std::f32::MAX, |acc, &val| {
+                    if val < acc {
+                        val
+                    } else {
+                        acc
+                    }
+                })
+        })
+        .collect::<Vec<f32>>();
+
+    mins
+}
+
 fn subtract_means(signals: Vec<Vec<f32>>, means: &Vec<f32>) -> Vec<Vec<f32>> {
     signals
         .into_iter()
@@ -199,6 +233,13 @@ fn subtract_means(signals: Vec<Vec<f32>>, means: &Vec<f32>) -> Vec<Vec<f32>> {
                 .collect::<Vec<f32>>()
         })
         .collect()
+}
+
+#[derive(PartialEq)]
+pub enum HistoricalMeanRunType {
+    Fast, // fast summation O(1)
+    Natural, // natural is the brute force summation algorithm O(N)
+    CheckFastAgainstNatural, // panics if fast and natural differ (after setup phase)
 }
 
 /// Keeps track of historical means and updates stars accordingly
@@ -216,9 +257,9 @@ fn subtract_means(signals: Vec<Vec<f32>>, means: &Vec<f32>) -> Vec<Vec<f32>> {
 ///
 /// NOTE: min/max_time should not change throughout the run
 pub fn stars_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String],
-    //stars: &[Vec<f32>], star_names: &[String],
                                      min_time: usize,
-                                     delta_time: usize, current_time: usize) -> Vec<Vec<f32>> {
+                                     delta_time: usize, current_time: usize,
+                                     run_type: HistoricalMeanRunType) -> Vec<Vec<f32>> {
     // Borrow for WHOLE function as inner_product is only called in a single threaded fashion
     let mut historical_means = historical_means_global.lock().unwrap();
 
@@ -226,10 +267,12 @@ pub fn stars_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String]
 
     let stars_means = means(&stars);
 
-    let adjustment_factors = star_names
+    let mut init_adjustments: HashMap<String, f32> = HashMap::new();
+
+    star_names
         .iter()
         .zip(stars_means.iter())
-        .map(|(name, mean)| {
+        .for_each(|(name, mean)| {
             if !historical_means.contains_key(name) {
                 historical_means.insert(name.to_string(),
                                         HistoricalMeanEntry::new(delta_time+min_time));
@@ -243,19 +286,23 @@ pub fn stars_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String]
                 data.next_point += 1;
             }
 
-            data.prev_means.push(*mean)
-        }).collect::<Vec<Option<f32>>>();
+            let prev_val = data.prev_means.push(*mean);
+
+            let prev_val = prev_val.map(|val| -val).unwrap_or(0.0);
+
+            init_adjustments.insert(name.to_string(), prev_val);
+        });
 
     let stars_means = star_names
         .iter()
-        .zip(adjustment_factors.iter())
-        .map(|(name, adjustment_factor)| {
+        .map(|name| {
             let mut data = historical_means
                 .get_mut(name)
                 .expect("historical mean removal issue with get (shouldn't happen)");
 
             // make sure the removed value is considered as negative (subtraction)
-            let mut adjustment_factor = adjustment_factor.map(|val| -val).unwrap_or(0.0);
+            let mut adjustment_factor = init_adjustments[name];
+            let org_af = init_adjustments[name];
 
             // makes sure the historical mean window is kept small
             // - subtract min_time to
@@ -266,23 +313,6 @@ pub fn stars_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String]
             //    adjustment_factor -= data.prev_means.remove(0);
             //}
 
-            /*
-            if data.prev_means.len() >= min_time && data.has_finished_startup {
-            } // data only consists of non-historic startup data; except first point (leave startup)
-            else if data.prev_means.len() > min_time {
-                data.next_point = 1;
-                data.prev_sum = 0.0;
-                data.has_finished_startup = true;
-
-                adjustment_factor +=
-                    data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
-            }
-            else {
-               //adjustment_factor +=
-               //    data.prev_means.get_relative(data.next_point - 1).unwrap(); // get current point
-            }
-            */
-
             match data.stage {
                 HistoricalMeanEntryStage::Startup => {
                     // Transition to POST_STARTUP
@@ -292,7 +322,7 @@ pub fn stars_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String]
                         //println!("{} trans at {}", name, data.next_point);
                         data.next_point = 1;
                         data.prev_sum = 0.0;
-                        data.stage = HistoricalMeanEntryStage::PostStartup;
+                        data.stage = HistoricalMeanEntryStage::PostStartupWarmup;
 
                         adjustment_factor += // get current point
                             data.prev_means.get_relative(data.next_point - 1).unwrap();
@@ -307,7 +337,26 @@ pub fn stars_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String]
                     }
                 }
                 HistoricalMeanEntryStage::PostStartupWarmup => {
-                   // [ ] TODO add additional stage for better transition
+                    // ensures at least k previous means are averaged to get results
+                    // before switching to "true" averaging
+                    // NOTE: assumes that max_duration is greater than 10 ???
+                    let k = 10;
+                    data.counter += 1;
+
+                    // linear scale down from 100% -> 0% over k length
+                    // - NOTE: abs is to avoid floating accuracy from making
+                    //         current_mean_split < 0.0 at count=k
+                    data.current_mean_split = (data.counter as f32)*(-1.0/k as f32) + 1.0;
+                    data.current_mean = *data.prev_means.get_back().unwrap();
+
+                    if data.counter ==  k {
+                        data.stage = HistoricalMeanEntryStage::PostStartup;
+                        data.current_mean_split = 0.0;
+                        data.current_mean = 0.0;
+                    }
+
+                    adjustment_factor +=  // get current point
+                        data.prev_means.get_relative(data.next_point - 1).unwrap();
                 }
                 HistoricalMeanEntryStage::PostStartup => {
                     adjustment_factor += // get current point
@@ -315,13 +364,121 @@ pub fn stars_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String]
                 }
             }
 
-            data.prev_sum += adjustment_factor;
+            match run_type {
+                HistoricalMeanRunType::Fast => {
+                    data.prev_sum += adjustment_factor;
+                }
+                HistoricalMeanRunType::Natural |
+                HistoricalMeanRunType::CheckFastAgainstNatural => {
+                    let mut prev_sum = 0.0;
+                    for i in 0..data.next_point {
+                        prev_sum += data.prev_means.get_relative(i).unwrap();
+                    }
 
-            data.prev_sum / data.next_point as f32 // here next_point can represent window length
+                    if run_type == HistoricalMeanRunType::CheckFastAgainstNatural {
+                        data.prev_sum += adjustment_factor;
+
+                        match data.stage {
+                            HistoricalMeanEntryStage::PostStartup |
+                            HistoricalMeanEntryStage::PostStartupWarmup => {
+                                assert_abs_diff_eq!(prev_sum, data.prev_sum, epsilon=0.001);
+                            }
+                            _ => {}
+                        }
+                    }
+
+                    data.prev_sum = prev_sum;
+                }
+            }
+
+            // here next_point can represent window length
+            let normalized_mean_a = (data.prev_sum/data.next_point as f32)
+                * (1.0-data.current_mean_split);
+            let normalized_mean_b = data.current_mean*data.current_mean_split;
+
+            normalized_mean_a + normalized_mean_b
         }).collect::<Vec<f32>>();
 
     subtract_means(stars, &stars_means)
 }
+
+/*
+struct MMHistoricalMeanEntry {
+    average_min: f32,
+    min_min: f32,
+    average_max: f32,
+    max_max: f32,
+    mins: CyclicQueue<f32>,
+    maxes: CyclicQueue<f32>,
+}
+
+impl MMHistoricalMeanEntry {
+    fn new(cap: usize) -> MMHistoricalMeanEntry {
+        MMHistoricalMeanEntry {
+            min_min: std::f32::MAX,
+            max_max: std::f32::MIN,
+            average_min: std::f32::MAX,
+            average_max: std::f32::MIN,
+            mins: CyclicQueue::new(cap),
+            maxes: CyclicQueue::new(cap),
+        }
+    }
+}
+
+lazy_static!{
+    static ref historical_min_max_global: Mutex<HashMap<String, MMHistoricalMeanEntry>>
+        = Mutex::new(HashMap::new());
+}
+
+pub fn stars_min_max_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String],
+                                             min_time: usize,
+                                             delta_time: usize, current_time: usize)
+                                             -> Vec<Vec<f32>> {
+    // Borrow for WHOLE function as inner_product is only called in a single threaded fashion
+    let mut historical_min_max = historical_min_max_global.lock().unwrap();
+
+    let num_stars = star_names.len();
+    let stars_mins = mins(&stars);
+    let stars_maxes = maxes(&stars);
+
+    star_names
+        .iter()
+        .zip(stars_mins
+             .iter()
+             .zip(stars_maxes.iter())
+        )
+        .for_each(|(name, (min, max))| {
+            if !historical_min_max.contains_key(name) {
+                historical_min_max.insert(name.to_string(),
+                                          MMHistoricalMeanEntry::new());
+            }
+
+            let mut data = historical_min_max
+                .get_mut(name)
+                .expect("historical mean removal issue with get_mut (shouldn't happen)");
+
+            if *min < data.min {
+                data.min = *min;
+            }
+
+            if *max > data.max {
+                data.max = *max;
+            }
+        });
+
+    let stars_means = star_names
+        .iter()
+        .map(|name| {
+            let mut data = historical_min_max
+                .get_mut(name)
+                .expect("historical mean removal issue with get (shouldn't happen)");
+
+            data.min + (data.max - data.min) / 2.0
+        }).collect::<Vec<f32>>();
+
+    subtract_means(stars, &stars_means)
+}
+*/
 
 pub fn stars_fft(stars: &AF_Array<f32>, fft_len: usize, fft_half_len: usize) -> AF_Array<Complex<f32>> {
     let stars = {

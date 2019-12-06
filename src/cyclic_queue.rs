@@ -8,6 +8,7 @@ pub trait CyclicQueueInterface {
     fn len(&self) -> usize;
     fn push(&mut self, val: Self::VAL_TYPE) -> Option<Self::VAL_TYPE>;
     fn get_relative(&self, i: usize) -> Option<&Self::VAL_TYPE>;
+    fn get_back(&self) -> Option<&Self::VAL_TYPE>;
 }
 
 #[derive(Debug)]
@@ -19,6 +20,11 @@ pub struct CyclicQueue<T> {
     back: usize,
 }
 
+pub struct CyclicQueueIterator<'a, T> {
+    data: &'a CyclicQueue<T>,
+    i: usize,
+}
+
 impl<T: Default + Clone> CyclicQueue<T> {
     pub fn new(cap: usize) -> CyclicQueue<T> {
         CyclicQueue{
@@ -28,6 +34,23 @@ impl<T: Default + Clone> CyclicQueue<T> {
             front: 0,
             back: 0,
         }
+    }
+
+    pub fn iter<'a>(&'a self) -> CyclicQueueIterator<'a, T> {
+        CyclicQueueIterator {
+            data: &self,
+            i: 0,
+        }
+    }
+}
+
+impl<'a, T> Iterator for CyclicQueueIterator<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+        self.i += 1;
+
+        self.data.get_relative(self.i)
     }
 }
 
@@ -52,6 +75,14 @@ impl<T> CyclicQueueInterface for CyclicQueue<T> {
         }
     }
 
+    fn get_back(&self) -> Option<&T> {
+        if self.len == 0 {
+            None
+        } else {
+            Some(&self.data[self.back])
+        }
+    }
+
     fn push(&mut self, val: T) -> Option<T> {
         if self.len == 0 { // special case for empty buffer
             self.len+=1;
@@ -66,7 +97,7 @@ impl<T> CyclicQueueInterface for CyclicQueue<T> {
             }
 
             if self.front == self.back {
-                self.front+=1;
+                self.front = (self.front + 1) % self.cap;
 
                 let temp = mem::replace(&mut self.data[self.back], val);
 
@@ -154,6 +185,41 @@ mod tests {
         assert_eq!(queue.front, 2);
         assert_eq!(queue.back, 1);
         assert_eq!(prev, Some("dog"));
+
+        let prev = queue.push("this");
+        assert_eq!(queue.data, vec!{"white","fence","this","over","a"});
+        assert_eq!(queue.cap, 5);
+        assert_eq!(queue.len, 5);
+        assert_eq!(queue.front, 3);
+        assert_eq!(queue.back, 2);
+        assert_eq!(prev, Some("jumps"));
+
+        let prev = queue.push("is");
+        assert_eq!(queue.data, vec!{"white","fence","this","is","a"});
+        assert_eq!(queue.cap, 5);
+        assert_eq!(queue.len, 5);
+        assert_eq!(queue.front, 4);
+        assert_eq!(queue.back, 3);
+        assert_eq!(prev, Some("over"));
+
+        let prev = queue.push("some");
+        assert_eq!(queue.data, vec!{"white","fence","this","is","some"});
+        assert_eq!(queue.cap, 5);
+        assert_eq!(queue.len, 5);
+        assert_eq!(queue.front, 0);
+        assert_eq!(queue.back, 4);
+        assert_eq!(prev, Some("a"));
+
+        // make sure crosses completely to check the issue
+        // of making sure the front pointer wraps correctly
+        // FIXED
+        let prev = queue.push("words");
+        assert_eq!(queue.data, vec!{"words","fence","this","is","some"});
+        assert_eq!(queue.cap, 5);
+        assert_eq!(queue.len, 5);
+        assert_eq!(queue.front, 1);
+        assert_eq!(queue.back, 0);
+        assert_eq!(prev, Some("white"));
     }
 
     #[test]

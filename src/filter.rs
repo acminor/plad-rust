@@ -45,8 +45,13 @@ pub fn inner_product(
             DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate => {
                 let min_time = 30;
                 let max_duration = 1200;
+                //let signals = outlier_removal_stars(signals);
                 stars_historical_mean_removal(signals, signal_names,
-                                              min_time, max_duration, current_time)
+                                              min_time, max_duration, current_time,
+                                              HistoricalMeanRunType::Fast)
+                //stars_min_max_historical_mean_removal(signals, signal_names,
+                //                                      min_time, max_duration,
+                //                                      current_time)
             }
             _ => signals
         };
