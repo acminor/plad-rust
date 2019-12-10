@@ -24,17 +24,19 @@ pub trait Tester {
 pub struct NoneTester {}
 
 impl Tester for NoneTester {
-    fn is_true_positive(&self, star: &str, sample_time: usize) -> bool {
+    fn is_true_positive(&self, _star: &str, _sample_time: usize) -> bool {
         true
     }
 
-    fn _adp(&self, star: &str, sample_time: usize) -> f32 {
+    fn _adp(&self, _star: &str, _sample_time: usize) -> f32 {
         0.0
     }
 }
 
 pub struct TartanTester {
+    #[allow(unused)]
     start_len: usize,
+    #[allow(unused)]
     end_len: usize,
 }
 
@@ -55,6 +57,7 @@ impl TartanTester {
         }
     }
 
+    #[allow(unused)]
     fn star_name_to_len(star: &str) -> usize {
         star
             .split(",")
@@ -77,6 +80,7 @@ impl TartanTester {
 }
 
 impl Tester for TartanTester {
+    // TODO XXX: check what units sample_time is in
     fn is_true_positive(&self, star: &str, sample_time: usize) -> bool {
         let attrs = TartanTester::star_name_to_attrs(star);
 
@@ -110,7 +114,7 @@ pub struct NFDTester {
 }
 
 impl Tester for NFDTester {
-    fn is_true_positive(&self, star: &str, sample_time: usize) -> bool {
+    fn is_true_positive(&self, _star: &str, sample_time: usize) -> bool {
         // FIXME we can make this more accurate XD
         sample_time >= 40320 && sample_time <= 46080
     }

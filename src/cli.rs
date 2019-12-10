@@ -10,7 +10,6 @@ use crate::tester::*;
 use clap::{App, Arg};
 use std::fs;
 use std::str::FromStr;
-use toml;
 
 pub struct RunInfo {
     pub templates: Templates,

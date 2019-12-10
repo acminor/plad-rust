@@ -129,48 +129,6 @@ pub fn stars_norm_at_zero(stars: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
     subtract_means(stars, &star_mins)
 }
 
-#[derive(Clone, Copy)]
-enum HistoricalMeanEntryStage {
-    /// data only consists of non-historic startup data (operate startup)
-    Startup,
-    PostStartupWarmup,
-    /// data only consists of historic data (operate normally)
-    PostStartup,
-}
-
-struct HistoricalMeanEntry {
-    prev_sum: f32,
-    prev_means: CyclicQueue<f32>,
-    stage: HistoricalMeanEntryStage,
-    next_point: usize,
-    /// for use in adjusting mean by current for warmup stage
-    current_mean: f32,
-    /// for use in adjusting mean by current for warmup stage
-    /// - percentage of mean that should be b/c of current mean
-    current_mean_split: f32,
-    /// for use in transitioning to the final stage
-    counter: usize,
-}
-
-impl HistoricalMeanEntry {
-    fn new(capacity: usize) -> HistoricalMeanEntry {
-        HistoricalMeanEntry {
-            prev_sum: 0.0,
-            prev_means: CyclicQueue::new(capacity),
-            stage: HistoricalMeanEntryStage::Startup,
-            next_point: 0,
-            current_mean: 0.0,
-            current_mean_split: 0.0,
-            counter: 0,
-        }
-    }
-}
-
-lazy_static!{
-    static ref historical_means_global: Mutex<HashMap<String, HistoricalMeanEntry>>
-        = Mutex::new(HashMap::new());
-}
-
 fn means(signals: &[Vec<f32>]) -> Vec<f32> {
     signals
         .iter()
@@ -184,6 +142,7 @@ fn means(signals: &[Vec<f32>]) -> Vec<f32> {
         .collect::<Vec<f32>>()
 }
 
+#[allow(unused)]
 fn maxes(signals: &[Vec<f32>]) -> Vec<f32> {
     let maxes = signals
         .iter()
@@ -235,6 +194,48 @@ fn subtract_means(signals: Vec<Vec<f32>>, means: &Vec<f32>) -> Vec<Vec<f32>> {
         .collect()
 }
 
+#[derive(Clone, Copy)]
+enum HistoricalMeanEntryStage {
+    /// data only consists of non-historic startup data (operate startup)
+    Startup,
+    PostStartupWarmup,
+    /// data only consists of historic data (operate normally)
+    PostStartup,
+}
+
+struct HistoricalMeanEntry {
+    prev_sum: f32,
+    prev_means: CyclicQueue<f32>,
+    stage: HistoricalMeanEntryStage,
+    next_point: usize,
+    /// for use in adjusting mean by current for warmup stage
+    current_mean: f32,
+    /// for use in adjusting mean by current for warmup stage
+    /// - percentage of mean that should be b/c of current mean
+    current_mean_split: f32,
+    /// for use in transitioning to the final stage
+    counter: usize,
+}
+
+impl HistoricalMeanEntry {
+    fn new(capacity: usize) -> HistoricalMeanEntry {
+        HistoricalMeanEntry {
+            prev_sum: 0.0,
+            prev_means: CyclicQueue::new(capacity),
+            stage: HistoricalMeanEntryStage::Startup,
+            next_point: 0,
+            current_mean: 0.0,
+            current_mean_split: 0.0,
+            counter: 0,
+        }
+    }
+}
+
+lazy_static!{
+    static ref HISTORICAL_MEANS_GLOBAL: Mutex<HashMap<String, HistoricalMeanEntry>>
+        = Mutex::new(HashMap::new());
+}
+
 #[derive(PartialEq)]
 pub enum HistoricalMeanRunType {
     Fast, // fast summation O(1)
@@ -245,6 +246,8 @@ pub enum HistoricalMeanRunType {
 /// Keeps track of historical means and updates stars accordingly
 ///
 /// current_time and min/max_time in number of sample time increments
+/// -> for now current_time is unused and this function should be used
+///    with delta_skip = 1 for current_time like functionality
 ///
 /// Algorithm:
 /// 1. Calculate current window means
@@ -258,12 +261,12 @@ pub enum HistoricalMeanRunType {
 /// NOTE: min/max_time should not change throughout the run
 pub fn stars_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String],
                                      min_time: usize,
-                                     delta_time: usize, current_time: usize,
+                                     delta_time: usize, _current_time: usize,
                                      run_type: HistoricalMeanRunType) -> Vec<Vec<f32>> {
     // Borrow for WHOLE function as inner_product is only called in a single threaded fashion
-    let mut historical_means = historical_means_global.lock().unwrap();
+    let mut historical_means = HISTORICAL_MEANS_GLOBAL.lock().unwrap();
 
-    let num_stars = star_names.len();
+    //let num_stars = star_names.len();
 
     let stars_means = means(&stars);
 
@@ -302,7 +305,7 @@ pub fn stars_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String]
 
             // make sure the removed value is considered as negative (subtraction)
             let mut adjustment_factor = init_adjustments[name];
-            let org_af = init_adjustments[name];
+            //let org_af = init_adjustments[name];
 
             // makes sure the historical mean window is kept small
             // - subtract min_time to

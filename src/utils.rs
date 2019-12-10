@@ -1,12 +1,7 @@
-use arrayfire as AF;
-use arrayfire::Array as AF_Array;
-use arrayfire::Dim4 as AF_Dim4;
 use inline_python::python;
 use regex::Regex;
 use std::path::Path;
 use std::path::PathBuf;
-
-use crate::template::*;
 
 // NOTE: From NFD Paper TODO better cite
 pub fn adp(t0: f32, t_prime: f32, sample_time: f32) -> f32 {

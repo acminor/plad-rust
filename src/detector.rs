@@ -4,9 +4,7 @@ use crate::info_handler::InformationHandler;
 use crate::log;
 use crate::sw_star::SWStar;
 use crate::template::Templates;
-//use crate::utils::inner_product;
 use crate::filter::inner_product;
-use crate::utils::uid_to_t0_tp;
 use crate::tester::Tester;
 
 use colored::*;
@@ -117,7 +115,6 @@ impl Detector {
             // - NOTE should be fine to AssertUnwindSafe, main compile issues
             //   seem to come from being within an async context.
             //   - The actual inner_product and arguments should be fine.
-            /*
             let ip = panic::catch_unwind(panic::AssertUnwindSafe(|| {
                 inner_product(
                     &self.templates.templates[..],
@@ -131,8 +128,8 @@ impl Detector {
                     200,
                 )
             }));
-            */
 
+            /*
             let ip: Result<Vec<f32>, usize> = Ok(inner_product(
                 &self.templates.templates[..],
                 &windows,
@@ -149,6 +146,7 @@ impl Detector {
                 2000,
                 2000,
             ));
+            */
 
             let ip = match ip {
                 Ok(ip) => ip,

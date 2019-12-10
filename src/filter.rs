@@ -1,9 +1,4 @@
 use arrayfire as AF;
-use arrayfire::Array as AF_Array;
-use arrayfire::Dim4 as AF_Dim4;
-
-use std::sync::Mutex;
-use std::collections::HashMap;
 
 use crate::cli::DCNorm;
 use crate::template::*;
@@ -58,7 +53,7 @@ pub fn inner_product(
 
         let signals = outlier_removal_stars(signals);
         let signals = window_signals(signals, WindowFunc::Rectangle);
-        let (stars, num_stars, signal_max_len) = stars_to_af(signals);
+        let (stars, _num_stars, _signal_max_len) = stars_to_af(signals);
 
         let stars = stars_fft(&stars, templates[0].fft_len, templates[0].max_len);
 
