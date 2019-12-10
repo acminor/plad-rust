@@ -155,6 +155,11 @@ impl Detector {
                 _ => continue,
             };
 
+            // TODO rework so that we first insert into data
+            //      then pass each data to a detection function
+            //      that takes a threshold, this allows us to
+            //      apply different things such as a flare remover
+            //      or glitch remover, etc.
             let mut detected_stars = std::collections::HashSet::new();
             ip.iter().zip(window_names).for_each(|(val, star)| {
                 if *val > self.detector_opts.alert_threshold {

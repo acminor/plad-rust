@@ -67,6 +67,8 @@ pub fn inner_product(
         //     -- for now only works bc large template groups (only one group)
         for template_group in templates {
             // [ ] TODO add in Delta x scale
+            // [ ] TODO make selection, but it does matter if templates
+            //     or stars gets conjugated verses the other (from observation)
             let res_af = AF::matmul(
                 &stars,
                 &template_group.templates,
@@ -79,6 +81,7 @@ pub fn inner_product(
             // https://dsp.{{se}}.com/questions/20500/negative-values-of-the-fft
             // --- can be fixed will describe in other doc
             //let res_af = AF::real(&res_af);
+            //let res_af = AF::imag(&res_af);
             //let res_af = AF::ifft(&res_af, 1.0, signal_max_len as i64);
             let res_af = AF::abs(&res_af);
 

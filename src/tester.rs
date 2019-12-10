@@ -1,4 +1,5 @@
 use std::fs;
+use std::collections::HashMap;
 
 pub trait Tester {
     fn is_true_positive(&self, star: &str, sample_time: usize) -> bool;
@@ -62,16 +63,30 @@ impl TartanTester {
             .collect::<Vec<Vec<&str>>>()[0][1] // only one entry and 1 is value, 0 is key
             .parse::<usize>().expect("malformed tartan star name")
     }
+
+    fn star_name_to_attrs(star: &str) -> HashMap<String, String> {
+        star
+            .split(",")
+            .map(|kv| {
+                let temp = kv.split("=").map(|v| v.to_string()).collect::<Vec<String>>();
+
+                (temp[0].clone(), temp[1].clone())
+            })
+            .collect::<HashMap<String,String>>()
+    }
 }
 
 impl Tester for TartanTester {
     fn is_true_positive(&self, star: &str, sample_time: usize) -> bool {
-        let tot_len = TartanTester::star_name_to_len(star);
+        let attrs = TartanTester::star_name_to_attrs(star);
 
-        // between the start and end boundaries
-        // -- FIXME should be equality???
-        // ---- Shouldn't mater much (b/c shouldn't predict immediately)
-        sample_time > self.start_len && sample_time < (tot_len - self.end_len)
+        let t_left = attrs["tl"].parse::<usize>().unwrap();
+        let t_right = attrs["tr"].parse::<usize>().unwrap();
+
+        // TODO should be equals or just strict inequality???
+        // - shouldn't matter much b/c we shouldn't be able to
+        //   predict immediately anyway
+        sample_time > t_left && sample_time < t_right
     }
 
     fn is_valid(&self) -> bool {
@@ -79,12 +94,15 @@ impl Tester for TartanTester {
     }
 
     fn _adp(&self, star: &str, sample_time: usize) -> f32 {
-        let tot_len = TartanTester::star_name_to_len(star);
-        let signal_width = (tot_len - (self.start_len + self.end_len)) as f32;
-        // NOTE: ignores discrete values and approximates as continuous
-        let center_of_signal = signal_width/2.0 + self.start_len as f32;
+        let attrs = TartanTester::star_name_to_attrs(star);
 
-        crate::utils::adp(center_of_signal, signal_width, sample_time as f32)
+        let t_left = attrs["tl"].parse::<usize>().unwrap();
+        let t_right = attrs["tr"].parse::<usize>().unwrap();
+        // center of signal
+        let t_peak = (t_left + t_right) as f32 / 2.0;
+        let signal_width = t_right - t_left;
+
+        crate::utils::adp(t_peak, signal_width as f32, sample_time as f32)
     }
 }
 
