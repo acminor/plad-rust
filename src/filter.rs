@@ -1,8 +1,8 @@
 use arrayfire as AF;
 
 use crate::cli::DCNorm;
-use crate::template::*;
 use crate::filter_utils::*;
+use crate::template::*;
 
 pub fn inner_product(
     templates: &[TemplateGroup],
@@ -25,37 +25,43 @@ pub fn inner_product(
         let signals = signals.to_vec();
 
         let signals = match dc_norm {
-            DCNorm::MeanRemoveStar |
-            DCNorm::MeanRemoveTemplateAndStar |
-            DCNorm::NormAtZeroTemplateAndMeanRemoveStar => {
+            DCNorm::MeanRemoveStar
+            | DCNorm::MeanRemoveTemplateAndStar
+            | DCNorm::NormAtZeroTemplateAndMeanRemoveStar => {
                 stars_dc_removal(signals)
             }
-            DCNorm::NormAtZeroStar |
-            DCNorm::NormAtZeroTemplateAndStar |
-            DCNorm::NormAtZeroStarAndMeanRemoveTemplate => {
+            DCNorm::NormAtZeroStar
+            | DCNorm::NormAtZeroTemplateAndStar
+            | DCNorm::NormAtZeroStarAndMeanRemoveTemplate => {
                 stars_norm_at_zero(signals)
             }
-            DCNorm::HistMeanRemoveStar |
-            DCNorm::HistMeanRemoveStarAndTemplate |
-            DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate => {
+            DCNorm::HistMeanRemoveStar
+            | DCNorm::HistMeanRemoveStarAndTemplate
+            | DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate => {
                 let min_time = 30;
                 let max_duration = 1200;
                 //let signals = outlier_removal_stars(signals);
-                stars_historical_mean_removal(signals, signal_names,
-                                              min_time, max_duration, current_time,
-                                              HistoricalMeanRunType::Fast)
+                stars_historical_mean_removal(
+                    signals,
+                    signal_names,
+                    min_time,
+                    max_duration,
+                    current_time,
+                    HistoricalMeanRunType::Fast,
+                )
                 //stars_min_max_historical_mean_removal(signals, signal_names,
                 //                                      min_time, max_duration,
                 //                                      current_time)
             }
-            _ => signals
+            _ => signals,
         };
 
         let signals = outlier_removal_stars(signals);
         let signals = window_signals(signals, WindowFunc::Rectangle);
         let (stars, _num_stars, _signal_max_len) = stars_to_af(signals);
 
-        let stars = stars_fft(&stars, templates[0].fft_len, templates[0].max_len);
+        let stars =
+            stars_fft(&stars, templates[0].fft_len, templates[0].max_len);
 
         // [ ] TODO work on making right grouping
         //     of templates output and max of them

@@ -1,16 +1,16 @@
 use crate::async_utils::TwinBarrier;
 use crate::cli::DetectorOpts;
+use crate::filter::inner_product;
 use crate::info_handler::InformationHandler;
 use crate::log;
 use crate::sw_star::SWStar;
 use crate::template::Templates;
-use crate::filter::inner_product;
 use crate::tester::Tester;
 
 use colored::*;
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::panic;
+use std::sync::Arc;
 use tokio::sync::Lock;
 
 pub struct Detector {
@@ -171,7 +171,8 @@ impl Detector {
                                   "val"=>val.to_string(),
                             );
                             true_events += 1;
-                        } else { // NOTE: is_true_pos mutually exclusive of false_pos
+                        } else {
+                            // NOTE: is_true_pos mutually exclusive of false_pos
                             crit!(log, "{}", "FALSE EVENT DETECTED".on_red();
                                   "time"=>sample_time.to_string(),
                                   "star"=>star.to_string(),

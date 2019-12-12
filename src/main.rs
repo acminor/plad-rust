@@ -32,6 +32,8 @@ pub mod cli; // pub for documentation purposes
 pub mod cyclic_queue;
 mod dat_star;
 mod detector;
+mod filter;
+mod filter_utils;
 mod gwac_reader;
 mod info_handler;
 mod json_star;
@@ -40,12 +42,10 @@ mod python;
 mod star;
 mod sw_star;
 mod template;
+mod tester;
 mod ticker;
 mod toml_star;
 mod utils;
-mod filter;
-mod filter_utils;
-mod tester;
 
 use async_utils::{twin_barrier, TwinBarrier};
 use cli::*;
@@ -97,42 +97,48 @@ fn tick_driver(state: RunState) {
         detector_opts,
     } = state;
 
-    rt.block_on(async move {
-        {
-            let info_handler = info_handler.clone();
-            tokio::spawn(async move {
-                info_handler.progress_log().await;
-            });
-        }
+    rt.block_on(
+        async move {
+            {
+                let info_handler = info_handler.clone();
+                tokio::spawn(
+                    async move {
+                        info_handler.progress_log().await;
+                    },
+                );
+            }
 
-        let gwac_rx_chan = if gwac_reader.is_some() {
-            Some(
-                gwac_reader
-                    .as_mut()
-                    .expect("Should never happen.")
-                    .get_data_channel(),
+            let gwac_rx_chan = if gwac_reader.is_some() {
+                Some(
+                    gwac_reader
+                        .as_mut()
+                        .expect("Should never happen.")
+                        .get_data_channel(),
+                )
+            } else {
+                None
+            };
+
+            if let Some(mut gwac_reader) = gwac_reader {
+                tokio::spawn(
+                    async move {
+                        gwac_reader.start().await;
+                    },
+                );
+            }
+
+            Ticker::new(
+                computation_end,
+                tick_end,
+                stars,
+                gwac_rx_chan,
+                detector_opts.clone(),
+                info_handler,
             )
-        } else {
-            None
-        };
-
-        if let Some(mut gwac_reader) = gwac_reader {
-            tokio::spawn(async move {
-                gwac_reader.start().await;
-            });
-        }
-
-        Ticker::new(
-            computation_end,
-            tick_end,
-            stars,
-            gwac_rx_chan,
-            detector_opts.clone(),
-            info_handler,
-        )
-        .tick()
-        .await;
-    });
+            .tick()
+            .await;
+        },
+    );
 }
 
 static PROF: bool = true;
@@ -308,13 +314,11 @@ async fn main() {
     };
 
     let data = match log_opts.sort {
-        SortOpt::None => {
-            data
-        },
+        SortOpt::None => data,
         SortOpt::Increasing => {
             sort(&mut data);
             data
-        },
+        }
         SortOpt::Decreasing => {
             sort(&mut data);
             data.reverse();

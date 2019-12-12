@@ -1,5 +1,5 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 
 pub trait Tester {
     fn is_true_positive(&self, star: &str, sample_time: usize) -> bool;
@@ -7,7 +7,7 @@ pub trait Tester {
         !self.is_true_positive(star, sample_time)
     }
 
-    fn is_valid(&self) -> bool{
+    fn is_valid(&self) -> bool {
         false
     }
 
@@ -42,40 +42,47 @@ pub struct TartanTester {
 
 impl TartanTester {
     pub fn new(desc_file: &str) -> TartanTester {
-        let contents =
-            fs::read_to_string(desc_file).expect("Failure to read Tartan Tester File");
-        let desc =
-            contents.parse::<toml::Value>().expect("Failure to parse Tartan Tester File");
+        let contents = fs::read_to_string(desc_file)
+            .expect("Failure to read Tartan Tester File");
+        let desc = contents
+            .parse::<toml::Value>()
+            .expect("Failure to parse Tartan Tester File");
 
         println!("{:?}", desc["signal"]["start_len"]);
 
         TartanTester {
             start_len: desc["signal"]["start_len"]
-                .as_integer().expect("Problem parsing Tartan Tester File: start_len") as usize,
+                .as_integer()
+                .expect("Problem parsing Tartan Tester File: start_len")
+                as usize,
             end_len: desc["signal"]["end_len"]
-                .as_integer().expect("Problem parsing Tartan Tester File: end_len") as usize,
+                .as_integer()
+                .expect("Problem parsing Tartan Tester File: end_len")
+                as usize,
         }
     }
 
     #[allow(unused)]
     fn star_name_to_len(star: &str) -> usize {
-        star
-            .split(",")
+        star.split(",")
             .filter(|kv| kv.contains("len"))
             .map(|kv| kv.split("=").collect::<Vec<&str>>())
             .collect::<Vec<Vec<&str>>>()[0][1] // only one entry and 1 is value, 0 is key
-            .parse::<usize>().expect("malformed tartan star name")
+            .parse::<usize>()
+            .expect("malformed tartan star name")
     }
 
     fn star_name_to_attrs(star: &str) -> HashMap<String, String> {
-        star
-            .split(",")
+        star.split(",")
             .map(|kv| {
-                let temp = kv.split("=").map(|v| v.to_string()).collect::<Vec<String>>();
+                let temp = kv
+                    .split("=")
+                    .map(|v| v.to_string())
+                    .collect::<Vec<String>>();
 
                 (temp[0].clone(), temp[1].clone())
             })
-            .collect::<HashMap<String,String>>()
+            .collect::<HashMap<String, String>>()
     }
 }
 
@@ -110,8 +117,7 @@ impl Tester for TartanTester {
     }
 }
 
-pub struct NFDTester {
-}
+pub struct NFDTester {}
 
 impl Tester for NFDTester {
     fn is_true_positive(&self, _star: &str, sample_time: usize) -> bool {

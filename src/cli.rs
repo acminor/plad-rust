@@ -1,12 +1,12 @@
 use crate::dat_star;
+use crate::filter_utils::WindowFunc;
 use crate::gwac_reader::GWACReader;
 use crate::json_star;
 use crate::star::*;
 use crate::sw_star::SWStar;
 use crate::template::*;
-use crate::toml_star;
-use crate::filter_utils::WindowFunc;
 use crate::tester::*;
+use crate::toml_star;
 use clap::{App, Arg};
 use std::fs;
 use std::str::FromStr;
@@ -24,7 +24,7 @@ pub struct RunInfo {
     pub tester: Box<dyn Tester>,
 }
 
-arg_enum!{
+arg_enum! {
     pub enum SortOpt {
         None,
         Increasing,
@@ -32,7 +32,7 @@ arg_enum!{
     }
 }
 
-arg_enum!{
+arg_enum! {
     #[derive(Clone, Copy)]
     // [ ] TODO verify that the logic is correctly spread into filter.rs and template.rs
     ///
@@ -437,11 +437,13 @@ pub fn parse_args() -> RunInfo {
     let tester: Box<dyn Tester> = match value_t!(matches, "tartan_test", bool) {
         Ok(val) if val => {
             println!("Using the TARTAN.");
-            Box::new(TartanTester::new(&value_t_or_exit!(matches, "tartan_test_file", String)))
+            Box::new(TartanTester::new(&value_t_or_exit!(
+                matches,
+                "tartan_test_file",
+                String
+            )))
         }
-        _ => {
-            Box::new(NFDTester{})
-        }
+        _ => Box::new(NFDTester {}),
     };
 
     // NOTE for simplicity do not allow offline and gwac_files

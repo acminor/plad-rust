@@ -80,20 +80,21 @@ pub fn parse_template_file(file_name: String, dc_norm: DCNorm) -> Templates {
                         //      - This is very important and will lead to false
                         //        detection or searching for the wrong signal
                         let template = match dc_norm {
-                            DCNorm::MeanRemoveTemplate |
-                            DCNorm::MeanRemoveTemplateAndStar |
-                            DCNorm::HistMeanRemoveStarAndTemplate |
-                            DCNorm::NormAtZeroStarAndMeanRemoveTemplate => {
+                            DCNorm::MeanRemoveTemplate
+                            | DCNorm::MeanRemoveTemplateAndStar
+                            | DCNorm::HistMeanRemoveStarAndTemplate
+                            | DCNorm::NormAtZeroStarAndMeanRemoveTemplate => {
                                 let template_mean = AF::mean(&template, 0);
                                 AF::sub(&template, &template_mean, false)
                             }
-                            DCNorm::NormAtZeroTemplate |
-                            DCNorm::NormAtZeroTemplateAndStar |
-                            DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate => {
+                            DCNorm::NormAtZeroTemplate
+                            | DCNorm::NormAtZeroTemplateAndStar
+                            | DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate =>
+                            {
                                 let template_adjustment = AF::min(&template, 0);
                                 AF::sub(&template, &template_adjustment, false)
                             }
-                            _ => template
+                            _ => template,
                         };
 
                         let fft_bs = AF::fft(&template, 1.0, max_len as i64);
