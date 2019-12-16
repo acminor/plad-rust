@@ -60,6 +60,12 @@ pub fn inner_product(
                 //                                      min_time, max_duration,
                 //                                      current_time)
             }
+            DCNorm::MeanRemoveConstBumpStarAndNormAtZeroTemplate => {
+                // NOTE the bump is set to a value that means
+                //      the final result should never be zero
+                //      - thus the output should always be a positive signal
+                stars_dc_removal_with_const(signals, 100.0)
+            }
             _ => signals,
         };
 

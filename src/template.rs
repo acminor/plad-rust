@@ -89,7 +89,8 @@ pub fn parse_template_file(file_name: String, dc_norm: DCNorm) -> Templates {
                             }
                             DCNorm::NormAtZeroTemplate
                             | DCNorm::NormAtZeroTemplateAndStar
-                            | DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate =>
+                            | DCNorm::HistMeanRemoveStarAndNormAtZeroTemplate
+                            | DCNorm::MeanRemoveConstBumpStarAndNormAtZeroTemplate =>
                             {
                                 let template_adjustment = AF::min(&template, 0);
                                 AF::sub(&template, &template_adjustment, false)

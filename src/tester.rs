@@ -48,8 +48,6 @@ impl TartanTester {
             .parse::<toml::Value>()
             .expect("Failure to parse Tartan Tester File");
 
-        println!("{:?}", desc["signal"]["start_len"]);
-
         TartanTester {
             start_len: desc["signal"]["start_len"]
                 .as_integer()
@@ -74,6 +72,7 @@ impl TartanTester {
 
     fn star_name_to_attrs(star: &str) -> HashMap<String, String> {
         star.split(",")
+            .filter(|kv| kv.contains("="))
             .map(|kv| {
                 let temp = kv
                     .split("=")
@@ -91,6 +90,8 @@ impl Tester for TartanTester {
     fn is_true_positive(&self, star: &str, sample_time: usize) -> bool {
         let attrs = TartanTester::star_name_to_attrs(star);
 
+        println!("{} {}", attrs["tl"], attrs["tr"]);
+
         let t_left = attrs["tl"].parse::<usize>().unwrap();
         let t_right = attrs["tr"].parse::<usize>().unwrap();
 
@@ -106,6 +107,8 @@ impl Tester for TartanTester {
 
     fn _adp(&self, star: &str, sample_time: usize) -> f32 {
         let attrs = TartanTester::star_name_to_attrs(star);
+
+        println!("{} {}", attrs["tl"], attrs["tr"]);
 
         let t_left = attrs["tl"].parse::<usize>().unwrap();
         let t_right = attrs["tr"].parse::<usize>().unwrap();

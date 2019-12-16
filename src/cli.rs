@@ -67,11 +67,20 @@ arg_enum! {
     /// - HistMeanRemoveStarAndTemplate
     ///    - For the template, do normal mean removal and not history based (template has no history)
     ///
+    /// MeanRemoveConstBump
+    /// - Removes all the mean from the window
+    /// - Adds back a constant mean for each star
+    /// - Should help as now all stars have same mean
+    ///   and we shouldn't have an issue with weird dipping
+    ///   as their should be no negative values in final convolution
+    ///   (these mess up the maximum value taking logic in the filter)
+    ///
     pub enum DCNorm {
         None,
         MeanRemoveTemplate,
         MeanRemoveStar,
         MeanRemoveTemplateAndStar,
+        MeanRemoveConstBumpStarAndNormAtZeroTemplate,
         NormAtZeroTemplate,
         NormAtZeroStar,
         NormAtZeroTemplateAndStar,

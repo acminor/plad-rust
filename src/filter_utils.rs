@@ -120,9 +120,6 @@ pub fn stars_dc_removal(stars: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
     //        detection or searching for the wrong signal
     let stars_means = means(&stars);
 
-    //let stars_means = subtract_means(stars, &stars_means);
-    //add_const(stars_means, 100.0)
-
     subtract_means(stars, &stars_means)
 }
 

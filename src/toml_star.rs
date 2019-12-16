@@ -41,7 +41,7 @@ pub fn parse_star_file(star_file: &str) -> Star {
 
     Star {
         id: star_toml.id.clone(),
-        uid: star_toml.id + &star_file.to_string(),
+        uid: star_toml.id + "," + &star_file.to_string(),
         samples: Some(samples),
         samples_tick_index: std::cell::RefCell::new(0),
         star_type,
