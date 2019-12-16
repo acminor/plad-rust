@@ -10,7 +10,7 @@ use arrayfire::Dim4 as AF_Dim4;
 use crate::cyclic_queue::{CyclicQueue, CyclicQueueInterface};
 
 arg_enum! {
-    #[derive(Clone)]
+    #[derive(Clone, Copy)]
     #[allow(dead_code)]
     pub enum WindowFunc {
         Nuttall,
@@ -584,6 +584,7 @@ fn dolph_tchebyshev_window(signal: Vec<f32>) -> Vec<f32> {
 #[allow(dead_code)]
 fn gaussian_window(signal: Vec<f32>) -> Vec<f32> {
     // NOTE implements as described in ... TODO
+    // TODO validate
     let len = signal.len();
     let alpha = 2.5f32;
     signal
@@ -593,9 +594,10 @@ fn gaussian_window(signal: Vec<f32>) -> Vec<f32> {
             let n = n as i64;
             let len = len as i64;
             let scale = -0.5f32;
-            let pos = ((n - (len / 2)) as f32).abs() / (len as f32 / 2.0f32);
+            //let pos = ((n - (len / 2)) as f32).abs() / (len as f32 / 2.0f32);
+            let pos = (n as f32 - (len as f32 / 2.0)) / (len as f32 / 2.0f32);
             let inner = (alpha * pos).powf(2.0f32);
-            x * scale * inner.exp()
+            x * (scale * inner).exp()
         })
         .collect()
 }
@@ -615,6 +617,41 @@ fn triangle_window(signal: Vec<f32>) -> Vec<f32> {
             };
 
             x * res
+        })
+        .collect()
+}
+
+fn kaiser_bessel_window(signal: Vec<f32>) -> Vec<f32> {
+    // NOTE implements as described in ... TODO
+    let approx_inif = 1000;
+
+    let alpha = 3.0;
+
+    let e = std::f32::consts::E;
+    let pi = std::f32::consts::PI;
+
+    let modified_bessel = |x: f32| {
+        (0..approx_inif)
+            .map(|v| v as f32)
+            .fold(0.0, |res: f32, k: f32| {
+                let num = (x/2.0).powf(k);
+                // Stirling approx to factorial from Knuth Book I TODO
+                let denom = (2.0*pi*k).sqrt() * (k/e).powf(k);
+
+                res + (num/denom).powf(2.0)
+            })
+    };
+
+    let len = signal.len();
+    signal
+        .into_iter()
+        .enumerate()
+        .map(|(n, x)| {
+            let n = n - len/2;
+            let num = modified_bessel(pi*alpha*(1.0 - (n as f32/(len as f32/2.0)).powf(2.0)));
+            let denom = modified_bessel(pi*alpha);
+
+            x*num/denom
         })
         .collect()
 }

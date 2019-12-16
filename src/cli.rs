@@ -291,7 +291,7 @@ pub fn parse_args() -> RunInfo {
                 .long("window-func")
                 .help("Window function used to adjust the star windows.")
                 .takes_value(true)
-                .default_value("triangle")
+                .default_value("rectangle")
                 .possible_values(&WindowFunc::variants())
                 .case_insensitive(true)
         )

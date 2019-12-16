@@ -4,6 +4,12 @@ use crate::cli::DCNorm;
 use crate::filter_utils::*;
 use crate::template::*;
 
+enum DetectorType {
+    Normal,
+    DoubleSided,
+    IFFT,
+}
+
 pub fn inner_product(
     templates: &[TemplateGroup],
     signals: &[Vec<f32>],
@@ -16,6 +22,7 @@ pub fn inner_product(
     //  - refactor out
     _pre_fft: bool,
     dc_norm: DCNorm,
+    window_func: WindowFunc,
     // [ ] TODO refactor into template instant.
     _template_group_len: usize,
     signal_group_len: usize,
@@ -57,40 +64,100 @@ pub fn inner_product(
         };
 
         let signals = outlier_removal_stars(signals);
-        let signals = window_signals(signals, WindowFunc::Rectangle);
+        let signals = window_signals(signals, window_func);
         let (stars, _num_stars, _signal_max_len) = stars_to_af(signals);
 
         let stars =
             stars_fft(&stars, templates[0].fft_len, templates[0].max_len);
 
+        let detector_type = DetectorType::DoubleSided;
+
         // [ ] TODO work on making right grouping
         //     of templates output and max of them
         //     -- for now only works bc large template groups (only one group)
         for template_group in templates {
-            // [ ] TODO add in Delta x scale
-            // [ ] TODO make selection, but it does matter if templates
-            //     or stars gets conjugated verses the other (from observation)
-            let res_af = AF::matmul(
-                &stars,
-                &template_group.templates,
-                AF::MatProp::CTRANS,
-                AF::MatProp::NONE,
-            );
+            match detector_type {
+                DetectorType::Normal => {
+                    // [ ] TODO add in Delta x scale
+                    // [ ] TODO make selection, but it does matter if templates
+                    //     or stars gets conjugated verses the other (from observation)
+                    let res_af = AF::matmul(
+                        &stars,
+                        &template_group.templates,
+                        AF::MatProp::CTRANS,
+                        AF::MatProp::NONE,
+                    );
 
-            // as in SO questions try using abs to get pos. vals.
-            // https://{{so}}.com/questions/6740545/understanding-fft-output
-            // https://dsp.{{se}}.com/questions/20500/negative-values-of-the-fft
-            // --- can be fixed will describe in other doc
-            //let res_af = AF::real(&res_af);
-            //let res_af = AF::imag(&res_af);
-            //let res_af = AF::ifft(&res_af, 1.0, signal_max_len as i64);
-            let res_af = AF::abs(&res_af);
+                    // as in SO questions try using abs to get pos. vals.
+                    // https://{{so}}.com/questions/6740545/understanding-fft-output
+                    // https://dsp.{{se}}.com/questions/20500/negative-values-of-the-fft
+                    // --- can be fixed will describe in other doc
+                    //let res_af = AF::real(&res_af);
+                    //let res_af = AF::imag(&res_af);
+                    //let res_af = AF::ifft(&res_af, 1.0, signal_max_len as i64);
+                    let res_af = AF::abs(&res_af);
 
-            let res_af = AF::max(&res_af, 1);
-            res_af.eval();
+                    let res_af = AF::max(&res_af, 1);
+                    res_af.eval();
 
-            let mut temp = af_to_vec1d(&res_af);
-            res.append(&mut temp);
+                    let mut temp = af_to_vec1d(&res_af);
+                    res.append(&mut temp);
+                }
+                /*
+                 * This type of detector seems to eliminate all imaginary values
+                 * forces the assumption that the functions are even ???
+                 * [ ] TODO verify that the Single Sided Detector
+                 *          has real and imaginary values
+                 */
+                DetectorType::DoubleSided => {
+                    // [ ] TODO add in Delta x scale
+                    // [ ] TODO make selection, but it does matter if templates
+                    //     or stars gets conjugated verses the other (from observation)
+                    let res_af_left = AF::matmul(
+                        &stars,
+                        &template_group.templates,
+                        AF::MatProp::CTRANS,
+                        AF::MatProp::NONE,
+                    );
+
+                    let res_af_right = AF::matmul(
+                        &stars,
+                        &AF::conjg(&template_group.templates),
+                        AF::MatProp::TRANS,
+                        AF::MatProp::NONE,
+                    );
+
+                    let res_af = AF::add(&res_af_left, &res_af_right, false);
+
+                    // as in SO questions try using abs to get pos. vals.
+                    // https://{{so}}.com/questions/6740545/understanding-fft-output
+                    // https://dsp.{{se}}.com/questions/20500/negative-values-of-the-fft
+                    // --- can be fixed will describe in other doc
+                    let res_af = AF::real(&res_af);
+                    //let res_af = AF::imag(&res_af);
+                    //let res_af = AF::ifft(&res_af, 1.0, signal_max_len as i64);
+
+                    /*
+                     * NOTE: as a consequence of using the absolute value
+                     *       certain values will be taken up that would not
+                     *       be normally (for example any real value < 0.0).
+                     *
+                     *       This happened when the detector was choosing the max
+                     *       value which was a close to 0 negative value but on switching
+                     *       started to select a high-magnitude negative value since
+                     *       under abs it would be positive.
+                     */
+                    //let res_af = AF::abs(&res_af);
+
+                    let res_af = AF::max(&res_af, 1);
+                    res_af.eval();
+
+                    let mut temp = af_to_vec1d(&res_af);
+                    res.append(&mut temp);
+                }
+                DetectorType::IFFT => {
+                }
+            }
         }
     }
 

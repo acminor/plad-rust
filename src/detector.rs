@@ -124,6 +124,7 @@ impl Detector {
                     self.detector_opts.noise_stddev,
                     true,
                     self.detector_opts.dc_norm,
+                    self.detector_opts.window_func,
                     200,
                     200,
                 )
