@@ -6,6 +6,7 @@ use crate::log;
 use crate::sw_star::SWStar;
 use crate::template::Templates;
 use crate::tester::Tester;
+use crate::detector_utils::DetectorTrigger;
 
 use colored::*;
 use std::collections::HashMap;
@@ -20,6 +21,7 @@ pub struct Detector {
     stars: Lock<Vec<SWStar>>,
     templates: Templates,
     tester: Box<dyn Tester>,
+    detector: Box<dyn DetectorTrigger>,
     detector_opts: DetectorOpts,
 }
 
@@ -34,7 +36,6 @@ impl Detector {
         usize,
     ) {
         let sd_rx = self.info_handler.get_shutdown_receiver();
-        let mut ic_tx = self.info_handler.get_iterations_sender();
         let log = log::get_root_logger();
         let mut sample_time = 0;
         let mut true_events = 0;
@@ -159,31 +160,32 @@ impl Detector {
             //      that takes a threshold, this allows us to
             //      apply different things such as a flare remover
             //      or glitch remover, etc.
-            let mut detected_stars = std::collections::HashSet::new();
             ip.iter().zip(window_names).for_each(|(val, star)| {
-                if *val > self.detector_opts.alert_threshold {
-                    // compute values b/c tester is a valid tester
-                    if self.tester.is_valid() {
-                        if self.tester.is_true_positive(&star, sample_time) {
-                            adps.push(self.tester.adp(&star, sample_time));
-                            crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
-                                  "time"=>sample_time.to_string(),
-                                  "star"=>star.to_string(),
-                                  "val"=>val.to_string(),
-                            );
-                            true_events += 1;
-                        } else {
-                            // NOTE: is_true_pos mutually exclusive of false_pos
-                            crit!(log, "{}", "FALSE EVENT DETECTED".on_red();
-                                  "time"=>sample_time.to_string(),
-                                  "star"=>star.to_string(),
-                                  "val"=>val.to_string(),
-                            );
-                            false_events += 1;
+                match self.detector.detect(&star, *val, sample_time,
+                                           self.detector_opts.alert_threshold) {
+                    Some(_detector_res) => {
+                        // compute values b/c tester is a valid tester
+                        if self.tester.is_valid() {
+                            if self.tester.is_true_positive(&star, sample_time) {
+                                adps.push(self.tester.adp(&star, sample_time));
+                                crit!(log, "{}", "TRUE EVENT DETECTED".on_blue();
+                                      "time"=>sample_time.to_string(),
+                                      "star"=>star.to_string(),
+                                      "val"=>val.to_string(),
+                                );
+                                true_events += 1;
+                            } else {
+                                // NOTE: is_true_pos mutually exclusive of false_pos
+                                crit!(log, "{}", "FALSE EVENT DETECTED".on_red();
+                                      "time"=>sample_time.to_string(),
+                                      "star"=>star.to_string(),
+                                      "val"=>val.to_string(),
+                                );
+                                false_events += 1;
+                            }
                         }
                     }
-
-                    detected_stars.insert(star.clone());
+                    None => {}
                 }
 
                 if !data.contains_key(&star) {
@@ -194,29 +196,6 @@ impl Detector {
                     .expect("Star should be in inner_product data map.")
                     .push(*val);
             });
-
-            // taint detected stars
-            // for now just remove
-            {
-                let mut stars = self.stars.lock().await;
-
-                let mut iters = 0;
-                stars
-                    .iter()
-                    .filter(|sw| detected_stars.contains(&sw.star.uid))
-                    .for_each(|sw| {
-                        if let Some(samps) = sw.star.samples.as_ref() {
-                            iters += samps.len()
-                                - *sw.star.samples_tick_index.borrow();
-                        };
-                    });
-
-                match ic_tx.send(iters).await {
-                    _ => (), // NOTE for now ignore error b/c non-essential
-                };
-
-                stars.retain(|sw| !detected_stars.contains(&sw.star.uid));
-            }
         }
     }
 
@@ -227,6 +206,7 @@ impl Detector {
         stars: Lock<Vec<SWStar>>,
         templates: Templates,
         tester: Box<dyn Tester>,
+        detector: Box<dyn DetectorTrigger>,
         detector_opts: DetectorOpts,
     ) -> Detector {
         Detector {
@@ -237,6 +217,7 @@ impl Detector {
             templates,
             tester,
             detector_opts,
+            detector,
         }
     }
 }

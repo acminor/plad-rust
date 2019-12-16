@@ -120,7 +120,20 @@ pub fn stars_dc_removal(stars: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
     //        detection or searching for the wrong signal
     let stars_means = means(&stars);
 
+    //let stars_means = subtract_means(stars, &stars_means);
+    //add_const(stars_means, 100.0)
+
     subtract_means(stars, &stars_means)
+}
+
+pub fn stars_dc_removal_with_const(stars: Vec<Vec<f32>>, bump: f32) -> Vec<Vec<f32>> {
+    // NOTE Remove DC constant of template to focus on signal
+    //      - This is very important and will lead to false
+    //        detection or searching for the wrong signal
+    let stars_means = means(&stars);
+
+    let stars_means = subtract_means(stars, &stars_means);
+    add_const(stars_means, bump)
 }
 
 /// Normalizes stars to have their minimum value at zero.
@@ -189,6 +202,18 @@ fn subtract_means(signals: Vec<Vec<f32>>, means: &Vec<f32>) -> Vec<Vec<f32>> {
             signal
                 .into_iter()
                 .map(|val| val - mean)
+                .collect::<Vec<f32>>()
+        })
+        .collect()
+}
+
+fn add_const(signals: Vec<Vec<f32>>, bump: f32) -> Vec<Vec<f32>> {
+    signals
+        .into_iter()
+        .map(|signal| {
+            signal
+                .into_iter()
+                .map(|val| val + bump)
                 .collect::<Vec<f32>>()
         })
         .collect()

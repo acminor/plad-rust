@@ -2,29 +2,17 @@ import re
 import subprocess
 import click
 
-def construct_cmd(is_release, data_dir, build_dir,
-                  templates, window_length, alert_threshold,
-                  tartan_file):
+def construct_cmd(is_release, target_dir, alert_threshold, match_filter_opts):
     cmd = '''
-    cargo run {} --target-dir={} --\
-    --input={}\
-    --templates-file={}\
-    --noise=.06\
-    --rho=4.0\
-    --window-length={}\
-    --skip-delta=1\
-    --fragment=1\
+    cargo run {} --target-dir={} -- \
     --alert-threshold={}\
     --plot=false\
     {}
     '''.format(
         "--release "if is_release else "",
-        build_dir, #"/data/tmp/build_artifacts/match_filter",
-        data_dir,
-        templates, #"data/templates__nfd_def.toml",
-        window_length,
-        alert_threshold,
-        '--tartan-test True --tartan-test-file {}'.format(tartan_file) if tartan_file else ''
+        target_dir,
+        str(alert_threshold),
+        ' '.join(list(match_filter_opts)),
     )
 
     return cmd
@@ -72,17 +60,12 @@ def parse_results(output):
     return adp, pos
 
 
-@click.command()
-@click.option('--data-dir', required=True,
-              type=click.Path(exists=True, dir_okay=True, readable=True))
-@click.option('--build-dir', required=True,
-                type=click.Path(dir_okay=True, writable=True, readable=True))
-@click.option('--templates', required=True,
-                type=click.Path(exists=True, file_okay=True, readable=True))
-@click.option('--window-length', required=True, type=int)
-@click.option('--tartan-file',
-              type=click.Path(exists=True, file_okay=True, readable=True))
-def main(data_dir, build_dir, templates, window_length, tartan_file):
+@click.command(context_settings=dict(
+    ignore_unknown_options=True,
+))
+@click.option('--target-dir', required=True)
+@click.argument('match_filter_opts', nargs=-1)
+def main(target_dir, match_filter_opts):
     # NOTE for now, always assume release for testing
     is_release = True
     #data_dir = "/home/austin/research/microlensing_star_data/star_subset"
@@ -108,8 +91,7 @@ def main(data_dir, build_dir, templates, window_length, tartan_file):
         alert_threshold = (alert_threshold_window[0] + alert_threshold_window[1])/2.0
 
         proc = subprocess.run(
-            construct_cmd(is_release, data_dir, build_dir,
-                          templates, window_length, alert_threshold, tartan_file),
+            construct_cmd(is_release, target_dir, alert_threshold, match_filter_opts),
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, encoding='utf8'
         )
         output = proc.stdout
@@ -128,8 +110,7 @@ def main(data_dir, build_dir, templates, window_length, tartan_file):
         alert_threshold += 0.0001
 
         proc = subprocess.run(
-            construct_cmd(is_release, data_dir, build_dir, templates,
-                          window_length, alert_threshold, tartan_file),
+            construct_cmd(is_release, target_dir, alert_threshold, match_filter_opts),
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, encoding='utf8'
         )
         output = proc.stdout

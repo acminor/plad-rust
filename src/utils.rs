@@ -76,6 +76,7 @@ pub fn debug_plt_2(
         import pickle
         import matplotlib.pyplot as plt
         import numpy as np
+        import math
         import sys
         sys.argv.append("test")
 
@@ -112,7 +113,9 @@ pub fn debug_plt_2(
         //   for i in range(1, skip):
         //       data2.append(None)
         plt.title('title)
+        plt.subplot(211)
         plt.plot(temp, marker="o", ls="")
+        plt.subplot(212)
         plt.plot('data2, marker="x", ls="")
         //plt.plot(temp2, marker="s", ls="")
         plt.show()

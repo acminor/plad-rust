@@ -32,6 +32,7 @@ pub mod cli; // pub for documentation purposes
 pub mod cyclic_queue;
 mod dat_star;
 mod detector;
+mod detector_utils;
 mod filter;
 mod filter_utils;
 mod gwac_reader;
@@ -50,6 +51,7 @@ mod utils;
 use async_utils::{twin_barrier, TwinBarrier};
 use cli::*;
 use detector::Detector;
+use crate::detector_utils as DU;
 use gwac_reader::GWACReader;
 use info_handler::InformationHandler;
 use log::*;
@@ -263,6 +265,8 @@ async fn main() {
             stars,
             templates,
             tester,
+            //Box::new(DU::ThresholdTrigger::new()),
+            Box::new(DU::ThreeInARowTrigger::new(detector_opts.skip_delta as usize)),
             detector_opts,
         )
     };
