@@ -85,14 +85,6 @@ impl Detector {
                 (windows, window_names)
             };
 
-            /*
-            if windows.is_empty() {
-                println!("empty");
-            } else {
-                println!("has data");
-            }
-            */
-
             // NOTE check for shutdown before locking
             if *sd_rx.get_ref() {
                 info!(log, "Detector received finished signal...");
@@ -130,25 +122,6 @@ impl Detector {
                     200,
                 )
             }));
-
-            /*
-            let ip: Result<Vec<f32>, usize> = Ok(inner_product(
-                &self.templates.templates[..],
-                &windows,
-                &window_names,
-                sample_time,
-                self.detector_opts.noise_stddev,
-                true,
-                self.detector_opts.dc_norm,
-                // [ ] FIXME XXX had to increase but wrong logic is affecting results
-                // - quick visual test, reduce number and run on constant stars
-                //   - very easy to see the jumps and issues
-                //   - also could add logging at transition point
-                //     to historical mean removal to see other issues
-                2000,
-                2000,
-            ));
-            */
 
             let ip = match ip {
                 Ok(ip) => ip,

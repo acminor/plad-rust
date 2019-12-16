@@ -1,5 +1,14 @@
 use std::collections::{HashSet, HashMap};
 
+arg_enum! {
+    #[derive(Clone, Copy)]
+    pub enum DetectorTriggerImps {
+        NoneTrigger,
+        ThresholdTrigger,
+        ThreeInARowTrigger,
+    }
+}
+
 // NOTE allows for expansion to include detected (guess) type
 //      - flare, microlensing, etc. (positive, maybe positive, etc.)
 pub struct DetectorResult {}
@@ -118,3 +127,5 @@ impl DetectorTrigger for ThreeInARowTrigger {
         }
     }
 }
+
+// TODO write a trigger that observes curve as outputted to get better result

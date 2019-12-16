@@ -51,7 +51,6 @@ mod utils;
 use async_utils::{twin_barrier, TwinBarrier};
 use cli::*;
 use detector::Detector;
-use crate::detector_utils as DU;
 use gwac_reader::GWACReader;
 use info_handler::InformationHandler;
 use log::*;
@@ -172,6 +171,7 @@ async fn main() {
         detector_opts,
         log_opts,
         tester,
+        detector_trigger,
     } = run_info;
 
     let mut stars = Lock::new(stars);
@@ -266,7 +266,8 @@ async fn main() {
             templates,
             tester,
             //Box::new(DU::ThresholdTrigger::new()),
-            Box::new(DU::ThreeInARowTrigger::new(detector_opts.skip_delta as usize)),
+            //Box::new(DU::ThreeInARowTrigger::new(detector_opts.skip_delta as usize)),
+            detector_trigger,
             detector_opts,
         )
     };

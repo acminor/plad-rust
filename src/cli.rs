@@ -6,6 +6,7 @@ use crate::star::*;
 use crate::sw_star::SWStar;
 use crate::template::*;
 use crate::tester::*;
+use crate::detector_utils as DU;
 use crate::toml_star;
 use clap::{App, Arg};
 use std::fs;
@@ -22,6 +23,7 @@ pub struct RunInfo {
     pub detector_opts: DetectorOpts,
     pub log_opts: LogOpts,
     pub tester: Box<dyn Tester>,
+    pub detector_trigger: Box<dyn DU::DetectorTrigger>,
 }
 
 arg_enum! {
@@ -339,6 +341,15 @@ pub fn parse_args() -> RunInfo {
                 .case_insensitive(true)
         )
         .arg(
+            Arg::with_name("detector_trigger")
+                .long("detector-trigger")
+                .help("Specifies which detector trigger to use for detection results")
+                .takes_value(true)
+                .default_value("ThresholdTrigger")
+                .possible_values(&DU::DetectorTriggerImps::variants())
+                .case_insensitive(true)
+        )
+        .arg(
             Arg::with_name("license")
                 .long("license")
                 .help("Display license and attribution information."),
@@ -446,6 +457,19 @@ pub fn parse_args() -> RunInfo {
         _ => Box::new(NFDTester {}),
     };
 
+    let detector_trigger: Box<dyn DU::DetectorTrigger> =
+        match value_t_or_exit!(matches, "detector_trigger", DU::DetectorTriggerImps) {
+            DU::DetectorTriggerImps::NoneTrigger => {
+                Box::new(DU::NoneTrigger{})
+            }
+            DU::DetectorTriggerImps::ThresholdTrigger => {
+                Box::new(DU::ThresholdTrigger::new())
+            }
+            DU::DetectorTriggerImps::ThreeInARowTrigger => {
+                Box::new(DU::ThreeInARowTrigger::new(detector_opts.skip_delta as usize))
+            }
+        };
+
     // NOTE for simplicity do not allow offline and gwac_files
     //      to be on at same time
     if let Some(input_dirs) = matches.values_of("input_dir") {
@@ -462,6 +486,7 @@ pub fn parse_args() -> RunInfo {
             detector_opts,
             log_opts,
             tester,
+            detector_trigger,
         };
     }
 
@@ -476,6 +501,7 @@ pub fn parse_args() -> RunInfo {
             detector_opts,
             log_opts,
             tester,
+            detector_trigger,
         };
     }
 
