@@ -134,7 +134,16 @@ impl Detector {
             //      apply different things such as a flare remover
             //      or glitch remover, etc.
             ip.iter().zip(window_names).for_each(|(val, star)| {
-                match self.detector.detect(&star, *val, sample_time,
+                if !data.contains_key(&star) {
+                    data.insert(star.clone(), Vec::new());
+                }
+
+                data.get_mut(&star)
+                    .expect("Star should be in inner_product data map.")
+                    .push(*val);
+
+                let vals = data.get(&star).expect("Star should be in inner_product data map.");
+                match self.detector.detect(&star, vals,sample_time,
                                            self.detector_opts.alert_threshold) {
                     Some(_detector_res) => {
                         // compute values b/c tester is a valid tester
@@ -160,14 +169,6 @@ impl Detector {
                     }
                     None => {}
                 }
-
-                if !data.contains_key(&star) {
-                    data.insert(star.clone(), Vec::new());
-                }
-
-                data.get_mut(&star)
-                    .expect("Star should be in inner_product data map.")
-                    .push(*val);
             });
         }
     }

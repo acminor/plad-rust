@@ -14,7 +14,7 @@ arg_enum! {
 pub struct DetectorResult {}
 
 pub trait DetectorTrigger {
-    fn detect(&mut self, star: &str, val: f32, curren_time: usize, threshold: f32)
+    fn detect(&mut self, star: &str, vals: &Vec<f32>, curren_time: usize, threshold: f32)
               -> Option<DetectorResult>;
 }
 
@@ -22,7 +22,7 @@ pub trait DetectorTrigger {
 pub struct NoneTrigger {}
 
 impl DetectorTrigger for NoneTrigger {
-    fn detect(&mut self, _star: &str, _val: f32, _current_time: usize, _threshold: f32)
+    fn detect(&mut self, _star: &str, _vals: &Vec<f32>, _current_time: usize, _threshold: f32)
               -> Option<DetectorResult> {
         None
     }
@@ -51,13 +51,13 @@ impl ThresholdTrigger {
 }
 
 impl DetectorTrigger for ThresholdTrigger {
-    fn detect(&mut self, star: &str, val: f32, _current_time: usize, threshold: f32)
+    fn detect(&mut self, star: &str, vals: &Vec<f32>, _current_time: usize, threshold: f32)
               -> Option<DetectorResult> {
         if self.already_detected_stars.contains(star) {
             return None
         }
 
-        if val > threshold {
+        if vals[vals.len() - 1] > threshold {
             self.already_detected_stars.insert(star.to_string());
             Some(DetectorResult{})
         } else {
@@ -88,13 +88,13 @@ impl ThreeInARowTrigger {
 }
 
 impl DetectorTrigger for ThreeInARowTrigger {
-    fn detect(&mut self, star: &str, val: f32, current_time: usize, threshold: f32)
+    fn detect(&mut self, star: &str, vals: &Vec<f32>, current_time: usize, threshold: f32)
               -> Option<DetectorResult> {
         if self.already_detected_stars.contains(star) {
             return None
         }
 
-        if val > threshold {
+        if vals[vals.len() - 1] > threshold {
             match self.considered_stars.get_mut(star) {
                 Some(star_entry) => {
                     // TODO verify this logic
