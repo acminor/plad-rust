@@ -434,84 +434,6 @@ pub fn stars_historical_mean_removal(
     subtract_means(stars, &stars_means)
 }
 
-/*
-struct MMHistoricalMeanEntry {
-    average_min: f32,
-    min_min: f32,
-    average_max: f32,
-    max_max: f32,
-    mins: CyclicQueue<f32>,
-    maxes: CyclicQueue<f32>,
-}
-
-impl MMHistoricalMeanEntry {
-    fn new(cap: usize) -> MMHistoricalMeanEntry {
-        MMHistoricalMeanEntry {
-            min_min: std::f32::MAX,
-            max_max: std::f32::MIN,
-            average_min: std::f32::MAX,
-            average_max: std::f32::MIN,
-            mins: CyclicQueue::new(cap),
-            maxes: CyclicQueue::new(cap),
-        }
-    }
-}
-
-lazy_static!{
-    static ref historical_min_max_global: Mutex<HashMap<String, MMHistoricalMeanEntry>>
-        = Mutex::new(HashMap::new());
-}
-
-pub fn stars_min_max_historical_mean_removal(stars: Vec<Vec<f32>>, star_names: &[String],
-                                             min_time: usize,
-                                             delta_time: usize, current_time: usize)
-                                             -> Vec<Vec<f32>> {
-    // Borrow for WHOLE function as inner_product is only called in a single threaded fashion
-    let mut historical_min_max = historical_min_max_global.lock().unwrap();
-
-    let num_stars = star_names.len();
-    let stars_mins = mins(&stars);
-    let stars_maxes = maxes(&stars);
-
-    star_names
-        .iter()
-        .zip(stars_mins
-             .iter()
-             .zip(stars_maxes.iter())
-        )
-        .for_each(|(name, (min, max))| {
-            if !historical_min_max.contains_key(name) {
-                historical_min_max.insert(name.to_string(),
-                                          MMHistoricalMeanEntry::new());
-            }
-
-            let mut data = historical_min_max
-                .get_mut(name)
-                .expect("historical mean removal issue with get_mut (shouldn't happen)");
-
-            if *min < data.min {
-                data.min = *min;
-            }
-
-            if *max > data.max {
-                data.max = *max;
-            }
-        });
-
-    let stars_means = star_names
-        .iter()
-        .map(|name| {
-            let mut data = historical_min_max
-                .get_mut(name)
-                .expect("historical mean removal issue with get (shouldn't happen)");
-
-            data.min + (data.max - data.min) / 2.0
-        }).collect::<Vec<f32>>();
-
-    subtract_means(stars, &stars_means)
-}
-*/
-
 pub fn stars_fft(
     stars: &AF_Array<f32>,
     fft_len: usize,
@@ -564,7 +486,6 @@ fn stddev_outlier_removal(mut signal: Vec<f32>) -> Vec<f32> {
     signal
 }
 
-#[allow(dead_code)]
 fn nuttall_window(signal: Vec<f32>) -> Vec<f32> {
     // NOTE implements windowing to cut down on "glitched" in the
     // final fft output
@@ -591,24 +512,11 @@ fn nuttall_window(signal: Vec<f32>) -> Vec<f32> {
         .collect::<Vec<f32>>()
 }
 
-/*
-#[allow(dead_code)]
-fn dolph_tchebyshev_window(signal: Vec<f32>) -> Vec<f32> {
-    // NOTE implements as described in ... TODO
-    let len = signal.len();
-    signal.into_iter().enumerate().map(|(n, x)| {
-        // TODO
-        0.0f32
-    }).collect()
-}
-*/
-
-#[allow(dead_code)]
 fn gaussian_window(signal: Vec<f32>) -> Vec<f32> {
     // NOTE implements as described in ... TODO
     // TODO validate
     let len = signal.len();
-    let alpha = 2.5f32;
+    let alpha = 3.5f32;
     signal
         .into_iter()
         .enumerate()
@@ -624,7 +532,6 @@ fn gaussian_window(signal: Vec<f32>) -> Vec<f32> {
         .collect()
 }
 
-#[allow(dead_code)]
 fn triangle_window(signal: Vec<f32>) -> Vec<f32> {
     // NOTE implements as described in ... TODO
     let len = signal.len();
@@ -681,12 +588,72 @@ fn kaiser_bessel_window(signal: Vec<f32>) -> Vec<f32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io;
+    use inline_python::python;
 
     static INIT_AF: std::sync::Once = std::sync::Once::new();
 
+    lazy_static! {
+        static ref PYTHON_LOCK: std::sync::Mutex<usize> = std::sync::Mutex::new(0);
+    }
+
+    fn yn_prompt(msg: &str) -> bool {
+        println!("{}\n\n yes/no", msg);
+
+        loop {
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap();
+
+            let input = input.trim().to_lowercase();
+            if input == "yes" {
+                return true
+            } else if input == "no" {
+                return false
+            } else {
+                println!("You did not enter yes/no.");
+            }
+        }
+    }
+
+    fn plot_window<T>(window: T, n: usize, name: &str)
+    where T: Fn(Vec<f32>) -> Vec<f32> {
+        let data = vec![1.0; n];
+        let window = window(data);
+
+        // NOTE must have name or optimizer
+        //      removes it and thus their is a problem
+        let _lock = PYTHON_LOCK.lock();
+
+        let c = inline_python::Context::new();
+        python! {
+            #![context = &c]
+            import numpy as np
+            import matplotlib.pyplot as plt
+
+            // important to get the pyplot window to not crash
+            import sys
+            sys.argv.append("test")
+
+            plt.subplot(211)
+            plt.plot('window)
+
+            // adapted from frequency plotting code used here
+            // https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.windows.triang.html
+            fft = np.fft.fft('window, 2048) / (len('window)/2.0)
+            fft = np.fft.fftshift(fft / abs(fft).max())
+            freq = np.linspace(-0.5, 0.5, len(fft))
+            response = np.abs(fft)
+            response = 20*np.log10(np.maximum(response, 1e-10))
+            plt.subplot(212)
+            plt.plot(freq, response)
+
+            plt.title('name)
+            plt.show()
+        }
+    }
+
     // NOTE needs to be called before any tests using arrayfire
     // -- https://stackoverflow.com/a/58006287 (thanks explaining per class test init.)
-    #[test]
     fn init_af() {
         INIT_AF.call_once(|| {
             AF::set_backend(AF::Backend::CPU);
@@ -896,6 +863,7 @@ mod tests {
         });
     }
 
+    /*
     #[test]
     fn test_stars_historical_mean_removal() {
         init_af();
@@ -1127,6 +1095,7 @@ mod tests {
             );
         }
     }
+    */
 
     #[test]
     fn test_stars_norm_at_zero() {
@@ -1234,5 +1203,29 @@ mod tests {
                 assert_abs_diff_eq!(e.re, a.re, epsilon = 0.001);
                 assert_abs_diff_eq!(e.im, a.im, epsilon = 0.001);
             });
+    }
+
+    #[test]
+    fn test_gaussian_window() {
+        plot_window(gaussian_window, 50, "Gaussian Window");
+        plot_window(gaussian_window, 51, "Gaussian Window");
+    }
+
+    #[test]
+    fn test_triangle_window() {
+        plot_window(triangle_window, 50, "Triangle Window");
+        plot_window(triangle_window, 51, "Triangle Window");
+    }
+
+    #[test]
+    fn test_kaiser_bessel_window() {
+        plot_window(kaiser_bessel_window, 50, "Kaiser-Bessel Window");
+        plot_window(kaiser_bessel_window, 51, "Kaiser-Bessel Window");
+    }
+
+    #[test]
+    fn test_nuttall_window() {
+        plot_window(nuttall_window, 50, "Nuttall Window");
+        plot_window(nuttall_window, 51, "Nuttall Window");
     }
 }

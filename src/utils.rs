@@ -113,10 +113,14 @@ pub fn debug_plt_2(
         //   for i in range(1, skip):
         //       data2.append(None)
         plt.title('title)
-        plt.subplot(211)
+        plt.subplot(411)
         plt.plot(temp, marker="o", ls="")
-        plt.subplot(212)
+        plt.subplot(412)
         plt.plot('data2, marker="x", ls="")
+        plt.subplot(413)
+        plt.plot(np.diff('data, n=1), marker="x", ls="")
+        plt.subplot(414)
+        plt.plot(np.diff('data, n=2), marker="x", ls="")
         //plt.plot(temp2, marker="s", ls="")
         plt.show()
     }

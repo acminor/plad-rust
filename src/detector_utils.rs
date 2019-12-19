@@ -66,22 +66,13 @@ impl DetectorTrigger for ThresholdTrigger {
     }
 }
 
-struct ThreeInARowEntry {
-    last_time: usize,
-    count: usize,
-}
-
 pub struct ThreeInARowTrigger {
-    delta_skip: usize,
-    considered_stars: HashMap<String, ThreeInARowEntry>,
     already_detected_stars: HashSet<String>,
 }
 
 impl ThreeInARowTrigger {
-    pub fn new(delta_skip: usize) -> ThreeInARowTrigger {
+    pub fn new() -> ThreeInARowTrigger {
         ThreeInARowTrigger{
-            delta_skip,
-            considered_stars: HashMap::new(),
             already_detected_stars: HashSet::new(),
         }
     }
@@ -94,33 +85,18 @@ impl DetectorTrigger for ThreeInARowTrigger {
             return None
         }
 
-        if vals[vals.len() - 1] > threshold {
-            match self.considered_stars.get_mut(star) {
-                Some(star_entry) => {
-                    // TODO verify this logic
-                    if current_time - star_entry.last_time < self.delta_skip &&
-                        star_entry.count < 3 {
-                        star_entry.last_time = current_time;
-                        star_entry.count += 1;
-                        None
-                    } else if current_time - star_entry.last_time < self.delta_skip + 1 {
-                        self.already_detected_stars.insert(star.to_string());
-                        Some(DetectorResult{})
-                    } else {
-                        star_entry.last_time = current_time;
-                        star_entry.count = 1;
-                        None
-                    }
-                }
-                None => {
-                    self.considered_stars.insert(
-                        star.to_string(),
-                        ThreeInARowEntry{
-                            last_time: current_time,
-                            count: 1,
-                        });
-                    None
-                }
+        if vals[vals.len() - 1] > threshold && vals.len() > 3 {
+            let mut is_good = true;
+            // NOTE last three elements
+            for val in vals[vals.len() - 3..vals.len()].iter() {
+                is_good &= *val > threshold;
+            }
+
+            if is_good {
+                self.already_detected_stars.insert(star.to_string());
+                Some(DetectorResult{})
+            } else {
+                None
             }
         } else {
             None

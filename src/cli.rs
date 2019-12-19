@@ -475,7 +475,7 @@ pub fn parse_args() -> RunInfo {
                 Box::new(DU::ThresholdTrigger::new())
             }
             DU::DetectorTriggerImps::ThreeInARowTrigger => {
-                Box::new(DU::ThreeInARowTrigger::new(detector_opts.skip_delta as usize))
+                Box::new(DU::ThreeInARowTrigger::new())
             }
         };
 
