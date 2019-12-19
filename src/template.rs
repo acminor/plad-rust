@@ -28,7 +28,7 @@ pub struct Templates {
     pub pre_fft: bool,
 }
 
-pub fn parse_template_file(file_name: String, dc_norm: DCNorm) -> Templates {
+pub fn parse_template_file(file_name: String, template_group_sz: usize, dc_norm: DCNorm) -> Templates {
     let contents = fs::read_to_string(file_name)
         .expect("Failed to read Templates TOML file");
 
@@ -64,7 +64,7 @@ pub fn parse_template_file(file_name: String, dc_norm: DCNorm) -> Templates {
             max_len / 2 - 1
         };
 
-        temp.chunks(2800)
+        temp.chunks(template_group_sz)
             .map(|chunk| {
                 let chunk_len = chunk.len();
 

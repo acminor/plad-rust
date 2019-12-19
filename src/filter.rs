@@ -3,6 +3,7 @@ use arrayfire as AF;
 use crate::cli::DCNorm;
 use crate::filter_utils::*;
 use crate::template::*;
+use crate::utils;
 
 enum DetectorType {
     Normal,
@@ -23,8 +24,6 @@ pub fn inner_product(
     _pre_fft: bool,
     dc_norm: DCNorm,
     window_func: WindowFunc,
-    // [ ] TODO refactor into template instant.
-    _template_group_len: usize,
     signal_group_len: usize,
 ) -> Vec<f32> {
     let mut res: Vec<f32> = Vec::new();
@@ -78,9 +77,7 @@ pub fn inner_product(
 
         let detector_type = DetectorType::DoubleSided;
 
-        // [ ] TODO work on making right grouping
-        //     of templates output and max of them
-        //     -- for now only works bc large template groups (only one group)
+        let mut template_res = Vec::new();
         for template_group in templates {
             match detector_type {
                 DetectorType::Normal => {
@@ -104,10 +101,13 @@ pub fn inner_product(
                     let res_af = AF::abs(&res_af);
 
                     let res_af = AF::max(&res_af, 1);
+                    template_res.push(res_af);
+                    /*
                     res_af.eval();
 
                     let mut temp = af_to_vec1d(&res_af);
                     res.append(&mut temp);
+                    */
                 }
                 /*
                  * This type of detector seems to eliminate all imaginary values
@@ -156,15 +156,33 @@ pub fn inner_product(
                     //let res_af = AF::abs(&res_af);
 
                     let res_af = AF::max(&res_af, 1);
+                    template_res.push(res_af);
+                    /*
                     res_af.eval();
 
                     let mut temp = af_to_vec1d(&res_af);
                     res.append(&mut temp);
+                    */
                 }
                 DetectorType::IFFT => {
                 }
             }
         }
+
+        // Joins temporary star template matchings together
+        // into one master result for export (global template maximum)
+        let mut iter = template_res.into_iter();
+        let mut final_res = iter.next()
+            .expect("Should have at least one set of results.");
+        for group in iter {
+            final_res = AF::join(1, &final_res, &group);
+        }
+
+        let final_res = AF::max(&final_res, 1);
+        final_res.eval();
+
+        let mut temp = af_to_vec1d(&final_res);
+        res.append(&mut temp);
     }
 
     res

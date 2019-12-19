@@ -107,6 +107,7 @@ pub struct DetectorOpts {
     pub alert_threshold: f32,
     pub window_func: WindowFunc,
     pub dc_norm: DCNorm,
+    pub star_group_sz: usize,
 }
 
 fn unwrap_parse_star_files(
@@ -359,6 +360,20 @@ pub fn parse_args() -> RunInfo {
                 .case_insensitive(true)
         )
         .arg(
+            Arg::with_name("template_group_sz")
+                .long("template_group_sz")
+                .help("Specifies how many templates to consider for each GPU operation (matrix multiply).")
+                .takes_value(true)
+                .default_value("1024")
+        )
+        .arg(
+            Arg::with_name("star_group_sz")
+                .long("star_group_sz")
+                .help("Specifies how many stars to consider for each GPU operation (matrix multiply).")
+                .takes_value(true)
+                .default_value("1024")
+        )
+        .arg(
             Arg::with_name("license")
                 .long("license")
                 .help("Display license and attribution information."),
@@ -439,6 +454,7 @@ pub fn parse_args() -> RunInfo {
             .expect("Problem parsing fragment"),
         window_func: value_t_or_exit!(matches, "window_function", WindowFunc),
         dc_norm,
+        star_group_sz: value_t_or_exit!(matches, "star_group_sz", usize),
     };
 
     let log_opts = LogOpts {
@@ -451,6 +467,7 @@ pub fn parse_args() -> RunInfo {
             .value_of("templates_file")
             .expect("Problem reading templates_file")
             .to_string(),
+        value_t_or_exit!(matches, "template_group_sz", usize),
         dc_norm,
     );
 

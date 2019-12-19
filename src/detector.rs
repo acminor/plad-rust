@@ -118,8 +118,7 @@ impl Detector {
                     true,
                     self.detector_opts.dc_norm,
                     self.detector_opts.window_func,
-                    200,
-                    200,
+                    self.detector_opts.star_group_sz,
                 )
             }));
 
