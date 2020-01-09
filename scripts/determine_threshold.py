@@ -2,20 +2,8 @@ import re
 import subprocess
 import click
 
-def construct_cmd(is_release, target_dir, alert_threshold, match_filter_opts):
-    cmd = '''
-    cargo run {} --target-dir={} -- \
-    --alert-threshold={}\
-    --plot=false\
-    {}
-    '''.format(
-        "--release "if is_release else "",
-        target_dir,
-        str(alert_threshold),
-        ' '.join(list(match_filter_opts)),
-    )
-
-    return cmd
+def construct_cmd(cmd, threshold):
+    return cmd.format(threshold)
 
 def parse_results(output):
     # NOTE: remove ansi text coloring
@@ -63,13 +51,11 @@ def parse_results(output):
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
-@click.option('--target-dir', required=True)
-@click.argument('match_filter_opts', nargs=-1)
-def main(target_dir, match_filter_opts):
-    # NOTE for now, always assume release for testing
-    is_release = True
-    #data_dir = "/home/austin/research/microlensing_star_data/star_subset"
-    #window_length = 30
+@click.argument('cmd', required=True, nargs=-1)
+                #help='Python fmt string for command with fmt for threshold')
+def main(cmd):
+    cmd = ' '.join(cmd)
+    print(cmd)
 
     alert_threshold_window = [0.0, 200.0]
     alert_threshold = 0.0
@@ -91,7 +77,7 @@ def main(target_dir, match_filter_opts):
         alert_threshold = (alert_threshold_window[0] + alert_threshold_window[1])/2.0
 
         proc = subprocess.run(
-            construct_cmd(is_release, target_dir, alert_threshold, match_filter_opts),
+            construct_cmd(cmd, alert_threshold),
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, encoding='utf8'
         )
         output = proc.stdout
@@ -110,7 +96,7 @@ def main(target_dir, match_filter_opts):
         alert_threshold += 0.0001
 
         proc = subprocess.run(
-            construct_cmd(is_release, target_dir, alert_threshold, match_filter_opts),
+            construct_cmd(cmd, alert_threshold),
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, encoding='utf8'
         )
         output = proc.stdout

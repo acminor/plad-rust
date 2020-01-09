@@ -10,7 +10,8 @@ TEMPS="data/templates__nfd_def.toml"
 #TEMPS="data/templates_no_log_nfd_def.toml"
 
 #DATA="/data/star_extra_data/star_dataset/data/gwac"
-DATA="/home/austin/research/microlensing_star_data/star_subset"
+#DATA="/home/austin/research/microlensing_star_data/star_subset"
+DATA="/home/austinminor/star_subset"
 
 function safe_call {
     if [[ $1 == "" ]]
@@ -21,7 +22,7 @@ function safe_call {
     fi
 
     # fragment should cut time to run by x
-    RUST_BACKTRACE=1 cargo run $opt --target-dir=/data/tmp/build_artifacts/match_filter --\
+    RUST_BACKTRACE=1 cargo run $opt -- \
                   --input ${DATA} \
                   --templates-file ${TEMPS} \
                   --noise .06 \

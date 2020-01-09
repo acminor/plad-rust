@@ -33,6 +33,7 @@ pub mod cyclic_queue;
 mod dat_star;
 mod detector;
 mod detector_utils;
+mod sqlite_stars;
 mod filter;
 mod filter_utils;
 mod gwac_reader;

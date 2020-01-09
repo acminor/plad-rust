@@ -8,9 +8,11 @@ use crate::template::*;
 use crate::tester::*;
 use crate::detector_utils as DU;
 use crate::toml_star;
+use crate::sqlite_stars;
 use clap::{App, Arg};
 use std::fs;
 use std::str::FromStr;
+use std::path::Path;
 
 pub struct RunInfo {
     pub templates: Templates,
@@ -158,8 +160,18 @@ fn parse_star_files(
         match fs::metadata(&input_dir) {
             Ok(ref file_type) if file_type.is_dir() => fs::read_dir(&input_dir)
                 .expect("Problem reading star input directory.")
+                .collect::<Vec<std::io::Result<fs::DirEntry>>>()
+                .into_iter()
                 .filter_map(unwrap_parse_star_files)
                 .collect(),
+            Ok(ref file_type) if file_type.is_file() => {
+                match Path::new(input_dir).extension() {
+                    Some(ext) if ext == "db" => {
+                        sqlite_stars::parse_star_files(input_dir)
+                    }
+                    _ => panic!("Error in reading input_db")
+                }
+            }
             _ => panic!("Error in reading input_dir"),
         }
     };

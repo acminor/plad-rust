@@ -11,7 +11,8 @@ TEMPS="data/templates__nfd_def.toml"
 
 #DATA="/data/star_extra_data/star_dataset/data/gwac"
 #DATA="/home/austin/research/microlensing_star_data/star_subset"
-DATA="/home/austinminor/Data/pre_flares"
+#DATA="/home/austinminor/Data/pre_flares"
+DATA="/home/austinminor/Data/preflare.db"
 #DATA="/home/austinminor/Data/gaussian"
 
 function safe_call {

@@ -15,7 +15,7 @@ pub fn parse_star_file(star_file: &str) -> Star {
     let contents =
         fs::read_to_string(&star_file).expect("Failed to read Star TOML file");
     let star_toml: StarToml =
-        toml::from_str(&contents).expect("Failed to parse Star TOML file");
+        toml::from_str(&contents).expect(&format!("Failed to parse Star TOML file: {}", star_file));
 
     let star_type = match star_toml.star_type.as_ref() {
         "constant" => StarType::Constant,

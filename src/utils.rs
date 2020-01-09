@@ -1,3 +1,4 @@
+#![feature(proc_macro_hygiene)]
 use inline_python::python;
 use regex::Regex;
 use std::path::Path;
