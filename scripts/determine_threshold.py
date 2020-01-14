@@ -1,9 +1,12 @@
 import re
 import subprocess
 import click
+import toml
 
 def construct_cmd(cmd, threshold):
-    return cmd.format(threshold)
+    cmd = cmd.format(threshold)
+    print(cmd)
+    return cmd
 
 def parse_results(output):
     # NOTE: remove ansi text coloring
@@ -51,11 +54,15 @@ def parse_results(output):
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
+@click.option('--output-file', required=True,
+              help='File in which to store results of tuning.')
 @click.argument('cmd', required=True, nargs=-1)
-                #help='Python fmt string for command with fmt for threshold')
-def main(cmd):
+                #help='Python fmt string for command with fmt for threshold.')
+def main(output_file, cmd):
     cmd = ' '.join(cmd)
     print(cmd)
+
+    results = []
 
     alert_threshold_window = [0.0, 200.0]
     alert_threshold = 0.0
@@ -92,6 +99,12 @@ def main(cmd):
         print("ADP Stats: {}".format(adp))
         print("Positives Stats: {}".format(pos))
 
+        results.append({
+            'alert_threshold': alert_threshold,
+            'adp_stats': adp,
+            'detection_stats': pos,
+        })
+
     while pos['num_false_events'] > 0:
         alert_threshold += 0.0001
 
@@ -105,6 +118,11 @@ def main(cmd):
         print("Alert Threshold: {}".format(alert_threshold))
         print("ADP Stats: {}".format(adp))
         print("Positives Stats: {}".format(pos))
+
+    with open(output_file, 'w+') as file:
+        toml.dump({
+            'results': results
+        }, file)
 
 if __name__ == '__main__':
     main()
