@@ -270,6 +270,7 @@ async fn main() {
             //Box::new(DU::ThreeInARowTrigger::new(detector_opts.skip_delta as usize)),
             detector_trigger,
             detector_opts,
+            log_opts.plot,
         )
     };
 

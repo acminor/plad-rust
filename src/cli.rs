@@ -331,7 +331,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("plot")
                 .long("plot")
-                .help("Do we want to plot the data for a local test data run.")
+                .help("Do we want to plot the data for a local test data run. Also, removes reporting of data statistics avg, stddev, etc when false for memory performance reasons")
                 .takes_value(true)
                 .default_value("true")
                 .possible_values(&["true", "false"])

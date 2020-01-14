@@ -23,6 +23,7 @@ pub struct Detector {
     tester: Box<dyn Tester>,
     detector: Box<dyn DetectorTrigger>,
     detector_opts: DetectorOpts,
+    should_plot: bool,
 }
 
 impl Detector {
@@ -49,7 +50,10 @@ impl Detector {
             let stars = self.stars.lock().await;
             stars.iter().for_each(|sw| {
                 if let Some(samps) = sw.star.samples.as_ref() {
-                    data2.insert(sw.star.uid.clone(), samps.clone());
+                    // NOTE do not store original data if plot is off (for memory space reasons)
+                    if self.should_plot {
+                        data2.insert(sw.star.uid.clone(), samps.clone());
+                    }
                 };
             });
         }
@@ -137,12 +141,15 @@ impl Detector {
                     data.insert(star.clone(), Vec::new());
                 }
 
-                data.get_mut(&star)
-                    .expect("Star should be in inner_product data map.")
-                    .push(*val);
+                // NOTE do not store inner product if plot is off (for memory space reasons)
+                if self.should_plot {
+                    data.get_mut(&star)
+                        .expect("Star should be in inner_product data map.")
+                        .push(*val);
+                }
 
-                let vals = data.get(&star).expect("Star should be in inner_product data map.");
-                match self.detector.detect(&star, vals,sample_time,
+                //let vals = data.get(&star).expect("Star should be in inner_product data map.");
+                match self.detector.detect(&star, *val, sample_time,
                                            self.detector_opts.alert_threshold) {
                     Some(_detector_res) => {
                         // compute values b/c tester is a valid tester
@@ -181,6 +188,7 @@ impl Detector {
         tester: Box<dyn Tester>,
         detector: Box<dyn DetectorTrigger>,
         detector_opts: DetectorOpts,
+        should_plot: bool,
     ) -> Detector {
         Detector {
             tick_barrier,
@@ -191,6 +199,7 @@ impl Detector {
             tester,
             detector_opts,
             detector,
+            should_plot,
         }
     }
 }
