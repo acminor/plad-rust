@@ -1,4 +1,5 @@
 use crate::cli::DCNorm;
+use crate::utils;
 
 use serde_derive::Deserialize;
 use std::fs;
@@ -29,15 +30,17 @@ pub struct Templates {
 }
 
 pub fn parse_template_file(file_name: String, template_group_sz: usize, dc_norm: DCNorm) -> Templates {
-    let contents = fs::read_to_string(file_name)
+    let contents = fs::read_to_string(&file_name)
         .expect("Failed to read Templates TOML file");
 
     let template_toml: TemplateToml =
         toml::from_str(&contents).expect("Failed to parse Templates TOML file");
 
     let templates: Vec<TemplateGroup> = {
-        let mut file = fs::File::open(&template_toml.templates)
-            .expect("Failed to read Templates templates file");
+        let toml_templates_file = utils::normalize_local_data_paths(&file_name,
+                                                                    &template_toml.templates);
+        let mut file = fs::File::open(&toml_templates_file)
+            .expect(&format!("Failed to read Templates templates file {}", toml_templates_file));
         let mut contents: Vec<u8> = Vec::new();
         file.read_to_end(&mut contents)
             .expect("Failed reading contents of templates.");
