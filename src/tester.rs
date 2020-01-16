@@ -123,9 +123,20 @@ impl Tester for TartanTester {
 pub struct NFDTester {}
 
 impl Tester for NFDTester {
-    fn is_true_positive(&self, _star: &str, sample_time: usize) -> bool {
+    fn is_true_positive(&self, star: &str, sample_time: usize) -> bool {
         // FIXME we can make this more accurate XD
-        sample_time >= 40320 && sample_time <= 46080
+        //sample_time >= 40320 && sample_time <= 46080
+        if let Some((t0, t_prime)) = crate::utils::uid_to_t0_tp(star) {
+            let start_tm = (t0 - t_prime / 2.0) as usize;
+            let end_tm = (t0 + t_prime / 2.0) as usize;
+
+            assert!(start_tm < end_tm);
+            assert!(start_tm >= 40320);
+            assert!(end_tm <= 46080);
+            sample_time >= start_tm && sample_time <= end_tm
+        } else {
+            panic!("Issue parsing t0, t_prime from NFD star")
+        }
     }
 
     fn is_valid(&self) -> bool {
