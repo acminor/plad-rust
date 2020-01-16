@@ -14,17 +14,17 @@ pub struct TwinBarrier {
 }
 
 impl TwinBarrier {
-    async fn tx_go(&self) {
+    async fn tx_go(&self) -> Result<(), &'static str> {
         match self.tx_go.borrow_mut().send(true).await {
-            Ok(_) => (),
-            _ => panic!("Twin barrier locking down. Panicking..."),
+            Ok(_) => Ok(()),
+            _ => Err("Twin barrier locking down."),
         }
     }
 
-    async fn rx_go(&self) {
+    async fn rx_go(&self) -> Result<(), &'static str> {
         match self.rx_go.borrow_mut().recv().await {
-            Some(_) => (),
-            None => panic!("Twin barrier locking down. Panicking..."),
+            Some(_) => Ok(()),
+            None => Err("Twin barrier locking down."),
         }
     }
 
@@ -39,17 +39,19 @@ impl TwinBarrier {
     // oxo---
     // \/     o = send, x = block, - = unblocked
     // xo----
-    pub async fn wait(&self) {
+    pub async fn wait(&self) -> Result<(), &'static str> {
         match self.side {
             Side::SideA => {
-                self.tx_go().await;
-                self.rx_go().await;
+                self.tx_go().await?;
+                self.rx_go().await?;
             }
             Side::SideB => {
-                self.rx_go().await;
-                self.tx_go().await;
+                self.rx_go().await?;
+                self.tx_go().await?;
             }
         }
+
+        Ok(())
     }
 }
 

@@ -50,7 +50,17 @@ impl Ticker {
         let sd_rx = self.info_handler.get_shutdown_receiver();
         let mut name_to_pos: HashMap<String, usize> = HashMap::new();
         loop {
-            self.computation_end.wait().await;
+            match self.computation_end.wait().await {
+                Err(msg) => {
+                    if *sd_rx.get_ref() {
+                        info!(log, "Ticker received finished signal...");
+                        return;
+                    } else {
+                        panic!(msg)
+                    }
+                }
+                _ => ()
+            };
             {
                 let mut stars_l = self.stars.lock().await;
                 let mut iterations = 0;
@@ -164,7 +174,17 @@ impl Ticker {
             // b/c it is waiting here. We could fix this be temporary
             // un-polling this wait and checking sd_rx. For now we will
             // ignore this. It will work properly for a non-forced shutdown.
-            self.tick_end.wait().await;
+            match self.tick_end.wait().await {
+                Err(msg) => {
+                    if *sd_rx.get_ref() {
+                        info!(log, "Ticker received finished signal...");
+                        return;
+                    } else {
+                        panic!(msg)
+                    }
+                }
+                _ => ()
+            };
         }
     }
 }

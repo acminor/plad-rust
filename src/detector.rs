@@ -58,14 +58,35 @@ impl Detector {
             });
         }
 
-        self.computation_barrier.wait().await;
+        match self.computation_barrier.wait().await {
+            Err(msg) => {
+                if *sd_rx.get_ref() {
+                    info!(log, "Received finished signal...");
+                    return (data, data2, adps, true_events, false_events);
+                } else {
+                    panic!(msg);
+                }
+            }
+            _ => ()
+        }
+
         loop {
             // NOTE check for shutdown before locking
             if *sd_rx.get_ref() {
                 info!(log, "Received finished signal...");
                 return (data, data2, adps, true_events, false_events);
             }
-            self.tick_barrier.wait().await;
+            match self.tick_barrier.wait().await {
+                Err(msg) => {
+                    if *sd_rx.get_ref() {
+                        info!(log, "Received finished signal...");
+                        return (data, data2, adps, true_events, false_events);
+                    } else {
+                        panic!(msg);
+                    }
+                }
+                _ => ()
+            }
 
             let (windows, window_names) = {
                 let stars = self.stars.lock().await;
@@ -96,7 +117,18 @@ impl Detector {
             }
             // NOTE signals can modify stars because now only
             //      working with copied data and not refs
-            self.computation_barrier.wait().await;
+            match self.computation_barrier.wait().await {
+                Err(msg) => {
+                    if *sd_rx.get_ref() {
+                        info!(log, "Received finished signal...");
+                        return (data, data2, adps, true_events, false_events);
+                    } else {
+                        panic!(msg);
+                    }
+                }
+                _ => ()
+            }
+
 
             sample_time += 1;
 
