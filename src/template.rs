@@ -29,7 +29,18 @@ pub struct Templates {
     pub pre_fft: bool,
 }
 
-pub fn parse_template_file(file_name: String, template_group_sz: usize, dc_norm: DCNorm) -> Templates {
+arg_enum! {
+    #[derive(Clone, Copy)]
+    pub enum TemplateNorm {
+        None,
+        // normalize power over different length templates
+        // - necessary as window length is less than template length by a lot
+        LengthNorm,
+    }
+}
+
+pub fn parse_template_file(file_name: String, template_group_sz: usize,
+                           dc_norm: DCNorm, template_norm: TemplateNorm) -> Templates {
     let contents = fs::read_to_string(&file_name)
         .expect("Failed to read Templates TOML file");
 
@@ -50,11 +61,31 @@ pub fn parse_template_file(file_name: String, template_group_sz: usize, dc_norm:
         let temp: Vec<Vec<f32>> = serde::Deserialize::deserialize(&mut de)
             .expect("Failed to deserialize templates");
 
-        let max_len = temp
+        let mut max_len = temp
             .iter()
             .map(|template| template.len())
             .max()
             .expect("Issue getting max template set length.");
+
+        // XXX hack for our current template settings
+        //     to prevent a factor >= 13 from appearing
+        //     in the prime factorization of an fft dimenion
+        //     - this does not work with the arrayfire opencl fft
+        //       operation https://github.com/arrayfire/arrayfire-python/issues/139
+        // FIXME implement better fix by checking prime factors for this
+        //match AF::get_active_backend()  {
+        //    AF::Backend::OPENCL => {
+        //        max_len = 6000;
+        //    }
+        //    _ => {}
+        //}
+        //
+        // NOTE FOR NOW FIXED IN TEMPLATE GENERATION BY ROUNDING TO NEAREST POWER OF TWO LENGTH
+        // - SO WE DO THE SAME HERE
+
+        let max_len = (2 as usize).pow((max_len as f32).log2().ceil() as u32);
+        //let max_len = 8192;
+        println!("FFT length: {}", max_len);
 
         // using the numpy fftfreq reference
         // [ ] TODO check if correct
@@ -74,10 +105,25 @@ pub fn parse_template_file(file_name: String, template_group_sz: usize, dc_norm:
                 let mut chunk: Vec<AF_Array<Complex<f32>>> = chunk
                     .iter()
                     .map(|template| {
+                        let template_length = template.len();
                         let template = AF_Array::new(
                             &template,
                             AF_Dim4::new(&[template.len() as u64, 1, 1, 1]),
                         );
+
+                        let template = match template_norm {
+                            TemplateNorm::LengthNorm => {
+                                let norm_factor = (template_length as f32) / (max_len as f32);
+                                AF::mul(
+                                    &template,
+                                    &norm_factor,
+                                    false
+                                )
+                            }
+                            _ => {
+                                template
+                            }
+                        };
 
                         // NOTE Remove DC constant of template to focus on signal
                         //      - This is very important and will lead to false
@@ -101,8 +147,14 @@ pub fn parse_template_file(file_name: String, template_group_sz: usize, dc_norm:
                             _ => template,
                         };
 
+                        //AF::device_gc();
+
+                        //println!("template length {}", template.elements());
+                        //println!("max length {}", max_len);
                         let fft_bs = AF::fft(&template, 1.0, max_len as i64);
+                        //AF::device_gc();
                         let temp = AF::rows(&fft_bs, 0, real_len as u64);
+                        //AF::device_gc();
                         //AF::conjg(&temp)
                         temp
                     })
@@ -114,17 +166,19 @@ pub fn parse_template_file(file_name: String, template_group_sz: usize, dc_norm:
                         .next()
                         .expect("Should have at least one template.");
                     for lchunk in chunk {
+                        //AF::device_gc();
                         chunk_out = AF::join(1, &chunk_out, &lchunk);
                     }
+                    //AF::device_gc();
 
                     chunk_out
                 };
 
-                let mut buf: Vec<Complex<f32>> = Vec::new();
-                buf.resize(chunk_out.elements(), Complex::new(0.0, 0.0 as f32));
-                chunk_out.lock();
-                chunk_out.host(&mut buf);
-                chunk_out.unlock();
+                //let mut buf: Vec<Complex<f32>> = Vec::new();
+                //buf.resize(chunk_out.elements(), Complex::new(0.0, 0.0 as f32));
+                //chunk_out.lock();
+                //chunk_out.host(&mut buf);
+                //chunk_out.unlock();
 
                 TemplateGroup {
                     templates: chunk_out,

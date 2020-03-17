@@ -42,6 +42,8 @@ pub struct GWACReader {
 impl GWACReader {
     pub fn new(data_file: &str) -> GWACReader {
         // NOTE for now a large number (can tweak this later)
+        // -- if more than 100,000 stars might overrun channel
+        //    and causing locking RIGHT???
         let (tx, rx) = channel(100_000);
         let data_chan = (tx, Some(rx));
 
@@ -60,6 +62,9 @@ impl GWACReader {
     }
 
     // NOTE should only be called once
+    // NOTE separates parsing from interpreting
+    // NOTE in separate thread to simplify keeping data and reading off data
+    //      - also might speed up as can read off data before ticker is unlocked RIGHT???
     pub async fn start(&mut self) {
         let data_file = File::open(&self.data_file_path)
             .await

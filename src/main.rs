@@ -161,7 +161,7 @@ async fn main() {
     let run_info = parse_args();
 
     AF::info();
-    AF::set_backend(AF::Backend::CUDA);
+    AF::set_backend(AF::Backend::OPENCL);
     AF::set_device(0);
 
     let RunInfo {
@@ -336,6 +336,7 @@ async fn main() {
     if log_opts.plot {
         for (star_title, star_data) in data.into_iter() {
             if is_offline {
+                /*
                 //crate::utils::debug_plt(&star_data, star_title, None);
                 crate::utils::debug_plt_2(
                     &star_data,
@@ -345,6 +346,8 @@ async fn main() {
                     // use minimum as that is the first starting point
                     detector_opts.window_length.0,
                 );
+                */
+                crate::utils::debug_plt(&star_data, star_title, None);
             } else {
                 crate::utils::debug_plt(&star_data, star_title, None);
             }

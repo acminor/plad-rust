@@ -183,7 +183,7 @@ fn parse_star_files(
             SWStar::new()
                 .set_star(star)
                 .set_availables(fragment, detector_opts.skip_delta)
-                .set_max_buffer_len(100)
+                .set_max_buffer_len(100) // does not appeared to be used FIXME CHECK AND REMOVE???
                 .set_window_lens(
                     detector_opts.window_length.0 as u32,
                     detector_opts.window_length.1 as u32,
@@ -363,6 +363,15 @@ pub fn parse_args() -> RunInfo {
                 .case_insensitive(true)
         )
         .arg(
+            Arg::with_name("template_norm")
+                .long("template-norm")
+                .help("Specifies which (if any) template normalizations are applied")
+                .takes_value(true)
+                .default_value("none")
+                .possible_values(&TemplateNorm::variants())
+                .case_insensitive(true)
+        )
+        .arg(
             Arg::with_name("detector_trigger")
                 .long("detector-trigger")
                 .help("Specifies which detector trigger to use for detection results")
@@ -481,6 +490,7 @@ pub fn parse_args() -> RunInfo {
             .to_string(),
         value_t_or_exit!(matches, "template_group_sz", usize),
         dc_norm,
+        value_t_or_exit!(matches, "template_norm", TemplateNorm),
     );
 
     let tester: Box<dyn Tester> = match value_t!(matches, "tartan_test", bool) {
