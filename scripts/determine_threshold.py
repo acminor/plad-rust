@@ -64,9 +64,10 @@ def main(output_file, cmd):
 
     results = []
 
-    alert_threshold_window = [0.0, 200.0]
+    alert_threshold_window = [0.0, 2000.0]
     alert_threshold = 0.0
-    alert_threshold_prev = 100.0
+    alert_threshold_prev = 1000.0
+    alert_threshold_original_max = 2000.0
 
     pos = None
     adp = None
@@ -78,6 +79,17 @@ def main(output_file, cmd):
             alert_threshold_window = (alert_threshold, alert_threshold_window[1])
         elif pos:
             alert_threshold_window = (alert_threshold_window[0], alert_threshold)
+
+        # in the case where the false negatives are at the boundary
+        # will lead to a slow stall in the final adjustment loop
+        # as the threshold slowly increases to find the proper value
+        # NOTE should mention this in thesis
+        if abs(alert_threshold - alert_threshold_original_max) < 5.0:
+            alert_threshold_original_max *= 2
+            alert_threshold_window = (
+                    alert_threshold_window[0],
+                    alert_threshold_original_max
+            )
 
 
         alert_threshold_prev = alert_threshold
@@ -114,6 +126,12 @@ def main(output_file, cmd):
         )
         output = proc.stdout
         adp, pos = parse_results(output)
+
+        results.append({
+            'alert_threshold': alert_threshold,
+            'adp_stats': adp,
+            'detection_stats': pos,
+        })
 
         print("Alert Threshold: {}".format(alert_threshold))
         print("ADP Stats: {}".format(adp))

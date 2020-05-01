@@ -14,7 +14,8 @@ TEMPS="/home/austin/Code/tartan/template_gen/templates-1800.0x87616.0-1x600.toml
 #TEMPS="/home/austin/Code/tartan/template_gen/templates-7200.0x7201.0-600x1-set_u0.toml"
 #TEMPS="/home/austin/Code/tartan/template_gen/templates-7200.0x7201.0-1x1-set_u0.toml"
 #DATA="/home/austin/temp/temp.db"
-DATA="/home/austin/Data/reduced_gaussian.db"
+#DATA="/home/austin/Data/reduced_gaussian.db"
+DATA="/home/austin/Data/nfd_star_dataset_generator/data/gwac"
 
 function safe_call {
     if [[ $1 == "" ]]
@@ -25,7 +26,10 @@ function safe_call {
     fi
 
     # fragment should cut time to run by x
-    RUST_BACKTRACE=1 cargo run $opt --\
+    RUST_BACKTRACE=1 cargo build $opt
+
+
+    time ./target/release/match_filter \
                   --input ${DATA} \
                   --templates-file ${TEMPS} \
                   --noise .06 \
@@ -33,8 +37,9 @@ function safe_call {
                   --window-length $2 \
                   --skip-delta 1 \
                   --fragment 1 \
+		  --plot false \
                   --alert-threshold 260000.0 \
-		  $3 $4 $5 $6 $7
+		  $3 $4 $5 $6 $7 &> /dev/null
 }
 
 case $1 in

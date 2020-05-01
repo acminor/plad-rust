@@ -3,18 +3,10 @@
 source ~/.zshenv > /dev/null
 source ./src_env.sh > /dev/null
 
-#TEMPS="data/template_no_ok.toml"
-#TEMPS="data/templates_no_ok.toml"
-#TEMPS="data/templates__nfd_def.toml"
-#TEMPS="/home/austin/Data/templates/templates-1800.0x87616.0-25x25.toml"
-#TEMPS="/home/austin/Data/templates/templates-1800.0x87616.0-30x30.toml"
-#TEMPS="/home/austin/Data/new-templates-600.toml"
-#TEMPS="/home/austin/Data/validation/templates-1800.0x87616.0-1x1.toml"
 TEMPS="/home/austin/Code/tartan/template_gen/templates-1800.0x87616.0-1x600.toml"
-#TEMPS="/home/austin/Code/tartan/template_gen/templates-7200.0x7201.0-600x1-set_u0.toml"
-#TEMPS="/home/austin/Code/tartan/template_gen/templates-7200.0x7201.0-1x1-set_u0.toml"
-#DATA="/home/austin/temp/temp.db"
-DATA="/home/austin/Data/reduced_gaussian.db"
+#DATA="/home/austin/Data/nfd_star_dataset_generator/data/gwac"
+#DATA="/home/austin/Data/flares.db"
+DATA="/home/austin/Data/multi_sin.db"
 
 function safe_call {
     if [[ $1 == "" ]]
@@ -25,7 +17,10 @@ function safe_call {
     fi
 
     # fragment should cut time to run by x
-    RUST_BACKTRACE=1 cargo run $opt --\
+    RUST_BACKTRACE=1 cargo build $opt
+
+
+    time ./target/release/match_filter \
                   --input ${DATA} \
                   --templates-file ${TEMPS} \
                   --noise .06 \
@@ -33,6 +28,7 @@ function safe_call {
                   --window-length $2 \
                   --skip-delta 1 \
                   --fragment 1 \
+		  --plot true \
                   --alert-threshold 260000.0 \
 		  $3 $4 $5 $6 $7
 }
