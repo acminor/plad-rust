@@ -202,7 +202,7 @@ pub fn parse_args() -> RunInfo {
             Arg::with_name("input_dir")
                 .short("i")
                 .long("input")
-                .help("Directory containing the star data files.")
+                .help("Directory/file containing the star data information.")
                 .number_of_values(1)
                 .multiple(true)
                 .takes_value(true)
@@ -213,7 +213,7 @@ pub fn parse_args() -> RunInfo {
             Arg::with_name("templates_file")
                 .short("t")
                 .long("templates-file")
-                .help("File describing the templates.")
+                .help("File containing the template information.")
                 .takes_value(true)
                 .conflicts_with("license")
                 .required_unless("license")
@@ -243,7 +243,7 @@ pub fn parse_args() -> RunInfo {
             Arg::with_name("window_length")
                 .short("w")
                 .long("window-length")
-                .help("Fixed window length used in filtering star data. See min_/max_ window_length for variable window lengths")
+                .help("Fixed window length used in filtering star data. See min_/max_window_length for variable window lengths.")
                 .takes_value(true)
                 .conflicts_with_all(&[
                     "min_window_length",
@@ -277,7 +277,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("skip_delta")
                 .long("skip-delta")
-                .help("How many data points we skip before executing another matched filtering operation (happens per star).")
+                .help("How many data points we skip before executing another matched filtering operation. Happens per star.")
                 .takes_value(true)
                 .conflicts_with("license")
                 .required_unless("license")
@@ -296,7 +296,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("fragment")
                 .long("fragment")
-                .help("Number of fragments to split stars into. i.e. how we delay stars to group them (star a starts at 1, star b at 2, etc.)")
+                .help("Number of fragments to split stars into. (How we delay stars to group them (star A starts at 1, star B at 2, etc.))")
                 .takes_value(true)
                 .conflicts_with("license")
                 .required_unless("license")
@@ -331,7 +331,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("plot")
                 .long("plot")
-                .help("Do we want to plot the data for a local test data run. Also, removes reporting of data statistics avg, stddev, etc when false for memory performance reasons")
+                .help("Do we want to plot the data for a local test data run? Also, removes reporting of data statistics avg, stddev, etc. when false for memory performance reasons.")
                 .takes_value(true)
                 .default_value("true")
                 .possible_values(&["true", "false"])
@@ -340,7 +340,7 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("tartan_test")
                 .long("tartan-test")
-                .help("Specifies to use Tartan generated data parsing to determine (statistics: true positive, false positive, etc.)")
+                .help("Specifies to use or not use Tartan data parsing to determine true positive, false positive, etc.")
                 .takes_value(true)
                 .default_value("false")
                 .possible_values(&["true", "false"])
@@ -356,25 +356,27 @@ pub fn parse_args() -> RunInfo {
         .arg(
             Arg::with_name("dc_norm")
                 .long("dc-norm")
-                .help("Specifies which (if any) DC normalization should be applied")
+                .help("Specifies which (if any) DC normalization should be applied.")
                 .takes_value(true)
                 .default_value("none")
                 .possible_values(&DCNorm::variants())
                 .case_insensitive(true)
         )
+        /*
         .arg(
             Arg::with_name("template_norm")
                 .long("template-norm")
-                .help("Specifies which (if any) template normalizations are applied")
+                .help("Specifies which (if any) template normalizations are applied.")
                 .takes_value(true)
                 .default_value("none")
                 .possible_values(&TemplateNorm::variants())
                 .case_insensitive(true)
         )
+        */
         .arg(
             Arg::with_name("detector_trigger")
                 .long("detector-trigger")
-                .help("Specifies which detector trigger to use for detection results")
+                .help("Specifies which detector trigger to use for detection results.")
                 .takes_value(true)
                 .default_value("ThresholdTrigger")
                 .possible_values(&DU::DetectorTriggerImps::variants())
@@ -490,7 +492,9 @@ pub fn parse_args() -> RunInfo {
             .to_string(),
         value_t_or_exit!(matches, "template_group_sz", usize),
         dc_norm,
-        value_t_or_exit!(matches, "template_norm", TemplateNorm),
+        // (Since not worked on throughly) [i.e. do not want in help documentation for Master's
+        // tagged release].
+        TemplateNorm::None, //value_t_or_exit!(matches, "template_norm", TemplateNorm)
     );
 
     let tester: Box<dyn Tester> = match value_t!(matches, "tartan_test", bool) {
