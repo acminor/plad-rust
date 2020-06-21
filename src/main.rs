@@ -21,9 +21,12 @@ extern crate slog_async;
 extern crate slog_term;
 
 extern crate arrayfire;
+
+#[cfg(feature = "jemalloc")]
 extern crate jemallocator;
 
 // [ ] TODO Test if this speeds up the program: also what about memory pressure
+#[cfg(feature = "jemalloc")]
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
@@ -143,7 +146,7 @@ fn tick_driver(state: RunState) {
     );
 }
 
-static PROF: bool = true;
+static PROF: bool = false;
 static CC_COUNT: AtomicU8 = AtomicU8::new(0);
 static MAIN_SHUTDOWN: AtomicBool = AtomicBool::new(false);
 
